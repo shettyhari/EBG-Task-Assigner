@@ -233,8 +233,14 @@
                             <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
                             <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
                         </svg>
-                        <span>Continue with Google</span>
+                        <span>Continue with Google (@theebg.com)</span>
                     </button>
+                    <p class="text-[11px] text-center text-[#71717A] dark:text-[#A1A1AA] mt-2">
+                        <span class="inline-flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Restricted to corporate <strong>@theebg.com</strong> accounts
+                        </span>
+                    </p>
                 </div>
 
                 <!-- STEP 2: CREATE OR JOIN ORGANIZATION -->
@@ -1159,6 +1165,18 @@
                 }
 
                 onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+                        const userEmail = (user.email || '').toLowerCase().trim();
+                        if (isGoogle && !userEmail.endsWith('@theebg.com')) {
+                            await signOut(auth);
+                            currentUser = null;
+                            hideLoading();
+                            showAuthStep('login');
+                            showToast("Access restricted: Only @theebg.com Google accounts are allowed.", "error");
+                            return;
+                        }
+                    }
                     currentUser = user;
                     if (!user) {
                         cleanupListeners();
@@ -1337,17 +1355,59 @@
 
         async function handleGoogleSignIn() {
             if (useCloudSync && auth) {
-                showLoading("Connecting with Google...");
+                showLoading("Connecting with Google (@theebg.com)...");
                 try {
                     const provider = new GoogleAuthProvider();
-                    await signInWithPopup(auth, provider);
-                    showToast("Signed in with Google!", "success");
+                    provider.setCustomParameters({
+                        hd: 'theebg.com',
+                        prompt: 'select_account'
+                    });
+                    const result = await signInWithPopup(auth, provider);
+                    const email = (result.user?.email || '').toLowerCase().trim();
+                    if (!email.endsWith('@theebg.com')) {
+                        await signOut(auth);
+                        currentUser = null;
+                        hideLoading();
+                        showAuthStep('login');
+                        showToast("Access restricted: Only @theebg.com Google accounts are allowed.", "error");
+                        return;
+                    }
+                    showToast("Signed in with Google (@theebg.com)!", "success");
                 } catch (err) {
                     hideLoading();
-                    showToast("Google sign-in unavailable here. Use Email & Password.", "warning");
+                    if (err.code !== 'auth/popup-closed-by-user') {
+                        showToast("Google sign-in error: " + (err.message || err), "error");
+                    }
                 }
             } else {
-                showToast("Use 'Create Account' or 'Sign In' with your work email.", "info");
+                const inputEmail = prompt("Simulate Google Sign-In (restricted to @theebg.com):", "user@theebg.com");
+                if (!inputEmail) return;
+                const emailClean = inputEmail.trim().toLowerCase();
+                if (!emailClean.endsWith('@theebg.com')) {
+                    showToast("Access restricted: Only @theebg.com Google accounts are permitted.", "error");
+                    return;
+                }
+                showLoading("Signing in with Google (@theebg.com)...");
+                const displayName = capitalizeWords(emailClean.split('@')[0].replace(/[._-]/g, ' '));
+                const uid = 'goog_' + btoa(emailClean).replace(/[^a-zA-Z0-9]/g, '').substring(0, 12);
+
+                currentUser = { uid, email: emailClean, displayName };
+                setLocalStore('current_user', currentUser);
+
+                const usersMap = getLocalStore('registered_users', {});
+                if (usersMap[emailClean] && usersMap[emailClean].profile && usersMap[emailClean].profile.orgId) {
+                    currentUserProfile = usersMap[emailClean].profile;
+                    currentOrgId = currentUserProfile.orgId;
+                    setLocalStore('current_profile', currentUserProfile);
+                    await enterOrganizationWorkspace(currentOrgId);
+                } else {
+                    document.getElementById('ws-display-name').value = displayName;
+                    document.getElementById('ws-department').value = 'Performance Marketing';
+                    document.getElementById('ws-role').value = 'Member';
+                    hideLoading();
+                    showAuthStep('workspace');
+                }
+                showToast(`Signed in with Google as ${emailClean}`, "success");
             }
         }
 
