@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EBG Task & Operations Dashboard | EBG Group</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        ebg: {
+                            obsidian: '#111113',
+                            obsidianHover: '#27272A',
+                            zincSoft: '#F4F4F5',
+                            canvas: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            border: '#E4E4E7',
+                            borderStrong: '#D4D4D8',
+                            ink: '#18181B',
+                            muted: '#71717A',
+                            liveBg: '#E6F4EA',
+                            liveText: '#137333',
+                            liveDot: '#1E8E3E',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Clean Architectural Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4D4D8;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #3F3F46;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #18181B;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #E4E4E7;
+        }
+
+        /* Dashed underline matching dashboard-pm.theebg.com KPI metric labels */
+        .metric-label-dashed {
+            text-decoration: underline;
+            text-decoration-style: dashed;
+            text-decoration-color: #A1A1AA;
+            text-underline-offset: 4px;
+            text-decoration-thickness: 1px;
+        }
+        .dark .metric-label-dashed {
+            text-decoration-color: #52525B;
+        }
+
+        /* Active KPI Card Top 3px Obsidian Bar */
+        .kpi-segment {
+            position: relative;
+            transition: background-color 0.15s ease;
+        }
+        .kpi-segment.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #111113;
+        }
+        .dark .kpi-segment.active::before {
+            background-color: #FAFAFA;
+        }
+
+        /* Pulsing Live Dot */
+        @keyframes pulseLive {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.65; }
+        }
+        .live-dot-pulse {
+            animation: pulseLive 2s infinite ease-in-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .kanban-column {
+            min-height: 440px;
+        }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] dark:bg-[#09090B] text-[#18181B] dark:text-[#FAFAFA] font-sans antialiased selection:bg-zinc-200 selection:text-zinc-950 dark:selection:bg-zinc-800 dark:selection:text-white overflow-x-hidden transition-colors duration-150">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 bg-white/90 dark:bg-[#09090B]/90 backdrop-blur-xs flex flex-col items-center justify-center transition-opacity duration-200">
+        <div class="w-10 h-10 border-4 border-zinc-200 dark:border-zinc-800 border-t-[#111113] dark:border-t-white rounded-full animate-spin mb-3"></div>
+        <p class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 tracking-wide" id="loading-text">Loading EBG Operations Dashboard...</p>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. CLEAN AUTHENTICATION & ORGANIZATION ONBOARDING (ZERO MOCK DATA)    -->
+    <!-- ===================================================================== -->
+    <div id="auth-screen" class="hidden min-h-screen flex flex-col bg-[#F8F9FA] dark:bg-[#09090B]">
+        
+        <!-- Top EBG Portal Bar -->
+        <header class="h-16 bg-white dark:bg-[#111113] border-b border-[#E4E4E7] dark:border-[#27272A] px-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- EBG Geometric Bar-and-Arrow Logo -->
+                <div class="flex items-center gap-2">
+                    <span class="font-extrabold text-2xl tracking-tighter text-[#111113] dark:text-white leading-none">EBG</span>
+                    <svg class="w-6 h-6 text-[#111113] dark:text-white" viewBox="0 0 28 24" fill="none">
+                        <rect x="2" y="14" width="3.5" height="8" rx="1" fill="currentColor"/>
+                        <rect x="8" y="10" width="3.5" height="12" rx="1" fill="currentColor"/>
+                        <rect x="14" y="6" width="3.5" height="16" rx="1" fill="currentColor"/>
+                        <path d="M18 11L25 4M25 4H19.5M25 4V9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="h-5 w-[1px] bg-[#E4E4E7] dark:bg-[#27272A] mx-1"></span>
+                <span class="text-xs font-medium text-[#71717A] dark:text-[#A1A1AA]">EBG Group &middot; Task &amp; Operations Dashboard</span>
+            </div>
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition" title="Toggle Dark Mode">
+                <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+            </button>
+        </header>
+
+        <!-- Centered Clean Login / Registration / Organization Setup Card -->
+        <div class="flex-1 flex items-center justify-center p-6">
+            <div class="w-full max-w-md bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] shadow-sm p-7 sm:p-8">
+                
+                <!-- STEP 1: TEAM SIGN IN OR ACCOUNT CREATION -->
+                <div id="auth-step-login">
+                    <div class="mb-6">
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E6F4EA] dark:bg-emerald-950/70 text-[#137333] dark:text-emerald-300 text-[11px] font-semibold mb-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#1E8E3E]"></span>
+                            <span>EBG Team Workspace Portal</span>
+                        </div>
+                        <h1 class="text-2xl font-bold text-[#18181B] dark:text-white tracking-tight" id="auth-heading">Sign in to your workspace</h1>
+                        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1" id="auth-subheading">Log in with your team credentials or create a new member account.</p>
+                    </div>
+
+                    <!-- Mode Switcher (Sign In vs Create Account) -->
+                    <div class="grid grid-cols-2 p-1 bg-[#F4F4F5] dark:bg-[#18181B] rounded-lg mb-5 text-xs font-semibold">
+                        <button type="button" onclick="setAuthTab('signin')" id="tab-signin" class="py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">Sign In</button>
+                        <button type="button" onclick="setAuthTab('register')" id="tab-register" class="py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] dark:hover:text-white transition">Create Account</button>
+                    </div>
+
+                    <form id="email-auth-form" onsubmit="handleEmailAuth(event)" class="space-y-3.5">
+                        <!-- Extra registration fields (shown when Create Account is selected) -->
+                        <div id="register-extra-fields" class="hidden space-y-3.5">
+                            <div>
+                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Full Name *</label>
+                                <input type="text" id="reg-full-name" placeholder="e.g. Hari Krishna" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
+                                    <select id="reg-department" class="w-full px-3 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
+                                        <option value="Performance Marketing">Performance Marketing</option>
+                                        <option value="Management & HQ">Management &amp; HQ</option>
+                                        <option value="Sales & TeleCRM">Sales &amp; TeleCRM</option>
+                                        <option value="Product & Tech">Product &amp; Tech</option>
+                                        <option value="Creative & Brand">Creative &amp; Brand</option>
+                                        <option value="Operations">Operations</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Role</label>
+                                    <select id="reg-role" class="w-full px-3 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
+                                        <option value="Admin">Admin</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Member" selected>Member</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Work Email *</label>
+                            <input type="email" id="auth-email" required placeholder="name@theebg.com" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Password *</label>
+                            <input type="password" id="auth-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
+                        </div>
+
+                        <button type="submit" id="email-auth-btn" class="w-full py-2.5 px-4 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 mt-1">
+                            <span>Sign In</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+
+                    <div class="relative my-5">
+                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[#E4E4E7] dark:border-[#27272A]"></div></div>
+                        <div class="relative flex justify-center text-[11px] uppercase tracking-wider"><span class="bg-white dark:bg-[#111113] px-3 text-[#71717A] font-medium">Or</span></div>
+                    </div>
+
+                    <button type="button" onclick="handleGoogleSignIn()" class="w-full py-2.5 px-4 bg-white dark:bg-[#18181B] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 font-medium rounded-lg text-xs border border-[#D4D4D8] dark:border-[#3F3F46] transition flex items-center justify-center gap-2.5">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                    </button>
+                </div>
+
+                <!-- STEP 2: CREATE OR JOIN ORGANIZATION -->
+                <div id="auth-step-workspace" class="hidden">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#111113] dark:text-zinc-300">Organization Setup</span>
+                            <h2 class="text-xl font-bold text-[#18181B] dark:text-white mt-0.5">Create or Join Organization</h2>
+                        </div>
+                        <button onclick="signOutUser()" class="text-xs text-[#71717A] hover:text-rose-600 font-medium flex items-center gap-1">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
+                        </button>
+                    </div>
+
+                    <!-- Toggle Create vs Join -->
+                    <div class="grid grid-cols-2 p-1 bg-[#F4F4F5] dark:bg-[#18181B] rounded-lg mb-5 text-xs font-semibold">
+                        <button type="button" id="ws-mode-create" onclick="setWorkspaceMode('create')" class="py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">Create Organization</button>
+                        <button type="button" id="ws-mode-join" onclick="setWorkspaceMode('join')" class="py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition">Join with Invite Code</button>
+                    </div>
+
+                    <form id="workspace-setup-form" onsubmit="handleWorkspaceComplete(event)" class="space-y-4">
+                        <!-- Create Organization Mode -->
+                        <div id="create-org-fields">
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Organization Name *</label>
+                            <input type="text" id="ws-org-name" placeholder="e.g. EBG Group" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                            <p class="text-[11px] text-[#71717A] mt-1">Creates a dedicated workspace and generates an invite code for your team.</p>
+                        </div>
+
+                        <!-- Join Existing Organization Mode -->
+                        <div id="join-org-fields" class="hidden">
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Organization Invite Code *</label>
+                            <input type="text" id="ws-invite-code" placeholder="e.g. EBG-4829" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm uppercase font-mono tracking-wider focus:border-[#111113] outline-none">
+                            <p class="text-[11px] text-[#71717A] mt-1">Ask your organization Admin for the workspace invite code.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Your Display Name *</label>
+                                <input type="text" id="ws-display-name" required placeholder="Your full name" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
+                                <select id="ws-department" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                                    <option value="Performance Marketing">Performance Marketing</option>
+                                    <option value="Management & HQ">Management &amp; HQ</option>
+                                    <option value="Sales & TeleCRM">Sales &amp; TeleCRM</option>
+                                    <option value="Product & Tech">Product &amp; Tech</option>
+                                    <option value="Creative & Brand">Creative &amp; Brand</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Workspace Role</label>
+                            <select id="ws-role" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                                <option value="Admin">Admin (Organization Owner &amp; Task Assigner)</option>
+                                <option value="Manager">Manager (Department Lead &amp; Task Assigner)</option>
+                                <option value="Member">Member (Team Contributor)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full py-2.5 px-4 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 mt-2">
+                            <span>Launch Workspace</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 2. MAIN EBG OPERATIONS DASHBOARD (MONOCHROME OBSIDIAN & ZINC THEME)   -->
+    <!-- ===================================================================== -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col">
+        
+        <!-- TOP HEADER BAR (Matches dashboard-pm.theebg.com Layout in Monochrome) -->
+        <header class="h-16 bg-white dark:bg-[#111113] border-b border-[#E4E4E7] dark:border-[#27272A] px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30">
+            
+            <!-- Left Cluster: Hamburger + EBG Logo + Scope Dropdown Pills -->
+            <div class="flex items-center gap-3 min-w-0">
+                <button onclick="toggleSidebarExpand()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#71717A] dark:text-zinc-300 transition" title="Toggle Navigation Rail">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+
+                <!-- EBG Geometric Logo -->
+                <div class="flex items-center gap-2 pr-2 shrink-0 cursor-pointer" onclick="switchMainTab('overview')">
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-extrabold text-2xl tracking-tighter text-[#111113] dark:text-white leading-none">EBG</span>
+                        <svg class="w-6 h-6 text-[#111113] dark:text-white" viewBox="0 0 28 24" fill="none">
+                            <rect x="2" y="14" width="3.5" height="8" rx="1" fill="currentColor"/>
+                            <rect x="8" y="10" width="3.5" height="12" rx="1" fill="currentColor"/>
+                            <rect x="14" y="6" width="3.5" height="16" rx="1" fill="currentColor"/>
+                            <path d="M18 11L25 4M25 4H19.5M25 4V9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="hidden sm:block leading-none">
+                        <div class="text-[8px] font-bold tracking-[0.14em] text-[#71717A] uppercase">OPERATIONS &amp; TASK</div>
+                        <div class="text-[8px] font-bold tracking-[0.18em] text-[#71717A] uppercase mt-0.5">DASHBOARD</div>
+                    </div>
+                </div>
+
+                <!-- Organization Name Breadcrumb -->
+                <span class="hidden xl:inline-block text-xs font-medium text-[#71717A] dark:text-[#A1A1AA] truncate max-w-[200px]" id="header-org-subtitle">
+                    Organization Workspace
+                </span>
+
+                <!-- Scope Pill 1: Department / Channel Filter -->
+                <div class="hidden md:flex items-center relative">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#111113] dark:bg-white absolute left-3.5 pointer-events-none"></span>
+                    <select id="header-dept-filter" onchange="syncHeaderFilters()" class="pl-8 pr-8 py-1.5 rounded-full border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer transition appearance-none">
+                        <option value="all">All Departments</option>
+                        <option value="Performance Marketing">Performance Marketing</option>
+                        <option value="Management & HQ">Management &amp; HQ</option>
+                        <option value="Sales & TeleCRM">Sales &amp; TeleCRM</option>
+                        <option value="Product & Tech">Product &amp; Tech</option>
+                        <option value="Creative & Brand">Creative &amp; Brand</option>
+                        <option value="Operations">Operations</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-3 pointer-events-none"></i>
+                </div>
+
+                <!-- Scope Pill 2: Brand / Member & Task Count -->
+                <div class="hidden lg:flex items-center relative">
+                    <span class="w-2.5 h-2.5 rounded-full bg-zinc-500 absolute left-3.5 pointer-events-none"></span>
+                    <select id="header-member-filter" onchange="syncHeaderMemberFilter()" class="pl-8 pr-8 py-1.5 rounded-full border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer transition appearance-none">
+                        <option value="all">All members &middot; 0 tasks</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-3 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Right Cluster: Invite Code Chip, Dark Mode Moon, User Profile Dropdown -->
+            <div class="flex items-center gap-2.5">
+                <button onclick="openInviteModal()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#18181B] hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-mono font-semibold transition" title="Share Invite Code">
+                    <i data-lucide="key-round" class="w-3.5 h-3.5 text-[#111113] dark:text-white"></i>
+                    <span id="header-org-code">ORG-0000</span>
+                </button>
+
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#71717A] dark:text-zinc-300 transition" title="Toggle Dark Mode">
+                    <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                </button>
+
+                <!-- User Profile Pill -->
+                <div class="relative">
+                    <button onclick="toggleUserMenu()" class="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-[#E4E4E7] dark:hover:border-[#27272A] transition">
+                        <div id="header-user-avatar" class="w-8 h-8 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-xs flex items-center justify-center shrink-0">
+                            EB
+                        </div>
+                        <div class="hidden sm:block text-left">
+                            <div id="header-user-name" class="text-xs font-semibold text-[#18181B] dark:text-white leading-tight">User</div>
+                            <div id="header-user-role" class="text-[10px] text-[#71717A] leading-tight">Member</div>
+                        </div>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A]"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-60 bg-white dark:bg-[#111113] rounded-xl shadow-lg border border-[#E4E4E7] dark:border-[#27272A] py-2 z-50">
+                        <div class="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                            <div class="text-xs font-bold text-[#18181B] dark:text-white" id="menu-user-name">User</div>
+                            <div class="text-[11px] text-[#71717A]" id="menu-user-dept">Department</div>
+                            <div class="mt-1.5 flex items-center justify-between text-[11px] font-mono bg-[#F4F4F5] dark:bg-[#18181B] px-2.5 py-1 rounded text-[#18181B] dark:text-zinc-200 font-semibold">
+                                <span>Code: <strong id="menu-org-code">ORG-0000</strong></span>
+                                <button onclick="openInviteModal(); toggleUserMenu();" class="underline hover:opacity-75">Invite</button>
+                            </div>
+                        </div>
+                        <button onclick="openSwitchWorkspaceModal(); toggleUserMenu();" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5">
+                            <i data-lucide="repeat" class="w-3.5 h-3.5 text-[#71717A]"></i> Switch / Create Organization
+                        </button>
+                        <button onclick="signOutUser()" class="w-full px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2.5">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- BODY SHELL: SLIM WHITE ICON RAIL + MAIN WORKSPACE -->
+        <div class="flex-1 flex min-h-0">
+            
+            <!-- Left Slim Icon Rail (64px collapsed, 224px expanded) -->
+            <aside id="left-icon-rail" class="w-16 bg-white dark:bg-[#111113] border-r border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-between py-3 shrink-0 transition-all duration-200 select-none z-20">
+                <div class="space-y-1 px-2.5">
+                    <!-- Overview (KPI + Trend Chart + Board) -->
+                    <button onclick="switchMainTab('overview')" id="rail-overview" class="rail-btn w-full h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center gap-3 px-3 transition" title="Overview & Velocity">
+                        <i data-lucide="layout-grid" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-semibold truncate">Overview</span>
+                    </button>
+
+                    <!-- Kanban Board -->
+                    <button onclick="switchMainTab('board')" id="rail-board" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Kanban Board">
+                        <i data-lucide="kanban" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Task Board</span>
+                    </button>
+
+                    <!-- Table / List View -->
+                    <button onclick="switchMainTab('list')" id="rail-list" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Structured Table">
+                        <i data-lucide="table-2" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Task Table</span>
+                    </button>
+
+                    <!-- Team Directory & Workload -->
+                    <button onclick="switchMainTab('team')" id="rail-team" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Team & Workload">
+                        <i data-lucide="users" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Team &amp; Workload</span>
+                    </button>
+
+                    <div class="my-2 border-t border-[#E4E4E7] dark:border-[#27272A]"></div>
+
+                    <!-- Quick Filter: Assigned to Me -->
+                    <button onclick="toggleMyTasksFilter()" id="rail-mine" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Assigned to Me">
+                        <i data-lucide="user-check" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Assigned to Me</span>
+                    </button>
+
+                    <!-- Quick Filter: Overdue / Urgent -->
+                    <button onclick="toggleUrgentFilter()" id="rail-urgent" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Urgent & Overdue">
+                        <i data-lucide="clock-alert" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Urgent &amp; Overdue</span>
+                    </button>
+                </div>
+
+                <!-- Bottom Rail Actions -->
+                <div class="space-y-1 px-2.5 pt-3 border-t border-[#E4E4E7] dark:border-[#27272A]">
+                    <button onclick="openInviteModal()" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Invite Team Members">
+                        <i data-lucide="user-plus" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Invite Team</span>
+                    </button>
+                    <button onclick="exportTasksToCSV()" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Download Excel (CSV)">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Download Excel</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT CANVAS -->
+            <main class="flex-1 min-w-0 p-5 lg:p-8 max-w-[1440px] mx-auto w-full space-y-5">
+                
+                <!-- OVERVIEW HEADER ROW (Matches screenshot layout in Monochrome) -->
+                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                    <div>
+                        <h1 id="main-page-title" class="text-[22px] font-semibold text-[#18181B] dark:text-white tracking-tight">Overview</h1>
+                        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">
+                            Your team execution at a glance: tasks assigned, in progress, review velocity and SLA compliance. &middot; Workspace: <span id="overview-org-label" class="font-semibold text-[#18181B] dark:text-zinc-200">Organization</span>
+                        </p>
+                        <!-- Live Team Data Status Row -->
+                        <div class="flex flex-wrap items-center gap-2.5 mt-2.5">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E6F4EA] dark:bg-emerald-950/80 text-[#137333] dark:text-emerald-300 text-[11px] font-semibold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#1E8E3E] live-dot-pulse"></span>
+                                <span id="live-sync-label">Live team data</span>
+                            </span>
+                            <span class="text-xs text-[#71717A] dark:text-[#A1A1AA]">
+                                Tasks, assignees and status updates synchronize across all logged-in team members.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Right Action Buttons (Date Range Pill, + Assign Task [Obsidian Black], Team Directory [Zinc Pill], Download Excel [Zinc Pill]) -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Date / Sprint Scope Pill -->
+                        <div class="relative flex items-center">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 pointer-events-none"></i>
+                            <select id="timeframe-filter" onchange="renderAll()" class="pl-8 pr-7 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer appearance-none">
+                                <option value="all">All active dates</option>
+                                <option value="week">Due this week (7 days)</option>
+                                <option value="overdue">Overdue SLA items</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-2.5 pointer-events-none"></i>
+                        </div>
+
+                        <!-- Primary Obsidian Black Action Button -->
+                        <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold shadow-2xs transition flex items-center gap-1.5">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>Assign Task</span>
+                        </button>
+
+                        <!-- Secondary Soft Zinc Pill Button -->
+                        <button onclick="switchMainTab('team')" class="px-3.5 py-2 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-[#18181B] dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold transition flex items-center gap-1.5">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-[#71717A]"></i>
+                            <span>Team (<span id="btn-team-count">0</span>)</span>
+                        </button>
+
+                        <!-- Secondary Soft Zinc Pill Button -->
+                        <button onclick="exportTasksToCSV()" class="px-3.5 py-2 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-[#18181B] dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold transition flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-[#71717A]"></i>
+                            <span>Download Excel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sub-Header Scope Line -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div class="text-sm font-semibold text-[#18181B] dark:text-zinc-200" id="scope-summary-heading">
+                        All listed departments &middot; Active Workspace
+                    </div>
+                    <div class="text-[11px] text-[#71717A] dark:text-[#A1A1AA]">
+                        Click any metric column below to inspect its velocity trend.
+                    </div>
+                </div>
+
+                <!-- Alert Banner (Shown when urgent/overdue tasks exist, or workspace invite reminder when 1 member) -->
+                <div id="ops-alert-banner" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-zinc-300" id="ops-alert-text">
+                        <i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i>
+                        <span>Workspace ready. Share your organization invite code with teammates so they can register and receive task assignments.</span>
+                    </div>
+                    <button id="ops-alert-btn" onclick="openInviteModal()" class="px-3.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-[#18181B] dark:text-zinc-200 transition shrink-0 self-start sm:self-auto">
+                        Share Invite Code
+                    </button>
+                </div>
+
+                <!-- Search & Quick Filter Strip -->
+                <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2.5 flex-1">
+                        <div class="relative flex-1 min-w-[200px] max-w-sm">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 top-2.5"></i>
+                            <input type="text" id="search-input" oninput="renderAll()" placeholder="Search tasks by ID, title, assignee or tag..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#F8F9FA] dark:bg-[#18181B] text-xs text-[#18181B] dark:text-white focus:bg-white dark:focus:bg-[#111113] focus:border-[#111113] dark:focus:border-white outline-none transition">
+                        </div>
+
+                        <select id="priority-filter" onchange="renderAll()" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
+                            <option value="all">All Priorities</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+
+                        <button onclick="toggleMyTasksFilter()" id="pill-filter-mine" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                            Assigned to Me
+                        </button>
+
+                        <button onclick="resetFilters()" class="text-xs font-medium text-[#71717A] hover:text-[#111113] dark:hover:text-white px-2 py-1 transition">
+                            Clear
+                        </button>
+                    </div>
+
+                    <!-- View Switcher Pills -->
+                    <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg">
+                        <button onclick="switchMainTab('overview')" id="view-pill-overview" class="px-3 py-1 rounded-md text-xs font-semibold bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">Overview</button>
+                        <button onclick="switchMainTab('board')" id="view-pill-board" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Board</button>
+                        <button onclick="switchMainTab('list')" id="view-pill-list" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Table</button>
+                        <button onclick="switchMainTab('team')" id="view-pill-team" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Team</button>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- SEGMENTED 7-COLUMN KPI CARD + INTERACTIVE SVG TREND CHART -->
+                <!-- ========================================================= -->
+                <section id="overview-analytics-card" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden shadow-2xs">
+                    
+                    <!-- 7-Column Segmented KPI Strip -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] dark:divide-[#27272A] border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        
+                        <button type="button" onclick="selectKpiMetric('total')" id="kpi-seg-total" class="kpi-segment active text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Total Tasks</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-total">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('todo')" id="kpi-seg-todo" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">To Do</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-todo">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('inprogress')" id="kpi-seg-inprogress" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Progress</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-inprogress">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('review')" id="kpi-seg-review" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Review</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-review">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('done')" id="kpi-seg-done" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Completed</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-done">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('overdue')" id="kpi-seg-overdue" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Overdue</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-overdue">0</div>
+                        </button>
+
+                        <button type="button" onclick="selectKpiMetric('sla')" id="kpi-seg-sla" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none col-span-2 sm:col-span-1">
+                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">On-Time SLA</div>
+                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-sla">100%</div>
+                        </button>
+
+                    </div>
+
+                    <!-- Interactive SVG Trend Line Chart (Obsidian Black / Charcoal Stroke) -->
+                    <div class="p-4 sm:p-6">
+                        <div class="relative w-full h-52" id="chart-wrapper">
+                            <svg id="velocity-svg-chart" class="w-full h-full overflow-visible" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
+                            <!-- Hover Tooltip -->
+                            <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-[#111113] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-md z-10 border border-zinc-700"></div>
+                        </div>
+                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-[#71717A]">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3.5 h-0.5 bg-[#111113] dark:bg-white inline-block"></span>
+                                <span id="chart-legend-label">Total Tasks &middot; Live Workspace Velocity</span>
+                            </div>
+                            <span id="chart-summary-note">Real-time team activity</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- EMPTY WORKSPACE ONBOARDING CALLOUT (Automatically hides once tasks are created) -->
+                <div id="empty-workspace-callout" class="hidden bg-white dark:bg-[#111113] rounded-xl border border-dashed border-[#D4D4D8] dark:border-[#3F3F46] p-8 text-center">
+                    <div class="w-11 h-11 rounded-full bg-[#F4F4F5] dark:bg-[#18181B] text-[#111113] dark:text-white flex items-center justify-center mx-auto mb-3 border border-[#E4E4E7] dark:border-[#27272A]">
+                        <i data-lucide="clipboard-plus" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-base font-semibold text-[#18181B] dark:text-white">No tasks created in this workspace yet</h3>
+                    <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] max-w-md mx-auto mt-1 mb-4">
+                        Start assigning deliverables to your team members or invite colleagues using your organization invite code (<span id="empty-state-code" class="font-mono font-semibold text-[#18181B] dark:text-zinc-200">ORG-0000</span>).
+                    </p>
+                    <div class="flex items-center justify-center gap-2.5">
+                        <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign First Task
+                        </button>
+                        <button onclick="openInviteModal()" class="px-4 py-2 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-[#18181B] dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold transition flex items-center gap-1.5">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Invite Team
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- KANBAN EXECUTION BOARD SECTION                            -->
+                <!-- ========================================================= -->
+                <section id="section-kanban" class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Task Execution Board</h2>
+                        <span class="text-xs text-[#71717A]">Drag &amp; drop cards across stages or click any task to inspect</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <!-- Column 1: To Do -->
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'To Do')">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-zinc-400"></span>
+                                    <span class="text-xs font-semibold text-[#18181B] dark:text-zinc-200">To Do</span>
+                                </div>
+                                <span id="col-count-todo" class="px-2 py-0.5 text-[11px] font-semibold bg-[#F4F4F5] dark:bg-zinc-800 text-[#52525B] dark:text-zinc-300 rounded-full">0</span>
+                            </div>
+                            <div id="col-todo" class="space-y-2.5 flex-1"></div>
+                        </div>
+
+                        <!-- Column 2: In Progress -->
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'In Progress')">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-[#111113] dark:bg-white"></span>
+                                    <span class="text-xs font-semibold text-[#111113] dark:text-white">In Progress</span>
+                                </div>
+                                <span id="col-count-inprogress" class="px-2 py-0.5 text-[11px] font-semibold bg-[#F4F4F5] dark:bg-zinc-800 text-[#111113] dark:text-white rounded-full">0</span>
+                            </div>
+                            <div id="col-inprogress" class="space-y-2.5 flex-1"></div>
+                        </div>
+
+                        <!-- Column 3: In Review -->
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'In Review')">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                    <span class="text-xs font-semibold text-[#18181B] dark:text-zinc-200">In Review</span>
+                                </div>
+                                <span id="col-count-review" class="px-2 py-0.5 text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 rounded-full">0</span>
+                            </div>
+                            <div id="col-review" class="space-y-2.5 flex-1"></div>
+                        </div>
+
+                        <!-- Column 4: Done -->
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Done')">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-[#1E8E3E]"></span>
+                                    <span class="text-xs font-semibold text-[#18181B] dark:text-zinc-200">Done</span>
+                                </div>
+                                <span id="col-count-done" class="px-2 py-0.5 text-[11px] font-semibold bg-[#E6F4EA] dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 rounded-full">0</span>
+                            </div>
+                            <div id="col-done" class="space-y-2.5 flex-1"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- STRUCTURED TABLE VIEW SECTION                             -->
+                <!-- ========================================================= -->
+                <section id="section-table" class="hidden space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Structured Task Ledger</h2>
+                        <button onclick="exportTasksToCSV()" class="text-xs font-semibold text-[#111113] dark:text-white underline hover:opacity-75">Export to Excel (CSV)</button>
+                    </div>
+
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-[#F8F9FA] dark:bg-[#18181B] border-b border-[#E4E4E7] dark:border-[#27272A] text-[11px] font-semibold text-[#71717A] dark:text-zinc-400">
+                                        <th class="py-3 px-4">Task ID</th>
+                                        <th class="py-3 px-4">Deliverable &amp; Department</th>
+                                        <th class="py-3 px-4">Assignee</th>
+                                        <th class="py-3 px-4">Priority</th>
+                                        <th class="py-3 px-4">Status</th>
+                                        <th class="py-3 px-4">Checklist</th>
+                                        <th class="py-3 px-4">Due Date</th>
+                                        <th class="py-3 px-4 text-right">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="task-table-body" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- TEAM DIRECTORY & WORKLOAD SECTION                         -->
+                <!-- ========================================================= -->
+                <section id="section-team" class="hidden space-y-4">
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-base font-semibold text-[#18181B] dark:text-white">Registered Team Members &amp; Workload</h2>
+                            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">All members who signed up and joined this workspace appear automatically below.</p>
+                        </div>
+                        <button onclick="openInviteModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5 self-start sm:self-auto">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i> Invite Team Member
+                        </button>
+                    </div>
+
+                    <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamic member cards -->
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 3. MODAL: ASSIGN NEW TASK                                             -->
+    <!-- ===================================================================== -->
+    <div id="create-task-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-[#111113] rounded-xl shadow-xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-lg overflow-hidden my-8">
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Assign New Task</h3>
+                        <p class="text-[11px] text-[#71717A]">Delegate deliverable to any registered team member</p>
+                    </div>
+                </div>
+                <button onclick="closeCreateTaskModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="create-task-form" onsubmit="handleCreateTask(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Task Title *</label>
+                    <input type="text" id="task-title" required placeholder="e.g. Launch Q4 Search Campaign & Audit SQR" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Description &amp; Instructions</label>
+                    <textarea id="task-desc" rows="3" placeholder="Provide brief, deliverables, links or SLA targets..." class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Assign To *</label>
+                        <select id="task-assignee" required class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Priority *</label>
+                        <select id="task-priority" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Due Date *</label>
+                        <input type="date" id="task-due-date" required class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
+                        <select id="task-tag" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <option value="Performance Marketing">Performance Marketing</option>
+                            <option value="Management & HQ">Management &amp; HQ</option>
+                            <option value="Sales & TeleCRM">Sales &amp; TeleCRM</option>
+                            <option value="Product & Tech">Product &amp; Tech</option>
+                            <option value="Creative & Brand">Creative &amp; Brand</option>
+                            <option value="Operations">Operations</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Subtask Checklist Builder -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Checklist Subtasks</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="new-subtask-input" placeholder="Add a checklist step..." onkeydown="if(event.key==='Enter'){event.preventDefault(); addDraftSubtask();}" class="flex-1 px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs focus:border-[#111113] outline-none">
+                        <button type="button" onclick="addDraftSubtask()" class="px-3 py-1.5 bg-[#F4F4F5] dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 rounded-lg text-xs font-semibold transition">Add</button>
+                    </div>
+                    <ul id="draft-subtasks-list" class="space-y-1.5 max-h-28 overflow-y-auto"></ul>
+                </div>
+
+                <div class="pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-[#71717A] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-xs font-semibold bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] transition flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Assign Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 4. SLIDE-OVER DRAWER: TASK DETAILS & COLLABORATION                    -->
+    <!-- ===================================================================== -->
+    <div id="task-detail-drawer" class="hidden fixed inset-0 z-50 bg-black/45 backdrop-blur-xs flex justify-end">
+        <div class="bg-white dark:bg-[#111113] w-full max-w-xl h-full shadow-2xl border-l border-[#E4E4E7] dark:border-[#27272A] flex flex-col animate-slide-in">
+            
+            <!-- Drawer Header -->
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#18181B]">
+                <div class="flex items-center gap-2">
+                    <span id="detail-code" class="px-2 py-0.5 rounded font-mono text-xs font-bold bg-[#111113] dark:bg-white text-white dark:text-[#111113]">EBG-001</span>
+                    <span id="detail-tag" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F4F4F5] dark:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-zinc-700">Department</span>
+                    <span id="detail-priority" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">High</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button id="btn-delete-task" onclick="deleteCurrentTask()" class="p-1.5 text-[#71717A] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition" title="Delete Task">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="closeTaskDetailDrawer()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white hover:bg-zinc-200/60 dark:hover:bg-zinc-800 rounded-lg transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Drawer Body -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+                <div>
+                    <h2 id="detail-title" class="text-lg font-bold text-[#18181B] dark:text-white leading-snug">Task Title</h2>
+                    <p id="detail-meta" class="text-xs text-[#71717A] mt-1">Assigned by User &bull; Due Date</p>
+                </div>
+
+                <!-- Status, Assignee, Priority & Due Date Controls -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-[#F8F9FA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A]">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Status</label>
+                        <select id="detail-status-select" onchange="updateTaskFieldFromDrawer('status', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                            <option value="To Do">To Do</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="In Review">In Review</option>
+                            <option value="Done">Done</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Assigned Member</label>
+                        <select id="detail-assignee-select" onchange="updateTaskAssigneeFromDrawer(this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Priority</label>
+                        <select id="detail-priority-select" onchange="updateTaskFieldFromDrawer('priority', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Due Date</label>
+                        <input type="date" id="detail-due-input" onchange="updateTaskFieldFromDrawer('dueDate', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <h4 class="text-xs font-semibold text-[#71717A] mb-1.5">Description</h4>
+                    <p id="detail-desc" class="text-xs sm:text-sm text-[#18181B] dark:text-zinc-300 leading-relaxed bg-white dark:bg-[#18181B]/60 p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] whitespace-pre-line">No description provided.</p>
+                </div>
+
+                <!-- Checklist Subtasks -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-semibold text-[#71717A]">Checklist Progress</h4>
+                        <span id="detail-subtask-progress" class="text-xs font-semibold text-[#111113] dark:text-white">0/0</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-3">
+                        <div id="detail-subtask-bar" class="h-full bg-[#111113] dark:bg-white rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div id="detail-subtasks-list" class="space-y-2 mb-2.5"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="detail-new-subtask" placeholder="Add another subtask..." onkeydown="if(event.key==='Enter'){event.preventDefault(); addSubtaskToExistingTask();}" class="flex-1 px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs outline-none">
+                        <button type="button" onclick="addSubtaskToExistingTask()" class="px-3 py-1.5 bg-[#F4F4F5] dark:bg-zinc-800 hover:bg-zinc-200 text-[#18181B] dark:text-zinc-200 rounded-lg text-xs font-semibold transition">Add</button>
+                    </div>
+                </div>
+
+                <!-- Team Activity & Comments -->
+                <div class="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A]">
+                    <h4 class="text-xs font-semibold text-[#71717A] mb-3">Team Updates &amp; Comments</h4>
+                    <div id="detail-comments-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+
+            <!-- Add Comment Footer -->
+            <form onsubmit="handleAddComment(event)" class="p-4 border-t border-[#E4E4E7] dark:border-[#27272A] bg-[#F8F9FA] dark:bg-[#18181B] flex gap-2">
+                <input type="text" id="detail-comment-input" required placeholder="Write a status update or comment..." class="flex-1 px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs bg-white dark:bg-[#111113] focus:border-[#111113] dark:focus:border-white outline-none">
+                <button type="submit" class="px-4 py-2 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shrink-0">
+                    <span>Post</span>
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 5. MODAL: INVITE TEAM & ORGANIZATION CODE                             -->
+    <!-- ===================================================================== -->
+    <div id="invite-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#111113] rounded-xl shadow-xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Invite Team Members</h3>
+                <button onclick="closeInviteModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] rounded-full">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-[#71717A] dark:text-zinc-300 leading-relaxed">
+                    Share this Organization Invite Code with your colleagues. When they create their login and choose <strong>"Join with Invite Code"</strong>, they will join <strong id="invite-org-name-label">your organization</strong> immediately.
+                </p>
+
+                <div class="p-4 rounded-xl bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] text-center">
+                    <div class="text-[11px] font-semibold text-[#111113] dark:text-zinc-300 mb-1">Organization Invite Code</div>
+                    <div id="invite-modal-code" class="text-2xl font-mono font-bold text-[#18181B] dark:text-white tracking-widest select-all">ORG-0000</div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#71717A] mb-1">Copyable Invite Message</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="invite-share-text" readonly class="flex-1 px-3 py-2 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#F8F9FA] dark:bg-[#18181B] text-xs text-[#18181B] dark:text-zinc-300 outline-none">
+                        <button onclick="copyInviteCode()" class="px-4 py-2 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shrink-0">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end">
+                    <button onclick="closeInviteModal()" class="px-4 py-2 bg-[#F4F4F5] dark:bg-zinc-800 hover:bg-zinc-200 text-[#18181B] dark:text-zinc-200 rounded-lg text-xs font-semibold transition">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- FIREBASE & REAL-TIME STATE ENGINE (ZERO MOCK DATA)                    -->
+    <!-- ===================================================================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInWithCustomToken, 
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            GoogleAuthProvider,
+            signInWithPopup,
+            signOut,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc, 
+            setDoc, 
+            addDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            collection 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 1. Initialize Firebase (with automatic localStorage persistence fallback if offline/unconfigured)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ebg-task-assigner-prod';
+        let firebaseConfig = {};
+        let useCloudSync = false;
+        let auth = null;
+        let db = null;
+
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+                if (firebaseConfig && firebaseConfig.apiKey) {
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    useCloudSync = true;
+                }
+            }
+        } catch (e) {
+            useCloudSync = false;
+        }
+
+        // 2. Application State (Starts Completely Empty - Zero Mock Data)
+        let currentUser = null;
+        let currentUserProfile = null;
+        let currentOrgId = null;
+
+        let authTabMode = 'signin';
+        let workspaceSetupMode = 'create';
+        let activeMainTab = 'overview';
+        let selectedKpiMetric = 'total';
+        let filterOnlyMine = false;
+        let filterOnlyUrgent = false;
+        let isSidebarExpanded = false;
+
+        let activeDetailTaskId = null;
+        let draftSubtasks = [];
+
+        let orgMembers = [];
+        let orgTasks = [];
+
+        let unsubMembers = null;
+        let unsubTasks = null;
+
+        // Expose functions to global window
+        Object.assign(window, {
+            setAuthTab,
+            handleEmailAuth,
+            handleGoogleSignIn,
+            setWorkspaceMode,
+            handleWorkspaceComplete,
+            signOutUser,
+            openSwitchWorkspaceModal,
+            toggleDarkMode,
+            toggleSidebarExpand,
+            toggleUserMenu,
+            switchMainTab,
+            selectKpiMetric,
+            toggleMyTasksFilter,
+            toggleUrgentFilter,
+            resetFilters,
+            syncHeaderFilters,
+            syncHeaderMemberFilter,
+            renderAll,
+            openCreateTaskModal,
+            closeCreateTaskModal,
+            addDraftSubtask,
+            removeDraftSubtask,
+            handleCreateTask,
+            openTaskDetail,
+            closeTaskDetailDrawer,
+            updateTaskFieldFromDrawer,
+            updateTaskAssigneeFromDrawer,
+            toggleSubtaskCheck,
+            addSubtaskToExistingTask,
+            handleAddComment,
+            deleteCurrentTask,
+            openInviteModal,
+            closeInviteModal,
+            copyInviteCode,
+            exportTasksToCSV,
+            allowDrop,
+            handleDragStart,
+            handleDrop
+        });
+
+        // 3. Theme Initialization
+        function initTheme() {
+            const saved = localStorage.getItem('ebg_pm_theme');
+            if (saved === 'dark') document.documentElement.classList.add('dark');
+        }
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('ebg_pm_theme', isDark ? 'dark' : 'light');
+            renderTrendChart();
+        }
+        initTheme();
+
+        // 4. Clean Local Persistence Helpers (Starts at [] / {})
+        function getLocalStore(key, fallback) {
+            try {
+                const raw = localStorage.getItem(`ebg_prod_${key}`);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch {
+                return fallback;
+            }
+        }
+        function setLocalStore(key, val) {
+            try {
+                localStorage.setItem(`ebg_prod_${key}`, JSON.stringify(val));
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        // 5. Authentication Bootstrap
+        async function initAuth() {
+            if (useCloudSync && auth) {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    }
+                } catch (err) {
+                    console.warn("Token auth skipped:", err.message);
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    currentUser = user;
+                    if (!user) {
+                        cleanupListeners();
+                        hideLoading();
+                        showAuthStep('login');
+                        return;
+                    }
+                    await loadAuthenticatedUserProfile(user);
+                });
+            } else {
+                document.getElementById('live-sync-label').textContent = 'Live local workspace';
+                const savedUser = getLocalStore('current_user', null);
+                const savedProfile = getLocalStore('current_profile', null);
+                if (savedUser && savedProfile && savedProfile.orgId) {
+                    currentUser = savedUser;
+                    currentUserProfile = savedProfile;
+                    currentOrgId = savedProfile.orgId;
+                    await enterOrganizationWorkspace(currentOrgId);
+                } else {
+                    hideLoading();
+                    showAuthStep('login');
+                }
+            }
+        }
+
+        async function loadAuthenticatedUserProfile(user) {
+            showLoading("Checking organization membership...");
+            try {
+                const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
+                const userSnap = await getDoc(userDocRef);
+
+                if (userSnap.exists() && userSnap.data().orgId) {
+                    currentUserProfile = userSnap.data();
+                    currentOrgId = currentUserProfile.orgId;
+                    await enterOrganizationWorkspace(currentOrgId);
+                } else {
+                    hideLoading();
+                    const prefillName = user.displayName || (user.email ? capitalizeWords(user.email.split('@')[0].replace(/[._-]/g, ' ')) : '');
+                    document.getElementById('ws-display-name').value = prefillName;
+                    showAuthStep('workspace');
+                }
+            } catch (error) {
+                hideLoading();
+                showAuthStep('workspace');
+            }
+        }
+
+        initAuth();
+
+        // 6. Auth Tab & Sign-In / Registration Handlers
+        function setAuthTab(mode) {
+            authTabMode = mode;
+            const btnSignIn = document.getElementById('tab-signin');
+            const btnRegister = document.getElementById('tab-register');
+            const extraFields = document.getElementById('register-extra-fields');
+            const submitBtnSpan = document.getElementById('email-auth-btn').querySelector('span');
+            const heading = document.getElementById('auth-heading');
+            const subheading = document.getElementById('auth-subheading');
+
+            if (mode === 'signin') {
+                btnSignIn.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                btnRegister.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                extraFields.classList.add('hidden');
+                submitBtnSpan.textContent = "Sign In";
+                heading.textContent = "Sign in to your workspace";
+                subheading.textContent = "Enter your email and password to access your organization.";
+            } else {
+                btnRegister.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                btnSignIn.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                extraFields.classList.remove('hidden');
+                submitBtnSpan.textContent = "Create Member Account";
+                heading.textContent = "Create your team login";
+                subheading.textContent = "Set up your user account, then create or join your organization.";
+            }
+        }
+
+        async function handleEmailAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const password = document.getElementById('auth-password').value;
+
+            let fullName = '';
+            let department = 'Performance Marketing';
+            let role = 'Member';
+
+            if (authTabMode === 'register') {
+                fullName = document.getElementById('reg-full-name').value.trim();
+                department = document.getElementById('reg-department').value;
+                role = document.getElementById('reg-role').value;
+                if (!fullName) {
+                    showToast("Please enter your full name.", "error");
+                    return;
+                }
+            }
+
+            showLoading(authTabMode === 'signin' ? "Signing in..." : "Creating your account...");
+
+            if (useCloudSync && auth) {
+                try {
+                    if (authTabMode === 'signin') {
+                        await signInWithEmailAndPassword(auth, email, password);
+                    } else {
+                        const cred = await createUserWithEmailAndPassword(auth, email, password);
+                        // Pre-populate step 2 fields
+                        document.getElementById('ws-display-name').value = fullName;
+                        document.getElementById('ws-department').value = department;
+                        document.getElementById('ws-role').value = role;
+                        currentUser = cred.user;
+                    }
+                    showToast("Authenticated successfully!", "success");
+                } catch (err) {
+                    hideLoading();
+                    showToast(formatAuthError(err.code || err.message), "error");
+                }
+            } else {
+                // Local user account registry
+                const usersMap = getLocalStore('registered_users', {});
+                if (authTabMode === 'signin') {
+                    const existing = usersMap[email];
+                    if (!existing) {
+                        hideLoading();
+                        showToast("No account found for this email. Click 'Create Account' to register.", "error");
+                        return;
+                    }
+                    if (existing.password !== password) {
+                        hideLoading();
+                        showToast("Incorrect password. Please try again.", "error");
+                        return;
+                    }
+                    currentUser = { uid: existing.uid, email: existing.email, displayName: existing.displayName };
+                    setLocalStore('current_user', currentUser);
+
+                    if (existing.profile && existing.profile.orgId) {
+                        currentUserProfile = existing.profile;
+                        currentOrgId = existing.profile.orgId;
+                        setLocalStore('current_profile', currentUserProfile);
+                        await enterOrganizationWorkspace(currentOrgId);
+                    } else {
+                        document.getElementById('ws-display-name').value = existing.displayName;
+                        document.getElementById('ws-department').value = existing.department || 'Performance Marketing';
+                        document.getElementById('ws-role').value = existing.role || 'Member';
+                        hideLoading();
+                        showAuthStep('workspace');
+                    }
+                } else {
+                    if (usersMap[email]) {
+                        hideLoading();
+                        showToast("An account with this email already exists. Please Sign In.", "error");
+                        return;
+                    }
+                    const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+                    usersMap[email] = {
+                        uid,
+                        email,
+                        password,
+                        displayName: fullName,
+                        department,
+                        role,
+                        profile: null
+                    };
+                    setLocalStore('registered_users', usersMap);
+
+                    currentUser = { uid, email, displayName: fullName };
+                    setLocalStore('current_user', currentUser);
+
+                    document.getElementById('ws-display-name').value = fullName;
+                    document.getElementById('ws-department').value = department;
+                    document.getElementById('ws-role').value = role;
+
+                    hideLoading();
+                    showAuthStep('workspace');
+                    showToast("Account created! Now create or join your organization.", "success");
+                }
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            if (useCloudSync && auth) {
+                showLoading("Connecting with Google...");
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                    showToast("Signed in with Google!", "success");
+                } catch (err) {
+                    hideLoading();
+                    showToast("Google sign-in unavailable here. Use Email & Password.", "warning");
+                }
+            } else {
+                showToast("Use 'Create Account' or 'Sign In' with your work email.", "info");
+            }
+        }
+
+        async function signOutUser() {
+            cleanupListeners();
+            currentUserProfile = null;
+            currentOrgId = null;
+            if (useCloudSync && auth) {
+                await signOut(auth);
+            } else {
+                localStorage.removeItem('ebg_prod_current_user');
+                localStorage.removeItem('ebg_prod_current_profile');
+                currentUser = null;
+                showAuthStep('login');
+            }
+            showToast("Signed out.", "info");
+        }
+
+        function openSwitchWorkspaceModal() {
+            cleanupListeners();
+            if (currentUserProfile) {
+                document.getElementById('ws-display-name').value = currentUserProfile.displayName || '';
+                document.getElementById('ws-department').value = currentUserProfile.department || 'Performance Marketing';
+                document.getElementById('ws-role').value = currentUserProfile.role || 'Admin';
+            }
+            showAuthStep('workspace');
+        }
+
+        // 7. Create Organization or Join via Invite Code
+        function setWorkspaceMode(mode) {
+            workspaceSetupMode = mode;
+            const btnCreate = document.getElementById('ws-mode-create');
+            const btnJoin = document.getElementById('ws-mode-join');
+            const createFields = document.getElementById('create-org-fields');
+            const joinFields = document.getElementById('join-org-fields');
+
+            if (mode === 'create') {
+                btnCreate.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                btnJoin.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                createFields.classList.remove('hidden');
+                joinFields.classList.add('hidden');
+            } else {
+                btnJoin.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                btnCreate.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                joinFields.classList.remove('hidden');
+                createFields.classList.add('hidden');
+            }
+        }
+
+        async function handleWorkspaceComplete(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const displayName = document.getElementById('ws-display-name').value.trim();
+            const department = document.getElementById('ws-department').value;
+            const role = document.getElementById('ws-role').value;
+
+            let orgId = '';
+            let orgName = '';
+
+            showLoading("Setting up organization workspace...");
+
+            try {
+                if (workspaceSetupMode === 'create') {
+                    orgName = document.getElementById('ws-org-name').value.trim();
+                    if (!orgName) {
+                        hideLoading();
+                        showToast("Please enter your Organization Name.", "error");
+                        return;
+                    }
+                    const prefix = orgName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() || 'ORG';
+                    const randCode = Math.floor(1000 + Math.random() * 9000);
+                    orgId = `${prefix}-${randCode}`;
+
+                    if (useCloudSync && db) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'organizations', orgId), {
+                            orgId,
+                            orgName,
+                            createdBy: currentUser.uid,
+                            createdAt: new Date().toISOString()
+                        });
+                    } else {
+                        const orgs = getLocalStore('organizations', {});
+                        orgs[orgId] = { orgId, orgName, createdBy: currentUser.uid, createdAt: new Date().toISOString() };
+                        setLocalStore('organizations', orgs);
+                    }
+                } else {
+                    orgId = document.getElementById('ws-invite-code').value.trim().toUpperCase();
+                    if (!orgId) {
+                        hideLoading();
+                        showToast("Please enter the Organization Invite Code.", "error");
+                        return;
+                    }
+
+                    if (useCloudSync && db) {
+                        const orgSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'organizations', orgId));
+                        if (!orgSnap.exists()) {
+                            hideLoading();
+                            showToast(`Organization code "${orgId}" was not found. Check the code or create a new organization.`, "error");
+                            return;
+                        }
+                        orgName = orgSnap.data().orgName;
+                    } else {
+                        const orgs = getLocalStore('organizations', {});
+                        if (!orgs[orgId]) {
+                            hideLoading();
+                            showToast(`Organization code "${orgId}" not found. Create an organization first or verify the code.`, "error");
+                            return;
+                        }
+                        orgName = orgs[orgId].orgName;
+                    }
+                }
+
+                const profileData = {
+                    uid: currentUser.uid,
+                    displayName,
+                    email: currentUser.email || '',
+                    role,
+                    department,
+                    orgId,
+                    orgName,
+                    status: 'online',
+                    joinedAt: new Date().toISOString()
+                };
+
+                if (useCloudSync && db) {
+                    await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main'), profileData);
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', `${orgId}_${currentUser.uid}`), profileData);
+                } else {
+                    setLocalStore('current_profile', profileData);
+                    const usersMap = getLocalStore('registered_users', {});
+                    if (currentUser.email && usersMap[currentUser.email]) {
+                        usersMap[currentUser.email].profile = profileData;
+                        setLocalStore('registered_users', usersMap);
+                    }
+                    const members = getLocalStore('org_members', []);
+                    const idx = members.findIndex(m => m.uid === profileData.uid && m.orgId === orgId);
+                    if (idx >= 0) members[idx] = profileData;
+                    else members.push(profileData);
+                    setLocalStore('org_members', members);
+                }
+
+                currentUserProfile = profileData;
+                currentOrgId = orgId;
+
+                await enterOrganizationWorkspace(orgId);
+                showToast(`Welcome to ${orgName}! Invite Code: ${orgId}`, "success");
+            } catch (err) {
+                hideLoading();
+                showToast("Workspace setup error: " + err.message, "error");
+            }
+        }
+
+        // 8. Enter Workspace & Synchronize Real-Time Listeners
+        async function enterOrganizationWorkspace(orgId) {
+            cleanupListeners();
+
+            document.getElementById('header-org-subtitle').textContent = `${currentUserProfile.orgName} · Task Assigner`;
+            document.getElementById('overview-org-label').textContent = `${currentUserProfile.orgName} (${orgId})`;
+            document.getElementById('header-org-code').textContent = orgId;
+            document.getElementById('menu-org-code').textContent = orgId;
+            document.getElementById('empty-state-code').textContent = orgId;
+
+            document.getElementById('header-user-name').textContent = currentUserProfile.displayName;
+            document.getElementById('header-user-role').textContent = currentUserProfile.role;
+            document.getElementById('header-user-avatar').textContent = getInitials(currentUserProfile.displayName);
+            document.getElementById('menu-user-name').textContent = currentUserProfile.displayName;
+            document.getElementById('menu-user-dept').textContent = `${currentUserProfile.department} · ${currentUserProfile.role}`;
+
+            if (useCloudSync && db) {
+                const memberDocId = `${orgId}_${currentUser.uid}`;
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', memberDocId), {
+                    ...currentUserProfile,
+                    status: 'online',
+                    lastActive: new Date().toISOString()
+                }, { merge: true }).catch(() => {});
+
+                unsubMembers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'org_members'), (snap) => {
+                    if (!currentUser) return;
+                    const list = [];
+                    snap.forEach(d => {
+                        if (d.data().orgId === currentOrgId) list.push(d.data());
+                    });
+                    orgMembers = list;
+                    syncAfterDataChange();
+                }, (err) => console.error(err));
+
+                unsubTasks = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'org_tasks'), (snap) => {
+                    if (!currentUser) return;
+                    const list = [];
+                    snap.forEach(d => {
+                        if (d.data().orgId === currentOrgId) list.push({ id: d.id, ...d.data() });
+                    });
+                    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                    orgTasks = list;
+                    syncAfterDataChange();
+                }, (err) => console.error(err));
+            } else {
+                refreshLocalWorkspaceData();
+            }
+
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            hideLoading();
+            lucide.createIcons();
+        }
+
+        function refreshLocalWorkspaceData() {
+            orgMembers = getLocalStore('org_members', []).filter(m => m.orgId === currentOrgId);
+            orgTasks = getLocalStore('org_tasks', []).filter(t => t.orgId === currentOrgId);
+            orgTasks.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            syncAfterDataChange();
+        }
+
+        function syncAfterDataChange() {
+            document.getElementById('btn-team-count').textContent = orgMembers.length;
+            populateMemberDropdowns();
+            renderAll();
+
+            if (activeDetailTaskId) {
+                const current = orgTasks.find(t => t.id === activeDetailTaskId);
+                if (current) renderTaskDetailDrawerContent(current);
+                else closeTaskDetailDrawer();
+            }
+        }
+
+        function cleanupListeners() {
+            if (unsubMembers) { unsubMembers(); unsubMembers = null; }
+            if (unsubTasks) { unsubTasks(); unsubTasks = null; }
+        }
+
+        // 9. Filtering & Rendering Pipeline
+        function getFilteredTasks() {
+            const search = document.getElementById('search-input').value.toLowerCase().trim();
+            const dept = document.getElementById('header-dept-filter').value;
+            const memberId = document.getElementById('header-member-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+            const timeframe = document.getElementById('timeframe-filter').value;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            const nextWeekStr = nextWeekDate.toISOString().split('T')[0];
+
+            return orgTasks.filter(t => {
+                if (dept !== 'all' && t.tag !== dept) return false;
+                if (memberId !== 'all' && t.assigneeId !== memberId) return false;
+                if (priority !== 'all' && t.priority !== priority) return false;
+                if (filterOnlyMine && t.assigneeId !== currentUser.uid) return false;
+                if (filterOnlyUrgent && t.priority !== 'Urgent' && !isTaskOverdue(t)) return false;
+
+                if (timeframe === 'overdue' && !isTaskOverdue(t)) return false;
+                if (timeframe === 'week' && (!t.dueDate || t.dueDate < todayStr || t.dueDate > nextWeekStr)) return false;
+
+                if (search) {
+                    const hay = `${t.code || ''} ${t.title || ''} ${t.description || ''} ${t.assigneeName || ''} ${t.tag || ''}`.toLowerCase();
+                    if (!hay.includes(search)) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderAll() {
+            const filtered = getFilteredTasks();
+            updateScopeAndBanner(filtered);
+            updateKpiStrip(filtered);
+            renderTrendChart(filtered);
+            renderKanbanAndTable(filtered);
+            renderTeamDirectory();
+
+            const emptyCallout = document.getElementById('empty-workspace-callout');
+            if (orgTasks.length === 0 && activeMainTab !== 'team') {
+                emptyCallout.classList.remove('hidden');
+            } else {
+                emptyCallout.classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        function updateScopeAndBanner(filtered) {
+            const dept = document.getElementById('header-dept-filter').value;
+            const deptText = dept === 'all' ? 'All listed departments' : dept;
+            document.getElementById('scope-summary-heading').textContent = `${deptText} · ${currentUserProfile?.orgName || 'Workspace'} (${filtered.length} tasks)`;
+
+            const overdueCount = filtered.filter(t => isTaskOverdue(t)).length;
+            const alertText = document.getElementById('ops-alert-text');
+            const alertBtn = document.getElementById('ops-alert-btn');
+
+            if (overdueCount > 0) {
+                alertText.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i><span><strong>${overdueCount} task${overdueCount > 1 ? 's' : ''}</strong> ${overdueCount > 1 ? 'are' : 'is'} past due date and require immediate team review or reassignment.</span>`;
+                alertBtn.textContent = 'Review Overdue';
+                alertBtn.onclick = () => {
+                    document.getElementById('timeframe-filter').value = 'overdue';
+                    renderAll();
+                };
+            } else if (orgMembers.length <= 1) {
+                alertText.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i><span>You are currently the only member in <strong>${escapeHtml(currentUserProfile?.orgName || '')}</strong>. Share invite code <strong class="font-mono">${currentOrgId}</strong> so your team can create their logins.</span>`;
+                alertBtn.textContent = 'Invite Team';
+                alertBtn.onclick = openInviteModal;
+            } else {
+                alertText.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i><span><strong>${orgMembers.length} active team members</strong> connected. All deliverables are within SLA schedules.</span>`;
+                alertBtn.textContent = 'Assign Task';
+                alertBtn.onclick = openCreateTaskModal;
+            }
+        }
+
+        // 10. 7-Column KPI Strip & Interactive Monochrome SVG Trend Chart
+        function updateKpiStrip(tasks) {
+            const total = tasks.length;
+            const todo = tasks.filter(t => t.status === 'To Do').length;
+            const inprog = tasks.filter(t => t.status === 'In Progress').length;
+            const review = tasks.filter(t => t.status === 'In Review').length;
+            const done = tasks.filter(t => t.status === 'Done').length;
+            const overdue = tasks.filter(t => isTaskOverdue(t)).length;
+            const slaPct = total > 0 ? Math.max(0, Math.round(((total - overdue) / total) * 100)) : 100;
+
+            document.getElementById('kpi-val-total').textContent = total;
+            document.getElementById('kpi-val-todo').textContent = todo;
+            document.getElementById('kpi-val-inprogress').textContent = inprog;
+            document.getElementById('kpi-val-review').textContent = review;
+            document.getElementById('kpi-val-done').textContent = done;
+            document.getElementById('kpi-val-overdue').textContent = overdue;
+            document.getElementById('kpi-val-sla').textContent = `${slaPct}%`;
+        }
+
+        function selectKpiMetric(metric) {
+            selectedKpiMetric = metric;
+            ['total', 'todo', 'inprogress', 'review', 'done', 'overdue', 'sla'].forEach(m => {
+                const el = document.getElementById(`kpi-seg-${m}`);
+                if (el) el.classList.toggle('active', m === metric);
+            });
+            renderTrendChart(getFilteredTasks());
+        }
+
+        function renderTrendChart(tasks = getFilteredTasks()) {
+            const svg = document.getElementById('velocity-svg-chart');
+            if (!svg) return;
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const strokeColor = isDark ? '#FAFAFA' : '#111113';
+            const fillTopColor = isDark ? 'rgba(250, 250, 250, 0.14)' : 'rgba(17, 17, 19, 0.09)';
+
+            // Build 14-day window labels
+            const days = [];
+            const now = new Date();
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(d.getDate() - i);
+                days.push({
+                    iso: d.toISOString().split('T')[0],
+                    label: d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+                    val: 0
+                });
+            }
+
+            const metricNames = {
+                total: 'Total Tasks',
+                todo: 'To Do Queue',
+                inprogress: 'In Progress Tasks',
+                review: 'In Review Tasks',
+                done: 'Completed Tasks',
+                overdue: 'Overdue Tasks',
+                sla: 'On-Time SLA %'
+            };
+            document.getElementById('chart-legend-label').textContent = `${metricNames[selectedKpiMetric]} · Last 14 Days`;
+
+            // Map real tasks to the 14-day timeline
+            if (tasks.length === 0) {
+                days.forEach(d => {
+                    d.val = selectedKpiMetric === 'sla' ? 100 : 0;
+                });
+            } else {
+                days.forEach((day, idx) => {
+                    const createdUpToDay = tasks.filter(t => (t.createdAt || '').slice(0, 10) <= day.iso);
+                    const subset = createdUpToDay.length > 0 ? createdUpToDay : (idx === days.length - 1 ? tasks : []);
+
+                    if (selectedKpiMetric === 'total') {
+                        day.val = subset.length;
+                    } else if (selectedKpiMetric === 'todo') {
+                        day.val = subset.filter(t => t.status === 'To Do').length;
+                    } else if (selectedKpiMetric === 'inprogress') {
+                        day.val = subset.filter(t => t.status === 'In Progress').length;
+                    } else if (selectedKpiMetric === 'review') {
+                        day.val = subset.filter(t => t.status === 'In Review').length;
+                    } else if (selectedKpiMetric === 'done') {
+                        day.val = subset.filter(t => t.status === 'Done').length;
+                    } else if (selectedKpiMetric === 'overdue') {
+                        day.val = subset.filter(t => t.dueDate && t.dueDate < day.iso && t.status !== 'Done').length;
+                    } else if (selectedKpiMetric === 'sla') {
+                        const ov = subset.filter(t => t.dueDate && t.dueDate < day.iso && t.status !== 'Done').length;
+                        day.val = subset.length > 0 ? Math.round(((subset.length - ov) / subset.length) * 100) : 100;
+                    }
+                });
+            }
+
+            const width = 900;
+            const height = 190;
+            const padLeft = 10;
+            const padRight = 38;
+            const padTop = 14;
+            const padBottom = 26;
+            const plotW = width - padLeft - padRight;
+            const plotH = height - padTop - padBottom;
+
+            const rawMax = Math.max(...days.map(d => d.val), selectedKpiMetric === 'sla' ? 100 : 4);
+            const yMax = selectedKpiMetric === 'sla' ? 100 : Math.ceil(rawMax / 4) * 4;
+
+            const gridColor = isDark ? '#27272A' : '#E4E4E7';
+            const textColor = isDark ? '#71717A' : '#71717A';
+
+            // Horizontal Gridlines & Right-Aligned Y-Axis Labels
+            let gridSvg = '';
+            const steps = 4;
+            for (let s = 0; s <= steps; s++) {
+                const ratio = s / steps;
+                const y = padTop + plotH - (ratio * plotH);
+                const tickVal = Math.round(ratio * yMax);
+                gridSvg += `
+                    <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="${gridColor}" stroke-width="1" />
+                    <text x="${width - padRight + 8}" y="${y + 3.5}" fill="${textColor}" font-size="10" font-family="Inter, sans-serif">${tickVal}${selectedKpiMetric === 'sla' ? '%' : ''}</text>
+                `;
+            }
+
+            // Compute Coordinates
+            const points = days.map((d, i) => {
+                const x = padLeft + (i / (days.length - 1)) * plotW;
+                const y = padTop + plotH - ((d.val / yMax) * plotH);
+                return { x, y, ...d };
+            });
+
+            const polylineStr = points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+            const areaStr = `${points[0].x.toFixed(1)},${padTop + plotH} ${polylineStr} ${points[points.length - 1].x.toFixed(1)},${padTop + plotH}`;
+
+            // X-Axis Labels (Every 2 days)
+            let xLabelsSvg = '';
+            points.forEach((p, i) => {
+                if (i % 2 === 0 || i === points.length - 1) {
+                    xLabelsSvg += `<text x="${p.x}" y="${height - 5}" text-anchor="middle" fill="${textColor}" font-size="10" font-family="Inter, sans-serif">${p.label}</text>`;
+                }
+            });
+
+            // Interactive Hover Points
+            let dotsSvg = '';
+            points.forEach(p => {
+                dotsSvg += `
+                    <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${strokeColor}" class="opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                        onmouseenter="showChartTooltip(event, '${p.label}', '${p.val}${selectedKpiMetric === 'sla' ? '%' : ''}')"
+                        onmouseleave="hideChartTooltip()" />
+                    <circle cx="${p.x}" cy="${p.y}" r="12" fill="transparent" class="cursor-pointer"
+                        onmouseenter="showChartTooltip(event, '${p.label}', '${p.val}${selectedKpiMetric === 'sla' ? '%' : ''}')"
+                        onmouseleave="hideChartTooltip()" />
+                `;
+            });
+
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="ebgObsidianAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${fillTopColor}" />
+                        <stop offset="100%" stop-color="rgba(17, 17, 19, 0.0)" />
+                    </linearGradient>
+                </defs>
+                ${gridSvg}
+                <polygon points="${areaStr}" fill="url(#ebgObsidianAreaGrad)" />
+                <polyline fill="none" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="${polylineStr}" />
+                ${xLabelsSvg}
+                ${dotsSvg}
+            `;
+        }
+
+        window.showChartTooltip = function(e, label, val) {
+            const tip = document.getElementById('chart-tooltip');
+            const wrap = document.getElementById('chart-wrapper').getBoundingClientRect();
+            tip.textContent = `${label}: ${val}`;
+            tip.style.left = `${Math.min(wrap.width - 110, Math.max(8, e.clientX - wrap.left - 40))}px`;
+            tip.style.top = `${Math.max(4, e.clientY - wrap.top - 34)}px`;
+            tip.classList.remove('hidden');
+        };
+        window.hideChartTooltip = function() {
+            document.getElementById('chart-tooltip').classList.add('hidden');
+        };
+
+        // 11. Render Kanban Board & Structured Table
+        function renderKanbanAndTable(filtered) {
+            const cols = {
+                'To Do': document.getElementById('col-todo'),
+                'In Progress': document.getElementById('col-inprogress'),
+                'In Review': document.getElementById('col-review'),
+                'Done': document.getElementById('col-done')
+            };
+            Object.values(cols).forEach(el => el.innerHTML = '');
+            const counts = { 'To Do': 0, 'In Progress': 0, 'In Review': 0, 'Done': 0 };
+
+            filtered.forEach(task => {
+                const st = cols[task.status] ? task.status : 'To Do';
+                counts[st]++;
+                cols[st].appendChild(createKanbanCard(task));
+            });
+
+            document.getElementById('col-count-todo').textContent = counts['To Do'];
+            document.getElementById('col-count-inprogress').textContent = counts['In Progress'];
+            document.getElementById('col-count-review').textContent = counts['In Review'];
+            document.getElementById('col-count-done').textContent = counts['Done'];
+
+            Object.entries(cols).forEach(([status, container]) => {
+                if (counts[status] === 0) {
+                    container.innerHTML = `<div class="border border-dashed border-[#E4E4E7] dark:border-[#27272A] rounded-lg p-5 text-center text-[11px] text-[#71717A]">No tasks in ${status}</div>`;
+                }
+            });
+
+            // Table rows
+            const tbody = document.getElementById('task-table-body');
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-xs text-[#71717A]">No tasks match your current filters.</td></tr>`;
+            } else {
+                filtered.forEach(task => tbody.appendChild(createTableRow(task)));
+            }
+        }
+
+        function createKanbanCard(task) {
+            const card = document.createElement('div');
+            card.className = "bg-[#F8F9FA] dark:bg-[#18181B] p-3.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#111113] dark:hover:border-white hover:bg-white dark:hover:bg-[#1f1f23] transition cursor-pointer group";
+            card.draggable = true;
+            card.ondragstart = (e) => handleDragStart(e, task.id);
+            card.onclick = () => openTaskDetail(task.id);
+
+            const overdue = isTaskOverdue(task);
+            const subtasks = task.subtasks || [];
+            const doneSub = subtasks.filter(s => s.done).length;
+            const commentsCount = (task.comments || []).length;
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <span class="font-mono text-[10px] font-semibold text-[#71717A]">${escapeHtml(task.code || 'EBG')} &middot; ${escapeHtml(task.tag || 'General')}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getPriorityBadgeClass(task.priority)}">${escapeHtml(task.priority)}</span>
+                </div>
+                <h4 class="text-xs sm:text-[13px] font-semibold text-[#18181B] dark:text-white group-hover:underline leading-snug mb-1.5">${escapeHtml(task.title)}</h4>
+                ${task.description ? `<p class="text-[11px] text-[#71717A] dark:text-zinc-400 line-clamp-2 mb-2.5">${escapeHtml(task.description)}</p>` : ''}
+
+                ${subtasks.length > 0 ? `
+                    <div class="mb-2.5">
+                        <div class="flex justify-between text-[10px] text-[#71717A] mb-1">
+                            <span>Checklist</span>
+                            <span>${doneSub}/${subtasks.length}</span>
+                        </div>
+                        <div class="w-full h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-[#111113] dark:bg-white rounded-full" style="width: ${(doneSub / subtasks.length) * 100}%"></div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="pt-2 border-t border-zinc-200/70 dark:border-zinc-700/70 flex items-center justify-between text-[11px]">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <div class="w-5 h-5 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[9px] flex items-center justify-center shrink-0">
+                            ${getInitials(task.assigneeName)}
+                        </div>
+                        <span class="text-[#18181B] dark:text-zinc-300 font-medium truncate max-w-[100px]">${escapeHtml(task.assigneeName)}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 text-[#71717A]">
+                        ${commentsCount > 0 ? `<span class="flex items-center gap-0.5"><i data-lucide="message-square" class="w-3 h-3"></i>${commentsCount}</span>` : ''}
+                        <span class="flex items-center gap-1 ${overdue ? 'text-rose-600 font-semibold' : ''}">
+                            <i data-lucide="calendar" class="w-3 h-3"></i>${formatShortDate(task.dueDate)}
+                        </span>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function createTableRow(task) {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-[#F8F9FA] dark:hover:bg-[#18181B] transition cursor-pointer";
+            tr.onclick = () => openTaskDetail(task.id);
+
+            const overdue = isTaskOverdue(task);
+            const subtasks = task.subtasks || [];
+            const doneSub = subtasks.filter(s => s.done).length;
+            const pct = subtasks.length > 0 ? Math.round((doneSub / subtasks.length) * 100) : (task.status === 'Done' ? 100 : 0);
+
+            tr.innerHTML = `
+                <td class="py-3 px-4 font-mono text-[11px] font-semibold text-[#111113] dark:text-white">${escapeHtml(task.code || 'EBG')}</td>
+                <td class="py-3 px-4">
+                    <div class="font-semibold text-[#18181B] dark:text-white">${escapeHtml(task.title)}</div>
+                    <div class="text-[11px] text-[#71717A] mt-0.5">${escapeHtml(task.tag || 'General')}</div>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[10px] flex items-center justify-center">
+                            ${getInitials(task.assigneeName)}
+                        </div>
+                        <span class="font-medium text-[#18181B] dark:text-zinc-200">${escapeHtml(task.assigneeName)}</span>
+                    </div>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getPriorityBadgeClass(task.priority)}">${escapeHtml(task.priority)}</span>
+                </td>
+                <td class="py-3 px-4" onclick="event.stopPropagation()">
+                    <select onchange="quickUpdateStatusFromTable('${task.id}', this.value)" class="px-2.5 py-1 rounded-lg text-xs font-medium border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[#18181B] dark:text-zinc-200 outline-none">
+                        <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
+                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="In Review" ${task.status === 'In Review' ? 'selected' : ''}>In Review</option>
+                        <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+                    </select>
+                </td>
+                <td class="py-3 px-4 w-28">
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-[#111113] dark:bg-white rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="text-[11px] text-[#71717A]">${pct}%</span>
+                    </div>
+                </td>
+                <td class="py-3 px-4 ${overdue ? 'text-rose-600 font-semibold' : 'text-[#71717A]'}">
+                    ${formatShortDate(task.dueDate)}
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <button class="px-2.5 py-1 rounded-lg bg-[#F4F4F5] dark:bg-zinc-800 text-[#18181B] dark:text-zinc-200 font-semibold text-[11px] hover:bg-zinc-200 transition">Open</button>
+                </td>
+            `;
+            return tr;
+        }
+
+        window.quickUpdateStatusFromTable = async function(taskId, newStatus) {
+            await patchTaskById(taskId, { status: newStatus });
+            showToast(`Status updated to ${newStatus}`, "success");
+        };
+
+        // Drag and Drop
+        function allowDrop(e) { e.preventDefault(); }
+        function handleDragStart(e, taskId) { e.dataTransfer.setData("text/plain", taskId); }
+        async function handleDrop(e, newStatus) {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData("text/plain");
+            if (!taskId || !currentUser) return;
+            const task = orgTasks.find(t => t.id === taskId);
+            if (!task || task.status === newStatus) return;
+            await patchTaskById(taskId, { status: newStatus });
+            showToast(`Moved to ${newStatus}`, "success");
+        }
+
+        // 12. Team Directory & Workload
+        function renderTeamDirectory() {
+            const grid = document.getElementById('team-grid');
+            grid.innerHTML = '';
+
+            if (orgMembers.length === 0) {
+                grid.innerHTML = `<div class="col-span-full bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-8 text-center text-xs text-[#71717A]">No team members registered yet.</div>`;
+                return;
+            }
+
+            orgMembers.forEach(member => {
+                const memberTasks = orgTasks.filter(t => t.assigneeId === member.uid);
+                const activeCount = memberTasks.filter(t => t.status !== 'Done').length;
+                const doneCount = memberTasks.filter(t => t.status === 'Done').length;
+                const pct = Math.min(100, Math.round((activeCount / 5) * 100));
+
+                let barColor = 'bg-[#1E8E3E]';
+                if (activeCount >= 5) barColor = 'bg-rose-600';
+                else if (activeCount >= 3) barColor = 'bg-amber-500';
+
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-[#111113] p-5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-xs flex items-center justify-center shrink-0">
+                                    ${getInitials(member.displayName)}
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-1.5">
+                                        ${escapeHtml(member.displayName)}
+                                        ${member.uid === currentUser.uid ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-[#E6F4EA] text-[#137333] font-semibold">You</span>' : ''}
+                                    </h3>
+                                    <p class="text-[11px] text-[#71717A]">${escapeHtml(member.email || '')}</p>
+                                </div>
+                            </div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#F4F4F5] dark:bg-zinc-800 text-[#18181B] dark:text-zinc-300 border border-[#E4E4E7] dark:border-zinc-700">${escapeHtml(member.role)}</span>
+                        </div>
+
+                        <div class="text-xs text-[#71717A] mb-4">
+                            <span class="font-medium text-[#18181B] dark:text-zinc-200">${escapeHtml(member.department || 'General')}</span> &middot; ${activeCount} Active &middot; ${doneCount} Completed
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[11px]">
+                                <span class="text-[#71717A]">Current Workload</span>
+                                <span class="font-semibold text-[#18181B] dark:text-zinc-200">${activeCount} / 5 active</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-full ${barColor} rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                        <button onclick="filterByMember('${member.uid}')" class="text-xs font-semibold text-[#71717A] hover:text-[#111113] dark:hover:text-white transition">View Tasks (${memberTasks.length})</button>
+                        <button onclick="openCreateTaskForMember('${member.uid}')" class="px-3 py-1.5 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 text-xs font-semibold transition flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        window.filterByMember = function(uid) {
+            document.getElementById('header-member-filter').value = uid;
+            switchMainTab('board');
+            renderAll();
+        };
+
+        window.openCreateTaskForMember = function(uid) {
+            openCreateTaskModal();
+            document.getElementById('task-assignee').value = uid;
+        };
+
+        // 13. Member Dropdowns & Header Filter Sync
+        function populateMemberDropdowns() {
+            const headerMemberSel = document.getElementById('header-member-filter');
+            const createAssigneeSel = document.getElementById('task-assignee');
+            const detailAssigneeSel = document.getElementById('detail-assignee-select');
+
+            const prevHeaderVal = headerMemberSel.value;
+
+            headerMemberSel.innerHTML = `<option value="all">All members (${orgMembers.length}) · ${orgTasks.length} tasks</option>`;
+            createAssigneeSel.innerHTML = '';
+            detailAssigneeSel.innerHTML = '';
+
+            orgMembers.forEach(m => {
+                const count = orgTasks.filter(t => t.assigneeId === m.uid).length;
+                headerMemberSel.add(new Option(`${m.displayName} · ${count} tasks`, m.uid));
+                createAssigneeSel.add(new Option(`${m.displayName} (${m.department})`, m.uid));
+                detailAssigneeSel.add(new Option(m.displayName, m.uid));
+            });
+
+            if ([...headerMemberSel.options].some(o => o.value === prevHeaderVal)) {
+                headerMemberSel.value = prevHeaderVal;
+            }
+        }
+
+        function syncHeaderFilters() { renderAll(); }
+        function syncHeaderMemberFilter() { renderAll(); }
+
+        function toggleMyTasksFilter() {
+            filterOnlyMine = !filterOnlyMine;
+            const pill = document.getElementById('pill-filter-mine');
+            if (filterOnlyMine) {
+                pill.className = "px-3 py-1.5 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] border border-[#111113] dark:border-white text-xs font-semibold transition";
+            } else {
+                pill.className = "px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition";
+            }
+            renderAll();
+        }
+
+        function toggleUrgentFilter() {
+            filterOnlyUrgent = !filterOnlyUrgent;
+            renderAll();
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('header-dept-filter').value = 'all';
+            document.getElementById('header-member-filter').value = 'all';
+            document.getElementById('priority-filter').value = 'all';
+            document.getElementById('timeframe-filter').value = 'all';
+            filterOnlyMine = false;
+            filterOnlyUrgent = false;
+            document.getElementById('pill-filter-mine').className = "px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition";
+            renderAll();
+        }
+
+        // 14. Create Task Modal & Submission
+        function openCreateTaskModal() {
+            draftSubtasks = [];
+            renderDraftSubtasks();
+            document.getElementById('create-task-form').reset();
+
+            const due = new Date();
+            due.setDate(due.getDate() + 3);
+            document.getElementById('task-due-date').value = due.toISOString().split('T')[0];
+
+            if (currentUser) {
+                document.getElementById('task-assignee').value = currentUser.uid;
+            }
+            document.getElementById('create-task-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeCreateTaskModal() {
+            document.getElementById('create-task-modal').classList.add('hidden');
+        }
+
+        function addDraftSubtask() {
+            const input = document.getElementById('new-subtask-input');
+            const text = input.value.trim();
+            if (!text) return;
+            draftSubtasks.push({ id: 'sub_' + Date.now(), text, done: false });
+            input.value = '';
+            renderDraftSubtasks();
+        }
+
+        function removeDraftSubtask(idx) {
+            draftSubtasks.splice(idx, 1);
+            renderDraftSubtasks();
+        }
+
+        function renderDraftSubtasks() {
+            const list = document.getElementById('draft-subtasks-list');
+            list.innerHTML = '';
+            draftSubtasks.forEach((s, i) => {
+                const li = document.createElement('li');
+                li.className = "flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#F8F9FA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] text-xs";
+                li.innerHTML = `
+                    <span>${escapeHtml(s.text)}</span>
+                    <button type="button" onclick="removeDraftSubtask(${i})" class="text-[#71717A] hover:text-rose-600"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                `;
+                list.appendChild(li);
+            });
+            lucide.createIcons();
+        }
+
+        async function handleCreateTask(e) {
+            e.preventDefault();
+            if (!currentUser || !currentOrgId) return;
+
+            const title = document.getElementById('task-title').value.trim();
+            const description = document.getElementById('task-desc').value.trim();
+            const assigneeId = document.getElementById('task-assignee').value;
+            const priority = document.getElementById('task-priority').value;
+            const dueDate = document.getElementById('task-due-date').value;
+            const tag = document.getElementById('task-tag').value;
+
+            const assignee = orgMembers.find(m => m.uid === assigneeId);
+            const assigneeName = assignee ? assignee.displayName : currentUserProfile.displayName;
+            const nextSeq = String(orgTasks.length + 1).padStart(3, '0');
+
+            const newTask = {
+                code: `EBG-${nextSeq}`,
+                orgId: currentOrgId,
+                title,
+                description,
+                assigneeId,
+                assigneeName,
+                createdBy: currentUser.uid,
+                createdByName: currentUserProfile.displayName,
+                priority,
+                status: 'To Do',
+                tag,
+                dueDate,
+                subtasks: draftSubtasks,
+                comments: [],
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                if (useCloudSync && db) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'org_tasks'), newTask);
+                } else {
+                    const all = getLocalStore('org_tasks', []);
+                    all.push({ id: 'tsk_' + Date.now(), ...newTask });
+                    setLocalStore('org_tasks', all);
+                    refreshLocalWorkspaceData();
+                }
+                closeCreateTaskModal();
+                showToast(`Task ${newTask.code} assigned to ${assigneeName}`, "success");
+            } catch (err) {
+                showToast("Error assigning task: " + err.message, "error");
+            }
+        }
+
+        // 15. Task Detail Slide-Over Drawer
+        function openTaskDetail(taskId) {
+            const task = orgTasks.find(t => t.id === taskId);
+            if (!task) return;
+            activeDetailTaskId = taskId;
+            renderTaskDetailDrawerContent(task);
+            document.getElementById('task-detail-drawer').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeTaskDetailDrawer() {
+            activeDetailTaskId = null;
+            document.getElementById('task-detail-drawer').classList.add('hidden');
+        }
+
+        function renderTaskDetailDrawerContent(task) {
+            document.getElementById('detail-code').textContent = task.code || 'EBG-001';
+            document.getElementById('detail-tag').textContent = task.tag || 'General';
+            const prioEl = document.getElementById('detail-priority');
+            prioEl.textContent = task.priority;
+            prioEl.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold ${getPriorityBadgeClass(task.priority)}`;
+
+            document.getElementById('detail-title').textContent = task.title;
+            document.getElementById('detail-meta').textContent = `Assigned by ${task.createdByName || 'Manager'} • Due ${formatShortDate(task.dueDate)}`;
+            document.getElementById('detail-desc').textContent = task.description || 'No description provided.';
+
+            document.getElementById('detail-status-select').value = task.status;
+            document.getElementById('detail-assignee-select').value = task.assigneeId;
+            document.getElementById('detail-priority-select').value = task.priority;
+            document.getElementById('detail-due-input').value = task.dueDate || '';
+
+            const subtasks = task.subtasks || [];
+            const doneCount = subtasks.filter(s => s.done).length;
+            const pct = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : 0;
+            document.getElementById('detail-subtask-progress').textContent = `${doneCount}/${subtasks.length} (${pct}%)`;
+            document.getElementById('detail-subtask-bar').style.width = `${pct}%`;
+
+            const subList = document.getElementById('detail-subtasks-list');
+            subList.innerHTML = '';
+            if (subtasks.length === 0) {
+                subList.innerHTML = `<p class="text-xs text-[#71717A] italic">No checklist subtasks yet.</p>`;
+            } else {
+                subtasks.forEach((s, idx) => {
+                    const row = document.createElement('label');
+                    row.className = "flex items-center gap-2.5 p-2.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] hover:bg-zinc-50 dark:hover:bg-zinc-800/60 cursor-pointer transition";
+                    row.innerHTML = `
+                        <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleSubtaskCheck(${idx})" class="w-4 h-4 rounded accent-[#111113]">
+                        <span class="text-xs ${s.done ? 'line-through text-[#71717A]' : 'text-[#18181B] dark:text-zinc-200 font-medium'}">${escapeHtml(s.text)}</span>
+                    `;
+                    subList.appendChild(row);
+                });
+            }
+
+            const comments = task.comments || [];
+            const commentsList = document.getElementById('detail-comments-list');
+            commentsList.innerHTML = '';
+            if (comments.length === 0) {
+                commentsList.innerHTML = `<p class="text-xs text-[#71717A] text-center py-4">No comments yet.</p>`;
+            } else {
+                comments.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = "p-3 rounded-lg bg-[#F8F9FA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A]";
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-semibold text-[#18181B] dark:text-white">${escapeHtml(c.author)}</span>
+                            <span class="text-[10px] text-[#71717A]">${formatTimeAgo(c.timestamp)}</span>
+                        </div>
+                        <p class="text-xs text-[#52525B] dark:text-zinc-300">${escapeHtml(c.text)}</p>
+                    `;
+                    commentsList.appendChild(item);
+                });
+            }
+        }
+
+        async function patchTaskById(taskId, patch) {
+            if (useCloudSync && db) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_tasks', taskId), patch);
+            } else {
+                const all = getLocalStore('org_tasks', []);
+                const idx = all.findIndex(t => t.id === taskId);
+                if (idx >= 0) {
+                    all[idx] = { ...all[idx], ...patch };
+                    setLocalStore('org_tasks', all);
+                    refreshLocalWorkspaceData();
+                }
+            }
+        }
+
+        async function updateTaskFieldFromDrawer(field, value) {
+            if (!activeDetailTaskId) return;
+            await patchTaskById(activeDetailTaskId, { [field]: value });
+            showToast(`Updated ${field}`, "success");
+        }
+
+        async function updateTaskAssigneeFromDrawer(newUid) {
+            if (!activeDetailTaskId) return;
+            const member = orgMembers.find(m => m.uid === newUid);
+            if (!member) return;
+            await patchTaskById(activeDetailTaskId, { assigneeId: member.uid, assigneeName: member.displayName });
+            showToast(`Reassigned to ${member.displayName}`, "success");
+        }
+
+        async function toggleSubtaskCheck(idx) {
+            if (!activeDetailTaskId) return;
+            const task = orgTasks.find(t => t.id === activeDetailTaskId);
+            if (!task || !task.subtasks) return;
+            const updated = [...task.subtasks];
+            updated[idx] = { ...updated[idx], done: !updated[idx].done };
+            await patchTaskById(activeDetailTaskId, { subtasks: updated });
+        }
+
+        async function addSubtaskToExistingTask() {
+            if (!activeDetailTaskId) return;
+            const input = document.getElementById('detail-new-subtask');
+            const text = input.value.trim();
+            if (!text) return;
+            const task = orgTasks.find(t => t.id === activeDetailTaskId);
+            if (!task) return;
+            const updated = [...(task.subtasks || []), { id: 'sub_' + Date.now(), text, done: false }];
+            input.value = '';
+            await patchTaskById(activeDetailTaskId, { subtasks: updated });
+        }
+
+        async function handleAddComment(e) {
+            e.preventDefault();
+            if (!activeDetailTaskId) return;
+            const input = document.getElementById('detail-comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+            const task = orgTasks.find(t => t.id === activeDetailTaskId);
+            if (!task) return;
+
+            const updated = [...(task.comments || []), {
+                author: currentUserProfile.displayName,
+                authorId: currentUser.uid,
+                text,
+                timestamp: new Date().toISOString()
+            }];
+            input.value = '';
+            await patchTaskById(activeDetailTaskId, { comments: updated });
+        }
+
+        async function deleteCurrentTask() {
+            if (!activeDetailTaskId) return;
+            if (useCloudSync && db) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_tasks', activeDetailTaskId));
+            } else {
+                const all = getLocalStore('org_tasks', []).filter(t => t.id !== activeDetailTaskId);
+                setLocalStore('org_tasks', all);
+                refreshLocalWorkspaceData();
+            }
+            closeTaskDetailDrawer();
+            showToast("Task deleted.", "info");
+        }
+
+        // 16. Invite Modal & Excel CSV Export
+        function openInviteModal() {
+            if (!currentOrgId) return;
+            document.getElementById('invite-org-name-label').textContent = currentUserProfile?.orgName || 'your organization';
+            document.getElementById('invite-modal-code').textContent = currentOrgId;
+            document.getElementById('invite-share-text').value = `Join ${currentUserProfile?.orgName} on EBG Task Assigner. Organization Invite Code: ${currentOrgId}`;
+            document.getElementById('invite-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeInviteModal() {
+            document.getElementById('invite-modal').classList.add('hidden');
+        }
+
+        function copyInviteCode() {
+            const input = document.getElementById('invite-share-text');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast("Invite code copied to clipboard!", "success");
+            } catch {
+                showToast("Invite Code: " + currentOrgId, "info");
+            }
+        }
+
+        function exportTasksToCSV() {
+            const rows = getFilteredTasks();
+            if (rows.length === 0) {
+                showToast("No tasks to export yet.", "info");
+                return;
+            }
+            const headers = ['Task ID', 'Title', 'Department', 'Assignee', 'Priority', 'Status', 'Due Date', 'Created By'];
+            const csvLines = [headers.join(',')];
+            rows.forEach(t => {
+                const vals = [
+                    t.code || '',
+                    `"${(t.title || '').replace(/"/g, '""')}"`,
+                    `"${(t.tag || '').replace(/"/g, '""')}"`,
+                    `"${(t.assigneeName || '').replace(/"/g, '""')}"`,
+                    t.priority || '',
+                    t.status || '',
+                    t.dueDate || '',
+                    `"${(t.createdByName || '').replace(/"/g, '""')}"`
+                ];
+                csvLines.push(vals.join(','));
+            });
+            const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentOrgId || 'EBG'}_Tasks_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Exported tasks to Excel (CSV)!", "success");
+        }
+
+        // 17. Navigation & Layout Controls
+        function showAuthStep(step) {
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('auth-step-login').classList.toggle('hidden', step !== 'login');
+            document.getElementById('auth-step-workspace').classList.toggle('hidden', step !== 'workspace');
+            lucide.createIcons();
+        }
+
+        function toggleSidebarExpand() {
+            isSidebarExpanded = !isSidebarExpanded;
+            const rail = document.getElementById('left-icon-rail');
+            const labels = document.querySelectorAll('.rail-label');
+            if (isSidebarExpanded) {
+                rail.classList.remove('w-16');
+                rail.classList.add('w-52');
+                labels.forEach(l => l.classList.remove('hidden'));
+            } else {
+                rail.classList.remove('w-52');
+                rail.classList.add('w-16');
+                labels.forEach(l => l.classList.add('hidden'));
+            }
+        }
+
+        function toggleUserMenu() {
+            document.getElementById('user-dropdown-menu').classList.toggle('hidden');
+        }
+
+        function switchMainTab(tab) {
+            activeMainTab = tab;
+            const analytics = document.getElementById('overview-analytics-card');
+            const kanban = document.getElementById('section-kanban');
+            const table = document.getElementById('section-table');
+            const team = document.getElementById('section-team');
+            const titleEl = document.getElementById('main-page-title');
+
+            analytics.classList.toggle('hidden', tab === 'team');
+            kanban.classList.toggle('hidden', tab === 'list' || tab === 'team');
+            table.classList.toggle('hidden', tab !== 'list');
+            team.classList.toggle('hidden', tab !== 'team');
+
+            const titles = {
+                overview: 'Overview',
+                board: 'Task Execution Board',
+                list: 'Structured Task Ledger',
+                team: 'Team Directory & Workload'
+            };
+            titleEl.textContent = titles[tab] || 'Overview';
+
+            ['overview', 'board', 'list', 'team'].forEach(t => {
+                const pill = document.getElementById(`view-pill-${t}`);
+                const railBtn = document.getElementById(`rail-${t}`);
+                if (pill) {
+                    pill.className = t === tab
+                        ? "px-3 py-1 rounded-md text-xs font-semibold bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition"
+                        : "px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition";
+                }
+                if (railBtn) {
+                    railBtn.className = t === tab
+                        ? "rail-btn w-full h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center gap-3 px-3 transition"
+                        : "rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition";
+                }
+            });
+
+            renderAll();
+        }
+
+        // 18. Helpers
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text || "Loading...";
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const styles = {
+                success: 'bg-[#111113] text-white border-[#1E8E3E]',
+                error: 'bg-rose-950 text-rose-100 border-rose-700',
+                warning: 'bg-amber-950 text-amber-100 border-amber-700',
+                info: 'bg-[#18181B] text-white border-zinc-700'
+            };
+            toast.className = `pointer-events-auto px-4 py-2.5 rounded-lg border shadow-lg text-xs font-medium flex items-center gap-2 transition-all duration-200 ${styles[type] || styles.info}`;
+            toast.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-white"></span><span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 250);
+            }, 3200);
+        }
+        function isTaskOverdue(t) {
+            if (!t.dueDate || t.status === 'Done') return false;
+            return t.dueDate < new Date().toISOString().split('T')[0];
+        }
+        function getPriorityBadgeClass(p) {
+            switch (p) {
+                case 'Urgent': return 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+                case 'High': return 'bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+                case 'Medium': return 'bg-[#F4F4F5] dark:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-zinc-700';
+                default: return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300';
+            }
+        }
+        function getInitials(name) {
+            if (!name) return 'EB';
+            const parts = name.trim().split(/\s+/);
+            return parts.length === 1 ? parts[0].substring(0, 2).toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        function capitalizeWords(str) {
+            return str.replace(/\b\w/g, l => l.toUpperCase());
+        }
+        function formatShortDate(dateStr) {
+            if (!dateStr) return 'No due date';
+            const d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        }
+        function formatTimeAgo(iso) {
+            if (!iso) return '';
+            const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+            if (sec < 60) return 'Just now';
+            if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+            if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+            return new Date(iso).toLocaleDateString();
+        }
+        function formatAuthError(code) {
+            if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) {
+                return "Invalid email or password. Use 'Create Account' if you are a new member.";
+            }
+            if (code.includes('email-already-in-use')) {
+                return "This email is already registered. Please Sign In.";
+            }
+            return code;
+        }
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
