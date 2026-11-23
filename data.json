@@ -65,7 +65,29 @@
       "joinedAt": "2026-11-23T17:32:30.273Z"
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "tsk_1795456687734",
+      "code": "EBG-001",
+      "orgId": "EBG-GROUP",
+      "title": "Weekly Creative Refresh & SQR Audit",
+      "description": "Audit top performing ad sets and refresh creative assets every Monday morning.",
+      "assigneeId": "goog_mwtjmkyrchxx",
+      "assigneeName": "Priya Sharma",
+      "createdBy": "goog_mwtjmkyrchxx",
+      "createdByName": "Priya Sharma",
+      "priority": "Medium",
+      "status": "Scheduled",
+      "isScheduled": true,
+      "scheduledDate": "2026-11-24T09:30",
+      "recurrence": "weekly",
+      "tag": "Performance Marketing",
+      "dueDate": "2026-11-26",
+      "subtasks": [],
+      "comments": [],
+      "createdAt": "2026-11-23T17:58:07.733Z"
+    }
+  ],
   "users": {
     "admin@theebg.com": {
       "uid": "goog_mwtald8m7n0f",

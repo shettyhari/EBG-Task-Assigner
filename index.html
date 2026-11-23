@@ -486,6 +486,7 @@
                             <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 pointer-events-none"></i>
                             <select id="timeframe-filter" onchange="renderAll()" class="pl-8 pr-7 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer appearance-none">
                                 <option value="all">All active dates</option>
+                                <option value="scheduled">Scheduled / Planned tasks</option>
                                 <option value="week">Due this week (7 days)</option>
                                 <option value="overdue">Overdue SLA items</option>
                             </select>
@@ -496,6 +497,12 @@
                         <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold shadow-2xs transition flex items-center gap-1.5">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                             <span>Assign Task</span>
+                        </button>
+
+                        <!-- Secondary Schedule Task Button -->
+                        <button onclick="openCreateTaskModal(true)" class="px-3.5 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i>
+                            <span>Schedule Task</span>
                         </button>
 
                         <!-- Secondary Soft Zinc Pill Button -->
@@ -654,7 +661,19 @@
                         <span class="text-xs text-[#71717A]">Drag &amp; drop cards across stages or click any task to inspect</span>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+                        <!-- Column 0: Scheduled -->
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Scheduled')">
+                            <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                    <span class="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Scheduled</span>
+                                </div>
+                                <span id="col-count-scheduled" class="px-2 py-0.5 text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full">0</span>
+                            </div>
+                            <div id="col-scheduled" class="space-y-2.5 flex-1"></div>
+                        </div>
+
                         <!-- Column 1: To Do -->
                         <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'To Do')">
                             <div class="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100 dark:border-zinc-800">
@@ -767,12 +786,12 @@
         <div class="bg-white dark:bg-[#111113] rounded-xl shadow-xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-lg overflow-hidden my-8">
             <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    <div id="create-task-modal-icon-wrap" class="w-8 h-8 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center">
+                        <i data-lucide="plus" id="create-task-modal-icon" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Assign New Task</h3>
-                        <p class="text-[11px] text-[#71717A]">Delegate deliverable to any registered team member</p>
+                        <h3 id="create-task-modal-title" class="text-sm font-bold text-[#18181B] dark:text-white">Assign New Task</h3>
+                        <p id="create-task-modal-subtitle" class="text-[11px] text-[#71717A]">Delegate deliverable to any registered team member</p>
                     </div>
                 </div>
                 <button onclick="closeCreateTaskModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
@@ -827,6 +846,43 @@
                     </div>
                 </div>
 
+                <!-- Schedule & Cadence Box -->
+                <div class="p-3.5 rounded-xl bg-[#F8F9FA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-semibold text-[#18181B] dark:text-zinc-200 block">Schedule &amp; Recurrence</span>
+                                <span class="text-[10px] text-[#71717A]">Automate future release date/time and recurring cadences</span>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="task-is-scheduled" onchange="toggleScheduleFields(this.checked)" class="sr-only peer">
+                            <div class="w-8 h-4.5 bg-zinc-300 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <span class="ml-2 text-[11px] font-medium text-[#71717A]" id="schedule-toggle-label">Schedule</span>
+                        </label>
+                    </div>
+
+                    <div id="schedule-fields-group" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2.5 border-t border-zinc-200 dark:border-zinc-800">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Release Date &amp; Time *</label>
+                            <input type="datetime-local" id="task-scheduled-date" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Recurrence Frequency</label>
+                            <select id="task-recurrence" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
+                                <option value="none">One-time (No recurrence)</option>
+                                <option value="daily">Daily (SQR &amp; Budget Audits)</option>
+                                <option value="weekly">Weekly (Creative Refresh / Sprint)</option>
+                                <option value="biweekly">Bi-weekly (Client Reviews)</option>
+                                <option value="monthly">Monthly (Reconciliation &amp; P&amp;L)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Subtask Checklist Builder -->
                 <div>
                     <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Checklist Subtasks</label>
@@ -839,8 +895,9 @@
 
                 <div class="pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-end gap-2">
                     <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-[#71717A] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Cancel</button>
-                    <button type="submit" class="px-5 py-2 rounded-lg text-xs font-semibold bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] transition flex items-center gap-1.5">
-                        <i data-lucide="check" class="w-3.5 h-3.5"></i> Assign Task
+                    <button type="submit" id="create-task-submit-btn" class="px-5 py-2 rounded-lg text-xs font-semibold bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] transition flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span id="create-task-submit-text">Assign Task</span>
                     </button>
                 </div>
             </form>
@@ -882,6 +939,7 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Status</label>
                         <select id="detail-status-select" onchange="updateTaskFieldFromDrawer('status', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                            <option value="Scheduled">Scheduled</option>
                             <option value="To Do">To Do</option>
                             <option value="In Progress">In Progress</option>
                             <option value="In Review">In Review</option>
@@ -906,6 +964,42 @@
                     <div>
                         <label class="block text-[11px] font-semibold text-[#71717A] mb-1">Due Date</label>
                         <input type="date" id="detail-due-input" onchange="updateTaskFieldFromDrawer('dueDate', this.value)" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-semibold bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                    </div>
+                </div>
+
+                <!-- Schedule & Recurrence Drawer Controls -->
+                <div id="detail-schedule-box" class="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900/50 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                            </div>
+                            <span class="text-xs font-semibold text-indigo-950 dark:text-indigo-200">Release Schedule &amp; Recurrence</span>
+                        </div>
+                        <span id="detail-recurrence-badge" class="px-2 py-0.5 text-[10px] font-semibold rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">One-time</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-[#71717A] dark:text-zinc-400 mb-1">Scheduled Release</label>
+                            <input type="datetime-local" id="detail-scheduled-date" onchange="updateTaskFieldFromDrawer('scheduledDate', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-[#71717A] dark:text-zinc-400 mb-1">Recurrence Frequency</label>
+                            <select id="detail-recurrence-select" onchange="updateTaskFieldFromDrawer('recurrence', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#111113] text-[#18181B] dark:text-white outline-none">
+                                <option value="none">One-time (No recurrence)</option>
+                                <option value="daily">Daily (SQR / Audits)</option>
+                                <option value="weekly">Weekly (Creative Refresh)</option>
+                                <option value="biweekly">Bi-weekly (Reviews)</option>
+                                <option value="monthly">Monthly (Reconciliation)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="detail-release-action" class="pt-1 flex items-center justify-between border-t border-indigo-200/40 dark:border-indigo-900/40">
+                        <span class="text-[11px] text-[#71717A] dark:text-zinc-400">Scheduled for automated/future execution</span>
+                        <button type="button" onclick="releaseScheduledTaskToTodo()" class="px-3 py-1 rounded-md text-[11px] font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition flex items-center gap-1 shadow-2xs">
+                            <i data-lucide="play" class="w-3 h-3"></i>
+                            <span>Release to "To Do" Now</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1090,6 +1184,8 @@
             renderAll,
             openCreateTaskModal,
             closeCreateTaskModal,
+            toggleScheduleFields,
+            releaseScheduledTaskToTodo,
             addDraftSubtask,
             removeDraftSubtask,
             handleCreateTask,
@@ -1761,6 +1857,7 @@
                 if (filterOnlyUrgent && t.priority !== 'Urgent' && !isTaskOverdue(t)) return false;
 
                 if (timeframe === 'overdue' && !isTaskOverdue(t)) return false;
+                if (timeframe === 'scheduled' && t.status !== 'Scheduled' && !t.isScheduled && !t.scheduledDate) return false;
                 if (timeframe === 'week' && (!t.dueDate || t.dueDate < todayStr || t.dueDate > nextWeekStr)) return false;
 
                 if (search) {
@@ -1994,27 +2091,29 @@
         // 11. Render Kanban Board & Structured Table
         function renderKanbanAndTable(filtered) {
             const cols = {
+                'Scheduled': document.getElementById('col-scheduled'),
                 'To Do': document.getElementById('col-todo'),
                 'In Progress': document.getElementById('col-inprogress'),
                 'In Review': document.getElementById('col-review'),
                 'Done': document.getElementById('col-done')
             };
-            Object.values(cols).forEach(el => el.innerHTML = '');
-            const counts = { 'To Do': 0, 'In Progress': 0, 'In Review': 0, 'Done': 0 };
+            Object.values(cols).forEach(el => { if (el) el.innerHTML = ''; });
+            const counts = { 'Scheduled': 0, 'To Do': 0, 'In Progress': 0, 'In Review': 0, 'Done': 0 };
 
             filtered.forEach(task => {
-                const st = cols[task.status] ? task.status : 'To Do';
+                const st = cols[task.status] ? task.status : (task.isScheduled ? 'Scheduled' : 'To Do');
                 counts[st]++;
-                cols[st].appendChild(createKanbanCard(task));
+                if (cols[st]) cols[st].appendChild(createKanbanCard(task));
             });
 
-            document.getElementById('col-count-todo').textContent = counts['To Do'];
-            document.getElementById('col-count-inprogress').textContent = counts['In Progress'];
-            document.getElementById('col-count-review').textContent = counts['In Review'];
-            document.getElementById('col-count-done').textContent = counts['Done'];
+            if (document.getElementById('col-count-scheduled')) document.getElementById('col-count-scheduled').textContent = counts['Scheduled'];
+            if (document.getElementById('col-count-todo')) document.getElementById('col-count-todo').textContent = counts['To Do'];
+            if (document.getElementById('col-count-inprogress')) document.getElementById('col-count-inprogress').textContent = counts['In Progress'];
+            if (document.getElementById('col-count-review')) document.getElementById('col-count-review').textContent = counts['In Review'];
+            if (document.getElementById('col-count-done')) document.getElementById('col-count-done').textContent = counts['Done'];
 
             Object.entries(cols).forEach(([status, container]) => {
-                if (counts[status] === 0) {
+                if (container && counts[status] === 0) {
                     container.innerHTML = `<div class="border border-dashed border-[#E4E4E7] dark:border-[#27272A] rounded-lg p-5 text-center text-[11px] text-[#71717A]">No tasks in ${status}</div>`;
                 }
             });
@@ -2046,6 +2145,12 @@
                     <span class="font-mono text-[10px] font-semibold text-[#71717A]">${escapeHtml(task.code || 'EBG')} &middot; ${escapeHtml(task.tag || 'General')}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getPriorityBadgeClass(task.priority)}">${escapeHtml(task.priority)}</span>
                 </div>
+                ${(task.status === 'Scheduled' || task.isScheduled || task.scheduledDate || (task.recurrence && task.recurrence !== 'none')) ? `
+                    <div class="flex items-center gap-1.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200/60 dark:border-indigo-800/40 w-fit mb-2">
+                        <i data-lucide="calendar-clock" class="w-3 h-3 text-indigo-600 dark:text-indigo-400"></i>
+                        <span>Scheduled: ${formatScheduledDateTime(task.scheduledDate || task.dueDate)}${task.recurrence && task.recurrence !== 'none' ? ` &middot; ${capitalizeWords(task.recurrence)}` : ''}</span>
+                    </div>
+                ` : ''}
                 <h4 class="text-xs sm:text-[13px] font-semibold text-[#18181B] dark:text-white group-hover:underline leading-snug mb-1.5">${escapeHtml(task.title)}</h4>
                 ${task.description ? `<p class="text-[11px] text-[#71717A] dark:text-zinc-400 line-clamp-2 mb-2.5">${escapeHtml(task.description)}</p>` : ''}
 
@@ -2092,7 +2197,15 @@
             tr.innerHTML = `
                 <td class="py-3 px-4 font-mono text-[11px] font-semibold text-[#111113] dark:text-white">${escapeHtml(task.code || 'EBG')}</td>
                 <td class="py-3 px-4">
-                    <div class="font-semibold text-[#18181B] dark:text-white">${escapeHtml(task.title)}</div>
+                    <div class="font-semibold text-[#18181B] dark:text-white flex items-center gap-1.5 flex-wrap">
+                        <span>${escapeHtml(task.title)}</span>
+                        ${(task.status === 'Scheduled' || task.isScheduled || task.scheduledDate) ? `
+                            <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium border border-indigo-200/60 dark:border-indigo-800/40">
+                                <i data-lucide="calendar-clock" class="w-2.5 h-2.5"></i>
+                                <span>${task.recurrence && task.recurrence !== 'none' ? capitalizeWords(task.recurrence) : 'Scheduled'}</span>
+                            </span>
+                        ` : ''}
+                    </div>
                     <div class="text-[11px] text-[#71717A] mt-0.5">${escapeHtml(task.tag || 'General')}</div>
                 </td>
                 <td class="py-3 px-4">
@@ -2108,6 +2221,7 @@
                 </td>
                 <td class="py-3 px-4" onclick="event.stopPropagation()">
                     <select onchange="quickUpdateStatusFromTable('${task.id}', this.value)" class="px-2.5 py-1 rounded-lg text-xs font-medium border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[#18181B] dark:text-zinc-200 outline-none">
+                        <option value="Scheduled" ${task.status === 'Scheduled' ? 'selected' : ''}>Scheduled</option>
                         <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                         <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
                         <option value="In Review" ${task.status === 'In Review' ? 'selected' : ''}>In Review</option>
@@ -2284,7 +2398,7 @@
         }
 
         // 14. Create Task Modal & Submission
-        function openCreateTaskModal() {
+        function openCreateTaskModal(isScheduled = false) {
             draftSubtasks = [];
             renderDraftSubtasks();
             document.getElementById('create-task-form').reset();
@@ -2296,7 +2410,65 @@
             if (currentUser) {
                 document.getElementById('task-assignee').value = currentUser.uid;
             }
+
+            const toggle = document.getElementById('task-is-scheduled');
+            const schedBox = document.getElementById('schedule-fields-group');
+            const schedDateInput = document.getElementById('task-scheduled-date');
+            const modalTitle = document.getElementById('create-task-modal-title');
+            const modalSub = document.getElementById('create-task-modal-subtitle');
+            const submitText = document.getElementById('create-task-submit-text');
+            const iconWrap = document.getElementById('create-task-modal-icon-wrap');
+
+            // Default scheduled datetime to tomorrow at 09:30 AM
+            const tmrw = new Date();
+            tmrw.setDate(tmrw.getDate() + 1);
+            tmrw.setHours(9, 30, 0, 0);
+            const tmrwIso = new Date(tmrw.getTime() - (tmrw.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            if (schedDateInput) schedDateInput.value = tmrwIso;
+
+            if (isScheduled) {
+                if (toggle) toggle.checked = true;
+                if (schedBox) schedBox.classList.remove('hidden');
+                if (modalTitle) modalTitle.textContent = "Schedule Deliverable / Recurring Task";
+                if (modalSub) modalSub.textContent = "Set automated release date/time and recurring cadences";
+                if (submitText) submitText.textContent = "Schedule Task";
+                if (iconWrap) {
+                    iconWrap.className = "w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center";
+                    iconWrap.innerHTML = `<i data-lucide="calendar-clock" class="w-4 h-4"></i>`;
+                }
+            } else {
+                if (toggle) toggle.checked = false;
+                if (schedBox) schedBox.classList.add('hidden');
+                if (modalTitle) modalTitle.textContent = "Assign New Task";
+                if (modalSub) modalSub.textContent = "Delegate deliverable to any registered team member";
+                if (submitText) submitText.textContent = "Assign Task";
+                if (iconWrap) {
+                    iconWrap.className = "w-8 h-8 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center";
+                    iconWrap.innerHTML = `<i data-lucide="plus" class="w-4 h-4"></i>`;
+                }
+            }
+
             document.getElementById('create-task-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleScheduleFields(isChecked) {
+            const schedBox = document.getElementById('schedule-fields-group');
+            const submitText = document.getElementById('create-task-submit-text');
+            const schedDateInput = document.getElementById('task-scheduled-date');
+            if (isChecked) {
+                if (schedBox) schedBox.classList.remove('hidden');
+                if (submitText) submitText.textContent = "Schedule Task";
+                if (schedDateInput && !schedDateInput.value) {
+                    const tmrw = new Date();
+                    tmrw.setDate(tmrw.getDate() + 1);
+                    tmrw.setHours(9, 30, 0, 0);
+                    schedDateInput.value = new Date(tmrw.getTime() - (tmrw.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                }
+            } else {
+                if (schedBox) schedBox.classList.add('hidden');
+                if (submitText) submitText.textContent = "Assign Task";
+            }
             lucide.createIcons();
         }
 
@@ -2344,6 +2516,10 @@
             const dueDate = document.getElementById('task-due-date').value;
             const tag = document.getElementById('task-tag').value;
 
+            const isScheduled = document.getElementById('task-is-scheduled')?.checked || false;
+            const scheduledDate = isScheduled ? (document.getElementById('task-scheduled-date')?.value || '') : '';
+            const recurrence = isScheduled ? (document.getElementById('task-recurrence')?.value || 'none') : 'none';
+
             const assignee = orgMembers.find(m => m.uid === assigneeId);
             const assigneeName = assignee ? assignee.displayName : currentUserProfile.displayName;
             const nextSeq = String(orgTasks.length + 1).padStart(3, '0');
@@ -2358,7 +2534,10 @@
                 createdBy: currentUser.uid,
                 createdByName: currentUserProfile.displayName,
                 priority,
-                status: 'To Do',
+                status: isScheduled ? 'Scheduled' : 'To Do',
+                isScheduled,
+                scheduledDate,
+                recurrence,
                 tag,
                 dueDate,
                 subtasks: draftSubtasks,
@@ -2378,7 +2557,7 @@
                     await syncToServer({ tasks: [createdTask] });
                 }
                 closeCreateTaskModal();
-                showToast(`Task ${newTask.code} assigned to ${assigneeName}`, "success");
+                showToast(isScheduled ? `Task ${newTask.code} scheduled for release!` : `Task ${newTask.code} assigned to ${assigneeName}`, "success");
             } catch (err) {
                 showToast("Error assigning task: " + err.message, "error");
             }
@@ -2410,10 +2589,28 @@
             document.getElementById('detail-meta').textContent = `Assigned by ${task.createdByName || 'Manager'} • Due ${formatShortDate(task.dueDate)}`;
             document.getElementById('detail-desc').textContent = task.description || 'No description provided.';
 
-            document.getElementById('detail-status-select').value = task.status;
+            document.getElementById('detail-status-select').value = task.status || 'To Do';
             document.getElementById('detail-assignee-select').value = task.assigneeId;
             document.getElementById('detail-priority-select').value = task.priority;
             document.getElementById('detail-due-input').value = task.dueDate || '';
+
+            const schedDateInput = document.getElementById('detail-scheduled-date');
+            const recurSelect = document.getElementById('detail-recurrence-select');
+            const recurBadge = document.getElementById('detail-recurrence-badge');
+            const releaseAction = document.getElementById('detail-release-action');
+
+            if (schedDateInput) schedDateInput.value = task.scheduledDate || '';
+            if (recurSelect) recurSelect.value = task.recurrence || 'none';
+            if (recurBadge) {
+                recurBadge.textContent = task.recurrence && task.recurrence !== 'none' ? capitalizeWords(task.recurrence) : (task.status === 'Scheduled' || task.isScheduled ? 'Scheduled' : 'One-time');
+            }
+            if (releaseAction) {
+                if (task.status === 'Scheduled') {
+                    releaseAction.classList.remove('hidden');
+                } else {
+                    releaseAction.classList.add('hidden');
+                }
+            }
 
             const subtasks = task.subtasks || [];
             const doneCount = subtasks.filter(s => s.done).length;
@@ -2456,6 +2653,12 @@
                     commentsList.appendChild(item);
                 });
             }
+        }
+
+        async function releaseScheduledTaskToTodo() {
+            if (!activeDetailTaskId) return;
+            await patchTaskById(activeDetailTaskId, { status: 'To Do', isScheduled: false });
+            showToast("Task released to 'To Do' pipeline!", "success");
         }
 
         async function patchTaskById(taskId, patch) {
@@ -2569,7 +2772,7 @@
                 showToast("No tasks to export yet.", "info");
                 return;
             }
-            const headers = ['Task ID', 'Title', 'Department', 'Assignee', 'Priority', 'Status', 'Due Date', 'Created By'];
+            const headers = ['Task ID', 'Title', 'Department', 'Assignee', 'Priority', 'Status', 'Release Schedule', 'Recurrence', 'Due Date', 'Created By'];
             const csvLines = [headers.join(',')];
             rows.forEach(t => {
                 const vals = [
@@ -2579,6 +2782,8 @@
                     `"${(t.assigneeName || '').replace(/"/g, '""')}"`,
                     t.priority || '',
                     t.status || '',
+                    `"${(t.scheduledDate || '').replace(/"/g, '""')}"`,
+                    t.recurrence || 'none',
                     t.dueDate || '',
                     `"${(t.createdByName || '').replace(/"/g, '""')}"`
                 ];
@@ -2710,6 +2915,18 @@
             if (!dateStr) return 'No due date';
             const d = new Date(dateStr + 'T00:00:00');
             return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        }
+        function formatScheduledDateTime(dtStr) {
+            if (!dtStr) return 'Not set';
+            try {
+                const d = new Date(dtStr);
+                if (isNaN(d.getTime())) return dtStr;
+                const datePart = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const timePart = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                return `${datePart}, ${timePart}`;
+            } catch (e) {
+                return dtStr;
+            }
         }
         function formatTimeAgo(iso) {
             if (!iso) return '';
