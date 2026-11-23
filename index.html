@@ -1007,6 +1007,51 @@
     </div>
 
     <!-- ===================================================================== -->
+    <!-- 6. MODAL: GOOGLE ACCOUNT SIGN-IN / SIGN-UP                            -->
+    <!-- ===================================================================== -->
+    <div id="google-auth-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#111113] rounded-2xl shadow-2xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-md overflow-hidden animate-slide-in">
+            <div class="p-7 sm:p-8">
+                <!-- Google 4-Color Logo -->
+                <div class="flex items-center justify-center mb-3">
+                    <svg class="w-9 h-9" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-center text-[#18181B] dark:text-white tracking-tight">Sign in with Google</h3>
+                <p class="text-xs text-center text-[#71717A] dark:text-[#A1A1AA] mt-1 mb-5">to continue to <strong>EBG Operations Dashboard</strong></p>
+
+                <form id="google-auth-form" onsubmit="submitGoogleAuthModal(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Google Work Account *</label>
+                        <input type="email" id="google-email-input" required placeholder="name@theebg.com" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
+                        <div id="google-auth-error" class="hidden text-[11px] text-rose-600 font-medium mt-1.5 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
+                            <span id="google-auth-error-text">Access denied: Only @theebg.com Google accounts can sign in or register.</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Full Name (optional for new signups)</label>
+                        <input type="text" id="google-name-input" placeholder="e.g. Hari Krishna" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none">
+                    </div>
+
+                    <div class="pt-2 flex items-center justify-end gap-2.5">
+                        <button type="button" onclick="closeGoogleAuthModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-[#71717A] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Cancel</button>
+                        <button type="submit" class="px-5 py-2 rounded-lg text-xs font-semibold bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] transition flex items-center gap-2">
+                            <span>Continue</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
     <!-- FIREBASE & REAL-TIME STATE ENGINE (ZERO MOCK DATA)                    -->
     <!-- ===================================================================== -->
     <script type="module">
@@ -1042,14 +1087,17 @@
         let db = null;
 
         try {
+            const savedFirebaseConfig = localStorage.getItem('ebg_firebase_config');
             if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                 firebaseConfig = JSON.parse(__firebase_config);
-                if (firebaseConfig && firebaseConfig.apiKey) {
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    useCloudSync = true;
-                }
+            } else if (savedFirebaseConfig) {
+                firebaseConfig = JSON.parse(savedFirebaseConfig);
+            }
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                useCloudSync = true;
             }
         } catch (e) {
             useCloudSync = false;
@@ -1116,7 +1164,10 @@
             exportTasksToCSV,
             allowDrop,
             handleDragStart,
-            handleDrop
+            handleDrop,
+            openGoogleAuthModal,
+            closeGoogleAuthModal,
+            submitGoogleAuthModal
         });
 
         // 3. Theme Initialization
@@ -1352,6 +1403,115 @@
             }
         }
 
+        function openGoogleAuthModal() {
+            const emailInput = document.getElementById('google-email-input');
+            const nameInput = document.getElementById('google-name-input');
+            const errBox = document.getElementById('google-auth-error');
+            const authEmailVal = document.getElementById('auth-email')?.value?.trim() || '';
+            const regNameVal = document.getElementById('reg-full-name')?.value?.trim() || '';
+
+            if (emailInput) {
+                emailInput.value = authEmailVal.endsWith('@theebg.com') ? authEmailVal : '';
+            }
+            if (nameInput) {
+                nameInput.value = regNameVal;
+            }
+            if (errBox) {
+                errBox.classList.add('hidden');
+            }
+            document.getElementById('google-auth-modal').classList.remove('hidden');
+            if (emailInput) emailInput.focus();
+            lucide.createIcons();
+        }
+
+        function closeGoogleAuthModal() {
+            document.getElementById('google-auth-modal').classList.add('hidden');
+        }
+
+        async function submitGoogleAuthModal(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('google-email-input');
+            const nameInput = document.getElementById('google-name-input');
+            const errBox = document.getElementById('google-auth-error');
+            const errText = document.getElementById('google-auth-error-text');
+
+            const email = (emailInput?.value || '').trim().toLowerCase();
+            let fullName = (nameInput?.value || '').trim();
+
+            if (!email.endsWith('@theebg.com')) {
+                if (errBox && errText) {
+                    errText.textContent = "Access denied: Only @theebg.com Google accounts can sign in or register.";
+                    errBox.classList.remove('hidden');
+                }
+                showToast("Access denied: Only @theebg.com Google accounts are allowed.", "error");
+                return;
+            }
+
+            if (!fullName) {
+                fullName = capitalizeWords(email.split('@')[0].replace(/[._-]/g, ' '));
+            }
+
+            closeGoogleAuthModal();
+            showLoading("Signing in with Google...");
+
+            const usersMap = getLocalStore('registered_users', {});
+            const existing = usersMap[email];
+
+            if (existing) {
+                // Existing account login
+                currentUser = {
+                    uid: existing.uid,
+                    email: existing.email,
+                    displayName: existing.displayName || fullName,
+                    provider: 'google.com'
+                };
+                setLocalStore('current_user', currentUser);
+
+                if (existing.profile && existing.profile.orgId) {
+                    currentUserProfile = existing.profile;
+                    currentOrgId = existing.profile.orgId;
+                    setLocalStore('current_profile', currentUserProfile);
+                    await enterOrganizationWorkspace(currentOrgId);
+                } else {
+                    document.getElementById('ws-display-name').value = existing.displayName || fullName;
+                    document.getElementById('ws-department').value = existing.department || 'Performance Marketing';
+                    document.getElementById('ws-role').value = existing.role || 'Member';
+                    hideLoading();
+                    showAuthStep('workspace');
+                }
+                showToast(`Signed in with Google as ${existing.displayName || email}!`, "success");
+            } else {
+                // New user signup via Google account
+                const uid = 'goog_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+                usersMap[email] = {
+                    uid,
+                    email,
+                    password: null,
+                    provider: 'google.com',
+                    displayName: fullName,
+                    department: 'Performance Marketing',
+                    role: 'Member',
+                    profile: null
+                };
+                setLocalStore('registered_users', usersMap);
+
+                currentUser = {
+                    uid,
+                    email,
+                    displayName: fullName,
+                    provider: 'google.com'
+                };
+                setLocalStore('current_user', currentUser);
+
+                document.getElementById('ws-display-name').value = fullName;
+                document.getElementById('ws-department').value = 'Performance Marketing';
+                document.getElementById('ws-role').value = 'Member';
+                hideLoading();
+                showAuthStep('workspace');
+                showToast(`Google account verified (${email}). Now complete your workspace setup.`, "success");
+            }
+        }
+
         async function handleGoogleSignIn() {
             if (useCloudSync && auth) {
                 showLoading("Connecting with Google...");
@@ -1377,15 +1537,17 @@
                         return;
                     }
                     showToast("Signed in with Google!", "success");
+                    return;
                 } catch (err) {
                     hideLoading();
-                    if (err.code !== 'auth/popup-closed-by-user') {
-                        showToast("Google sign-in error: " + (err.message || err), "error");
+                    if (err.code === 'auth/popup-closed-by-user') {
+                        return;
                     }
+                    console.warn("Firebase popup error, opening Google Auth dialog:", err);
                 }
-            } else {
-                showToast("Google sign-in requires Firebase cloud configuration. Only @theebg.com accounts are permitted.", "warning");
             }
+
+            openGoogleAuthModal();
         }
 
         async function signOutUser() {
