@@ -1,0 +1,114 @@
+{
+  "organizations": {
+    "EBGG-2504": {
+      "orgId": "EBGG-2504",
+      "orgName": "EBG Group",
+      "createdBy": "goog_mwtald8m7n0f",
+      "createdAt": "2026-11-23T13:19:27.654Z"
+    },
+    "EBG-4829": {
+      "orgId": "EBG-4829",
+      "orgName": "EBG Group",
+      "createdBy": "admin",
+      "createdAt": "2026-11-23T12:00:00.000Z"
+    }
+  },
+  "members": [
+    {
+      "uid": "goog_mwtald8m7n0f",
+      "displayName": "Admin Hari",
+      "email": "admin@theebg.com",
+      "role": "Admin",
+      "department": "Performance Marketing",
+      "orgId": "EBGG-2504",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-23T13:19:27.701Z"
+    },
+    {
+      "uid": "goog_mwtao079psvc",
+      "displayName": "Team Member Rahul",
+      "email": "member@theebg.com",
+      "role": "Member",
+      "department": "Performance Marketing",
+      "orgId": "EBGG-2504",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-23T13:21:51.636Z"
+    },
+    {
+      "uid": "goog_mwtidwxla3o6",
+      "displayName": "Test Member",
+      "email": "testmember@theebg.com",
+      "role": "Member",
+      "department": "Performance Marketing",
+      "orgId": "EBG-4829",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-23T16:57:56.245Z"
+    }
+  ],
+  "tasks": [],
+  "users": {
+    "admin@theebg.com": {
+      "uid": "goog_mwtald8m7n0f",
+      "email": "admin@theebg.com",
+      "password": null,
+      "provider": "google.com",
+      "displayName": "Admin Hari",
+      "department": "Performance Marketing",
+      "role": "Member",
+      "profile": {
+        "uid": "goog_mwtald8m7n0f",
+        "displayName": "Admin Hari",
+        "email": "admin@theebg.com",
+        "role": "Admin",
+        "department": "Performance Marketing",
+        "orgId": "EBGG-2504",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-23T13:19:27.701Z"
+      }
+    },
+    "member@theebg.com": {
+      "uid": "goog_mwtao079psvc",
+      "email": "member@theebg.com",
+      "password": null,
+      "provider": "google.com",
+      "displayName": "Team Member Rahul",
+      "department": "Performance Marketing",
+      "role": "Member",
+      "profile": {
+        "uid": "goog_mwtao079psvc",
+        "displayName": "Team Member Rahul",
+        "email": "member@theebg.com",
+        "role": "Member",
+        "department": "Performance Marketing",
+        "orgId": "EBGG-2504",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-23T13:21:51.636Z"
+      }
+    },
+    "testmember@theebg.com": {
+      "uid": "goog_mwtidwxla3o6",
+      "email": "testmember@theebg.com",
+      "password": null,
+      "provider": "google.com",
+      "displayName": "Test Member",
+      "department": "Performance Marketing",
+      "role": "Member",
+      "profile": {
+        "uid": "goog_mwtidwxla3o6",
+        "displayName": "Test Member",
+        "email": "testmember@theebg.com",
+        "role": "Member",
+        "department": "Performance Marketing",
+        "orgId": "EBG-4829",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-23T16:57:56.245Z"
+      }
+    }
+  }
+}
