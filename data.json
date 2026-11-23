@@ -1,5 +1,11 @@
 {
   "organizations": {
+    "EBG-GROUP": {
+      "orgId": "EBG-GROUP",
+      "orgName": "EBG Group",
+      "createdBy": "goog_mwtjmkyrchxx",
+      "createdAt": "2026-11-23T17:32:29.807Z"
+    },
     "EBGG-2504": {
       "orgId": "EBGG-2504",
       "orgName": "EBG Group",
@@ -46,6 +52,17 @@
       "orgName": "EBG Group",
       "status": "online",
       "joinedAt": "2026-11-23T16:57:56.245Z"
+    },
+    {
+      "uid": "goog_mwtjmkyrchxx",
+      "displayName": "Priya Sharma",
+      "email": "priya@theebg.com",
+      "role": "Member",
+      "department": "Performance Marketing",
+      "orgId": "EBG-GROUP",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-23T17:32:30.273Z"
     }
   ],
   "tasks": [],
@@ -108,6 +125,26 @@
         "orgName": "EBG Group",
         "status": "online",
         "joinedAt": "2026-11-23T16:57:56.245Z"
+      }
+    },
+    "priya@theebg.com": {
+      "uid": "goog_mwtjmkyrchxx",
+      "email": "priya@theebg.com",
+      "password": null,
+      "provider": "google.com",
+      "displayName": "Priya Sharma",
+      "department": "Performance Marketing",
+      "role": "Member",
+      "profile": {
+        "uid": "goog_mwtjmkyrchxx",
+        "displayName": "Priya Sharma",
+        "email": "priya@theebg.com",
+        "role": "Member",
+        "department": "Performance Marketing",
+        "orgId": "EBG-GROUP",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-23T17:32:30.273Z"
       }
     }
   }
