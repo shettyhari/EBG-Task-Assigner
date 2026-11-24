@@ -1856,47 +1856,110 @@
         }
 
         // Shared Server Sync (server.py /api/data persistence)
-        async function syncFromServer() {
-            try {
-                const res = await fetch('/api/data', { cache: 'no-cache' });
-                if (!res.ok) return null;
-                const data = await res.json();
-                if (data && typeof data === 'object') {
-                    if (data.organizations && typeof data.organizations === 'object') {
-                        setLocalStore('organizations', data.organizations);
-                    }
-                    if (Array.isArray(data.members)) {
-                        setLocalStore('org_members', data.members);
-                    }
-                    if (Array.isArray(data.tasks)) {
-                        setLocalStore('org_tasks', data.tasks);
-                    }
-                    if (data.users && typeof data.users === 'object') {
-                        setLocalStore('registered_users', data.users);
-                    }
-                    return data;
-                }
-            } catch {
-                // Fetch failed or static server, local persistence fallback
-            }
-            return null;
+        // ---- Server session (token issued by /api/login or /api/register) ----
+        function getSessionToken() {
+            return localStorage.getItem('ebg_prod_session_token') || '';
+        }
+        function setSessionToken(token) {
+            if (token) localStorage.setItem('ebg_prod_session_token', token);
+            else localStorage.removeItem('ebg_prod_session_token');
+        }
+        function clearLocalSessionCache() {
+            setSessionToken('');
+            ['current_user', 'current_profile', 'registered_users', 'org_members', 'org_tasks', 'organizations']
+                .forEach(k => localStorage.removeItem(`ebg_prod_${k}`));
         }
 
-        async function syncToServer(patch) {
-            try {
-                await fetch('/api/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(patch)
-                });
-            } catch {
-                // Ignore if offline
+        async function apiFetch(path, options = {}) {
+            const headers = { ...(options.headers || {}) };
+            const token = getSessionToken();
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+            const res = await fetch(path, { cache: 'no-store', ...options, headers });
+            let json = null;
+            try { json = await res.json(); } catch {}
+            if (res.status === 401 && currentUser && path !== '/api/login' && path !== '/api/register') {
+                handleSessionExpired(json && json.error);
             }
+            return { ok: res.ok, status: res.status, json };
+        }
+
+        function handleSessionExpired(message) {
+            if (!currentUser) return;
+            cleanupListeners();
+            currentUser = null;
+            currentUserProfile = null;
+            currentOrgId = null;
+            orgMembers = [];
+            orgTasks = [];
+            clearLocalSessionCache();
+            hideLoading();
+            showAuthStep('login');
+            showToast(message || "Your session has ended. Please sign in again.", "error");
+        }
+
+        function setCurrentUserFromProfile(profile) {
+            currentUser = { uid: profile.uid, email: profile.email, displayName: profile.displayName };
+            currentUserProfile = profile;
+            currentOrgId = UNIFIED_ORG_ID;
+            setLocalStore('current_user', currentUser);
+            setLocalStore('current_profile', currentUserProfile);
+        }
+
+        // Store the server's view of the workspace (passwords are never sent to the browser)
+        function applyServerData(data) {
+            if (!data || typeof data !== 'object') return;
+            if (data.organizations && typeof data.organizations === 'object') setLocalStore('organizations', data.organizations);
+            if (Array.isArray(data.members)) setLocalStore('org_members', data.members);
+            if (Array.isArray(data.tasks)) setLocalStore('org_tasks', data.tasks);
+            setLocalStore('registered_users', (data.users && typeof data.users === 'object') ? data.users : {});
+            // Pick up role/department changes an Admin made to the signed-in user
+            if (currentUser && currentUserProfile && Array.isArray(data.members)) {
+                const me = data.members.find(m => m.uid === currentUser.uid);
+                if (me) {
+                    const roleChanged = me.role !== currentUserProfile.role;
+                    currentUserProfile = { ...currentUserProfile, ...me };
+                    setLocalStore('current_profile', currentUserProfile);
+                    if (roleChanged && currentOrgId) enterOrganizationWorkspace(currentOrgId);
+                }
+            }
+        }
+
+        async function syncFromServer() {
+            if (!getSessionToken()) return null;
             try {
-                if (window.ebgBroadcast) {
+                const r = await apiFetch('/api/data');
+                if (!r.ok || !r.json) return null;
+                applyServerData(r.json);
+                return r.json;
+            } catch {
+                return null;
+            }
+        }
+
+        // Sends a change to the server and returns true if it was saved. If the server
+        // refuses it, the workspace is reloaded from the server so the UI never shows unsaved edits.
+        async function syncToServer(patch) {
+            let ok = false;
+            try {
+                const r = await apiFetch('/api/data', { method: 'POST', body: JSON.stringify(patch) });
+                if (r.ok && r.json && r.json.data) {
+                    applyServerData(r.json.data);
+                    ok = true;
+                } else if (r.status !== 401) {
+                    showToast((r.json && r.json.error) || "Could not save changes to the server.", "error");
+                    await syncFromServer();
+                }
+            } catch {
+                showToast("Server unreachable: changes were not saved.", "error");
+            }
+            if (currentOrgId && currentUser) refreshLocalWorkspaceData();
+            try {
+                if (ok && window.ebgBroadcast) {
                     window.ebgBroadcast.postMessage({ type: 'sync', time: Date.now() });
                 }
             } catch {}
+            return ok;
         }
 
         // Real-time Cross-Tab / Cross-Window Sync
@@ -1955,23 +2018,29 @@
                 });
             } else {
                 document.getElementById('live-sync-label').textContent = 'Live workspace';
-                await syncFromServer();
-                const savedUser = getLocalStore('current_user', null);
-                const savedProfile = getLocalStore('current_profile', null);
-                const registeredUsers = getLocalStore('registered_users', {});
-                if (savedUser && savedProfile && registeredUsers[savedUser.email]) {
-                    currentUser = savedUser;
-                    currentUserProfile = savedProfile;
-                    currentOrgId = UNIFIED_ORG_ID;
-                    await enterOrganizationWorkspace(currentOrgId);
-                } else {
-                    localStorage.removeItem('ebg_prod_current_user');
-                    localStorage.removeItem('ebg_prod_current_profile');
-                    currentUser = null;
-                    currentUserProfile = null;
-                    hideLoading();
-                    showAuthStep('login');
+                // Older versions cached every user's password in the browser; drop it
+                localStorage.removeItem('ebg_prod_registered_users');
+                let authMessage = '';
+                if (getSessionToken()) {
+                    try {
+                        const r = await apiFetch('/api/me');
+                        if (r.ok && r.json && r.json.profile) {
+                            setCurrentUserFromProfile(r.json.profile);
+                            await syncFromServer();
+                            await enterOrganizationWorkspace(UNIFIED_ORG_ID);
+                            return;
+                        }
+                        authMessage = (r.json && r.json.error) || '';
+                    } catch {
+                        authMessage = "Cannot reach the EBG server. Please make sure server.py is running.";
+                    }
                 }
+                clearLocalSessionCache();
+                currentUser = null;
+                currentUserProfile = null;
+                hideLoading();
+                showAuthStep('login');
+                if (authMessage && !/sign in again/i.test(authMessage)) showToast(authMessage, "error");
             }
         }
 
@@ -2037,20 +2106,19 @@
             const email = (emailInput?.value || '').trim().toLowerCase();
             const password = passwordInput?.value || '';
 
-            // 1. Strict restriction: Only official @theebg.com email addresses
+            // Quick checks for a friendly message; the server enforces the same rules
             if (!email.endsWith('@theebg.com')) {
                 showToast("Access restricted: Only official @theebg.com email addresses are permitted.", "error");
                 return;
             }
-
             if (!password || password.length < 6) {
                 showToast("Password must be at least 6 characters.", "error");
                 return;
             }
 
-            // ==========================================
-            // REGISTRATION (CREATE ACCOUNT) FLOW
-            // ==========================================
+            let endpoint = '/api/login';
+            let payload = { email, password };
+
             if (authTabMode === 'register') {
                 const fullName = (document.getElementById('reg-full-name')?.value || '').trim();
                 const department = document.getElementById('reg-department')?.value || 'Performance Marketing';
@@ -2062,170 +2130,59 @@
                     showToast("Please enter your full name.", "error");
                     return;
                 }
-
                 if (password !== confirmPassword) {
                     showToast("Passwords do not match. Please verify.", "error");
                     return;
                 }
-
+                endpoint = '/api/register';
+                payload = { email, password, displayName: fullName, department, role, phone };
                 showLoading("Creating your EBG workspace account...");
+            } else {
+                showLoading("Signing in to EBG Workspace...");
+            }
 
-                // Check local and server registered users
-                const usersMap = getLocalStore('registered_users', {});
-                if (usersMap[email]) {
-                    hideLoading();
-                    showToast("An account with this email already exists. Please Sign In.", "error");
-                    return;
-                }
-
-                const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-                const memberProfile = {
-                    uid,
-                    displayName: fullName,
-                    email,
-                    role,
-                    department,
-                    phone,
-                    orgId: UNIFIED_ORG_ID,
-                    orgName: UNIFIED_ORG_NAME,
-                    status: 'online',
-                    joinedAt: new Date().toISOString()
-                };
-
-                const userRecord = {
-                    uid,
-                    email,
-                    password,
-                    displayName: fullName,
-                    department,
-                    role,
-                    phone,
-                    profile: memberProfile
-                };
-
-                usersMap[email] = userRecord;
-                setLocalStore('registered_users', usersMap);
-
-                // Add to orgMembers
-                const currentMembers = getLocalStore('org_members', []);
-                const existingIdx = currentMembers.findIndex(m => m.email && m.email.toLowerCase() === email);
-                if (existingIdx >= 0) {
-                    currentMembers[existingIdx] = memberProfile;
-                } else {
-                    currentMembers.push(memberProfile);
-                }
-                setLocalStore('org_members', currentMembers);
-
-                currentUser = { uid, email, displayName: fullName };
-                currentUserProfile = memberProfile;
-                currentOrgId = UNIFIED_ORG_ID;
-
-                setLocalStore('current_user', currentUser);
-                setLocalStore('current_profile', currentUserProfile);
-
-                // Sync new member and user record to server
-                await syncToServer({
-                    users: { [email]: userRecord },
-                    members: [memberProfile]
-                });
-
-                if (useCloudSync && auth) {
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } catch (fbErr) {
-                        console.warn("Firebase Auth registration fallback:", fbErr);
-                    }
-                }
-
-                await enterOrganizationWorkspace(UNIFIED_ORG_ID);
+            let r;
+            try {
+                r = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+            } catch {
                 hideLoading();
-                showToast(`Welcome to EBG Group, ${fullName}! Your account is active.`, "success");
+                showToast("Cannot reach the EBG server. Please make sure server.py is running.", "error");
+                return;
+            }
+            if (!r.ok || !r.json || !r.json.token) {
+                hideLoading();
+                showToast((r.json && r.json.error) || "Sign in failed. Please try again.", "error");
                 return;
             }
 
-            // ==========================================
-            // SIGN IN FLOW
-            // ==========================================
-            showLoading("Signing in to EBG Workspace...");
+            if (passwordInput) passwordInput.value = '';
+            const confirmInput = document.getElementById('reg-confirm-password');
+            if (confirmInput) confirmInput.value = '';
 
-            const usersMap = getLocalStore('registered_users', {});
-            let user = usersMap[email];
-
-            // If not in local store, fetch latest from server /api/data
-            if (!user) {
-                try {
-                    const res = await fetch('/api/data');
-                    if (res.ok) {
-                        const json = await res.json();
-                        if (json.users && json.users[email]) {
-                            user = json.users[email];
-                            usersMap[email] = user;
-                            setLocalStore('registered_users', usersMap);
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Fetch users error:", e);
-                }
-            }
-
-            if (!user) {
-                hideLoading();
-                showToast("No account found for this @theebg.com email. Click 'Create Account' to register.", "error");
-                return;
-            }
-
-            if (user.status === 'suspended' || (user.profile && user.profile.accountStatus === 'suspended') || user.accountStatus === 'suspended') {
-                hideLoading();
-                showToast("Your login access has been suspended by the workspace Admin. Please contact Admin.", "error");
-                return;
-            }
-
-            if (user.password && user.password !== password) {
-                hideLoading();
-                showToast("Incorrect password. Please try again.", "error");
-                return;
-            }
-
-            const profile = user.profile || {
-                uid: user.uid,
-                displayName: user.displayName || capitalizeWords(email.split('@')[0]),
-                email: email,
-                role: user.role || 'Member',
-                department: user.department || 'Performance Marketing',
-                phone: user.phone || '',
-                orgId: UNIFIED_ORG_ID,
-                orgName: UNIFIED_ORG_NAME,
-                status: 'online',
-                joinedAt: new Date().toISOString()
-            };
-
-            currentUser = { uid: user.uid, email: user.email, displayName: profile.displayName };
-            currentUserProfile = profile;
-            currentOrgId = UNIFIED_ORG_ID;
-
-            setLocalStore('current_user', currentUser);
-            setLocalStore('current_profile', currentUserProfile);
-
-            if (useCloudSync && auth) {
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } catch (fbErr) {
-                    console.warn("Firebase sign-in fallback:", fbErr);
-                }
-            }
-
+            setSessionToken(r.json.token);
+            setCurrentUserFromProfile(r.json.profile);
+            await syncFromServer();
             await enterOrganizationWorkspace(UNIFIED_ORG_ID);
             hideLoading();
-            showToast(`Welcome back, ${profile.displayName}!`, "success");
+            showToast(
+                endpoint === '/api/register'
+                    ? `Welcome to EBG Group, ${currentUserProfile.displayName}! Your account is active.`
+                    : `Welcome back, ${currentUserProfile.displayName}!`,
+                "success"
+            );
         }
 
         async function signOutUser() {
             cleanupListeners();
+            try {
+                await apiFetch('/api/logout', { method: 'POST', body: '{}' });
+            } catch {}
             currentUserProfile = null;
             currentUser = null;
             currentOrgId = null;
-            localStorage.removeItem('ebg_prod_current_user');
-            localStorage.removeItem('ebg_prod_current_profile');
+            orgMembers = [];
+            orgTasks = [];
+            clearLocalSessionCache();
             if (useCloudSync && auth) {
                 await signOut(auth).catch(() => {});
             }
@@ -2290,7 +2247,7 @@
 
                 if (useCloudSync && db) {
                     await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main'), profileData);
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', `${orgId}_${currentUser.uid}`), profileData);
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', `EBG_${currentUser.uid}`), profileData);
                 } else {
                     setLocalStore('current_profile', profileData);
                     const usersMap = getLocalStore('registered_users', {});
@@ -2420,10 +2377,10 @@
             const brand = document.getElementById('brand-filter')?.value || 'all';
             const timeframe = document.getElementById('timeframe-filter')?.value || 'all';
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = localDateStr(new Date());
             const nextWeekDate = new Date();
             nextWeekDate.setDate(nextWeekDate.getDate() + 7);
-            const nextWeekStr = nextWeekDate.toISOString().split('T')[0];
+            const nextWeekStr = localDateStr(nextWeekDate);
 
             return orgTasks.filter(t => {
                 if (dept !== 'all' && t.tag !== dept) return false;
@@ -2564,7 +2521,7 @@
                 const d = new Date(now);
                 d.setDate(d.getDate() - i);
                 days.push({
-                    iso: d.toISOString().split('T')[0],
+                    iso: localDateStr(d),
                     label: d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
                     val: 0
                 });
@@ -2588,7 +2545,7 @@
                 });
             } else {
                 days.forEach((day, idx) => {
-                    const createdUpToDay = tasks.filter(t => (t.createdAt || '').slice(0, 10) <= day.iso);
+                    const createdUpToDay = tasks.filter(t => t.createdAt && localDateStr(new Date(t.createdAt)) <= day.iso);
                     const subset = createdUpToDay.length > 0 ? createdUpToDay : (idx === days.length - 1 ? tasks : []);
 
                     if (selectedKpiMetric === 'total') {
@@ -2778,12 +2735,12 @@
                 <!-- Google Drive Links Bar on Kanban Card -->
                 <div class="flex items-center gap-1.5 flex-wrap my-2">
                     ${task.contentDriveUrl ? `
-                        <a href="${task.contentDriveUrl}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 hover:underline">
+                        <a href="${safeUrl(task.contentDriveUrl)}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 hover:underline">
                             <i data-lucide="file-text" class="w-2.5 h-2.5"></i> Brief Doc
                         </a>
                     ` : ''}
                     ${task.submissionDriveUrl ? `
-                        <a href="${task.submissionDriveUrl}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E6F4EA] dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 border border-emerald-200/60 hover:underline">
+                        <a href="${safeUrl(task.submissionDriveUrl)}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E6F4EA] dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 border border-emerald-200/60 hover:underline">
                             <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> Drive Ready
                         </a>
                     ` : (task.tag === 'Graphic Designing' ? `
@@ -2862,14 +2819,14 @@
                 </td>
                 <td class="py-3 px-4" onclick="event.stopPropagation()">
                     ${task.contentDriveUrl ? `
-                        <a href="${task.contentDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+                        <a href="${safeUrl(task.contentDriveUrl)}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Brief Doc
                         </a>
                     ` : `<span class="text-xs text-zinc-400 italic">-</span>`}
                 </td>
                 <td class="py-3 px-4" onclick="event.stopPropagation()">
                     ${task.submissionDriveUrl ? `
-                        <a href="${task.submissionDriveUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-[#E6F4EA] text-[#137333] hover:underline">
+                        <a href="${safeUrl(task.submissionDriveUrl)}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-[#E6F4EA] text-[#137333] hover:underline">
                             <i data-lucide="external-link" class="w-3 h-3"></i> Drive Ready
                         </a>
                     ` : `
@@ -2916,8 +2873,7 @@
         }
 
         window.quickUpdateStatusFromTable = async function(taskId, newStatus) {
-            await patchTaskById(taskId, { status: newStatus });
-            showToast(`Status updated to ${newStatus}`, "success");
+            if (await patchTaskById(taskId, { status: newStatus })) showToast(`Status updated to ${newStatus}`, "success");
         };
 
         // Drag and Drop
@@ -2929,8 +2885,7 @@
             if (!taskId || !currentUser) return;
             const task = orgTasks.find(t => t.id === taskId);
             if (!task || task.status === newStatus) return;
-            await patchTaskById(taskId, { status: newStatus });
-            showToast(`Moved to ${newStatus}`, "success");
+            if (await patchTaskById(taskId, { status: newStatus })) showToast(`Moved to ${newStatus}`, "success");
         }
 
         // 12. Team Directory & Workload
@@ -3015,7 +2970,7 @@
                         </div>
                         <div class="flex items-center gap-1.5">
                             ${isAdmin ? `
-                                <button onclick="adminOpenEditMember('${member.uid}', '${escapeHtml(member.email || '')}')" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold transition flex items-center gap-1" title="Manage member login and permissions">
+                                <button onclick="adminOpenEditMember(${jsArg(member.uid)}, ${jsArg(member.email || '')})" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold transition flex items-center gap-1" title="Manage member login and permissions">
                                     <i data-lucide="shield" class="w-3 h-3"></i> Manage
                                 </button>
                             ` : ''}
@@ -3088,6 +3043,11 @@
 
         function toggleUrgentFilter() {
             filterOnlyUrgent = !filterOnlyUrgent;
+            const railUrgent = document.getElementById('rail-urgent');
+            if (railUrgent) {
+                railUrgent.classList.toggle('bg-rose-50', filterOnlyUrgent);
+                railUrgent.classList.toggle('text-rose-600', filterOnlyUrgent);
+            }
             renderAll();
         }
 
@@ -3097,8 +3057,11 @@
             document.getElementById('header-member-filter').value = 'all';
             document.getElementById('priority-filter').value = 'all';
             document.getElementById('timeframe-filter').value = 'all';
+            const brandFilterEl = document.getElementById('brand-filter');
+            if (brandFilterEl) brandFilterEl.value = 'all';
             filterOnlyMine = false;
             filterOnlyUrgent = false;
+            document.getElementById('rail-urgent')?.classList.remove('bg-rose-50', 'text-rose-600');
             document.getElementById('pill-filter-mine').className = "px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition";
             renderAll();
         }
@@ -3111,7 +3074,7 @@
 
             const due = new Date();
             due.setDate(due.getDate() + 3);
-            document.getElementById('task-due-date').value = due.toISOString().split('T')[0];
+            document.getElementById('task-due-date').value = localDateStr(due);
 
             if (currentUser) {
                 document.getElementById('task-assignee').value = currentUser.uid;
@@ -3227,6 +3190,10 @@
             const brand = (brandVal === '__custom__' && brandCustom) ? brandCustom : (brandVal === '__custom__' ? 'Custom Brand' : brandVal);
             const format = document.getElementById('task-format')?.value || 'General Deliverable';
             const contentDriveUrl = document.getElementById('task-content-drive')?.value.trim() || '';
+            if (contentDriveUrl && !isSafeUrl(contentDriveUrl)) {
+                showToast("Drive link must start with http:// or https://", "error");
+                return;
+            }
 
             const isScheduled = document.getElementById('task-is-scheduled')?.checked || false;
             const scheduledDate = isScheduled ? (document.getElementById('task-scheduled-date')?.value || '') : '';
@@ -3234,7 +3201,11 @@
 
             const assignee = orgMembers.find(m => m.uid === assigneeId);
             const assigneeName = assignee ? assignee.displayName : currentUserProfile.displayName;
-            const nextSeq = String(orgTasks.length + 1).padStart(3, '0');
+            const maxSeq = orgTasks.reduce((mx, t) => {
+                const n = parseInt(String(t.code || '').replace(/^EBG-/, ''), 10);
+                return Number.isFinite(n) && n > mx ? n : mx;
+            }, 0);
+            const nextSeq = String(maxSeq + 1).padStart(3, '0');
 
             const newTask = {
                 code: `EBG-${nextSeq}`,
@@ -3331,7 +3302,7 @@
             const contentInput = document.getElementById('detail-content-drive-input');
             if (task.contentDriveUrl) {
                 if (contentBtn) {
-                    contentBtn.href = task.contentDriveUrl;
+                    contentBtn.href = isSafeUrl(task.contentDriveUrl) ? task.contentDriveUrl.trim() : '#';
                     contentBtn.classList.remove('hidden');
                 }
                 if (contentText) contentText.textContent = task.contentDriveUrl;
@@ -3350,7 +3321,7 @@
             const subInput = document.getElementById('detail-submission-drive-input');
             if (task.submissionDriveUrl) {
                 if (subDisplay) subDisplay.classList.remove('hidden');
-                if (subBtn) subBtn.href = task.submissionDriveUrl;
+                if (subBtn) subBtn.href = isSafeUrl(task.submissionDriveUrl) ? task.submissionDriveUrl.trim() : '#';
                 if (subText) subText.textContent = task.submissionDriveUrl;
                 if (subBadge) {
                     subBadge.textContent = "Drive Link Ready";
@@ -3491,8 +3462,11 @@
             if (brand) {
                 const brandSelect = document.getElementById('task-brand');
                 if (brandSelect) {
-                    brandSelect.value = brand;
-                    toggleCustomBrandInput(brand);
+                    const isListed = [...brandSelect.options].some(o => o.value === brand);
+                    brandSelect.value = isListed ? brand : '__custom__';
+                    toggleCustomBrandInput(brandSelect.value);
+                    const customInput = document.getElementById('task-custom-brand');
+                    if (!isListed && customInput) customInput.value = brand;
                 }
             }
             const formatSelect = document.getElementById('task-format');
@@ -3503,8 +3477,8 @@
             if (!activeDetailTaskId) return;
             const input = document.getElementById('detail-content-drive-input');
             const url = (input ? input.value : '').trim();
-            if (!url) {
-                showToast("Please enter a valid Google Drive URL", "error");
+            if (!url || !isSafeUrl(url)) {
+                showToast("Please enter a valid Google Drive URL (starting with https://)", "error");
                 return;
             }
             await patchTaskById(activeDetailTaskId, { contentDriveUrl: url });
@@ -3515,8 +3489,8 @@
             if (!activeDetailTaskId) return;
             const input = document.getElementById('detail-submission-drive-input');
             const url = (input ? input.value : '').trim();
-            if (!url) {
-                showToast("Please enter a Google Drive link for your creative / reel deliverable", "error");
+            if (!url || !isSafeUrl(url)) {
+                showToast("Please enter a valid Google Drive link (starting with https://) for your creative / reel deliverable", "error");
                 return;
             }
             const currentTask = orgTasks.find(t => t.id === activeDetailTaskId);
@@ -3539,6 +3513,10 @@
             if (newUrl === null) return;
             const cleaned = newUrl.trim();
             if (!cleaned) return;
+            if (!isSafeUrl(cleaned)) {
+                showToast("Drive link must start with http:// or https://", "error");
+                return;
+            }
 
             const newStatus = (task.status === 'To Do' || task.status === 'In Progress') ? 'In Review' : task.status;
             await patchTaskById(taskId, {
@@ -3588,6 +3566,7 @@
         }
 
         async function patchTaskById(taskId, patch) {
+            if (patch.status && patch.status !== 'Scheduled') patch = { ...patch, isScheduled: false };
             if (useCloudSync && db) {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_tasks', taskId), patch);
             } else {
@@ -3597,23 +3576,23 @@
                     all[idx] = { ...all[idx], ...patch };
                     setLocalStore('org_tasks', all);
                     refreshLocalWorkspaceData();
-                    await syncToServer({ tasks: [all[idx]] });
+                    return await syncToServer({ tasks: [all[idx]] });
                 }
+                return false;
             }
+            return true;
         }
 
         async function updateTaskFieldFromDrawer(field, value) {
             if (!activeDetailTaskId) return;
-            await patchTaskById(activeDetailTaskId, { [field]: value });
-            showToast(`Updated ${field}`, "success");
+            if (await patchTaskById(activeDetailTaskId, { [field]: value })) showToast(`Updated ${field}`, "success");
         }
 
         async function updateTaskAssigneeFromDrawer(newUid) {
             if (!activeDetailTaskId) return;
             const member = orgMembers.find(m => m.uid === newUid);
             if (!member) return;
-            await patchTaskById(activeDetailTaskId, { assigneeId: member.uid, assigneeName: member.displayName });
-            showToast(`Reassigned to ${member.displayName}`, "success");
+            if (await patchTaskById(activeDetailTaskId, { assigneeId: member.uid, assigneeName: member.displayName })) showToast(`Reassigned to ${member.displayName}`, "success");
         }
 
         async function toggleSubtaskCheck(idx) {
@@ -3665,7 +3644,8 @@
                 const all = getLocalStore('org_tasks', []).filter(t => t.id !== targetTaskId);
                 setLocalStore('org_tasks', all);
                 refreshLocalWorkspaceData();
-                await syncToServer({ deleteTaskId: targetTaskId });
+                const ok = await syncToServer({ deleteTaskId: targetTaskId });
+                if (!ok) return;
             }
             closeTaskDetailDrawer();
             showToast("Task deleted.", "info");
@@ -3723,7 +3703,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `EBG_Tasks_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `EBG_Tasks_${localDateStr(new Date())}.csv`;
             a.click();
             URL.revokeObjectURL(url);
             showToast("Exported tasks to Excel (CSV) with Brand & Drive links!", "success");
@@ -3800,11 +3780,11 @@
         function isTaskInProductivityRange(task, range, customStart, customEnd) {
             if (range === 'all') return true;
 
-            const taskDateStr = (task.createdAt || task.dueDate || '').split('T')[0];
+            const taskDateStr = task.createdAt ? localDateStr(new Date(task.createdAt)) : (task.dueDate || '');
             if (!taskDateStr) return true;
 
             const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
+            const todayStr = localDateStr(today);
 
             if (range === 'today') {
                 return taskDateStr === todayStr;
@@ -3812,18 +3792,18 @@
             if (range === 'yesterday') {
                 const y = new Date(today);
                 y.setDate(y.getDate() - 1);
-                return taskDateStr === y.toISOString().split('T')[0];
+                return taskDateStr === localDateStr(y);
             }
             if (range === 'week') {
                 const weekAgo = new Date(today);
                 weekAgo.setDate(weekAgo.getDate() - 7);
-                const weekAgoStr = weekAgo.toISOString().split('T')[0];
+                const weekAgoStr = localDateStr(weekAgo);
                 return taskDateStr >= weekAgoStr && taskDateStr <= todayStr;
             }
             if (range === 'month') {
                 const monthAgo = new Date(today);
                 monthAgo.setDate(monthAgo.getDate() - 30);
-                const monthAgoStr = monthAgo.toISOString().split('T')[0];
+                const monthAgoStr = localDateStr(monthAgo);
                 return taskDateStr >= monthAgoStr && taskDateStr <= todayStr;
             }
             if (range === 'custom') {
@@ -3928,7 +3908,7 @@
 
             if (!container) return;
 
-            const creativeTasks = orgTasks.filter(t => t.tag === 'Graphic Designing' || t.format || t.brand);
+            const creativeTasks = orgTasks.filter(t => t.tag === 'Graphic Designing' || /Creative|Reel|Carousel|Story/i.test(t.format || ''));
 
             const totalCount = creativeTasks.length;
             const reelsCount = creativeTasks.filter(t => t.format && t.format.includes('Reel')).length;
@@ -3978,7 +3958,7 @@
                         <div class="bg-zinc-50 dark:bg-[#18181B] rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col justify-between gap-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition">
                             <div>
                                 <div class="flex items-center justify-between gap-2 mb-2">
-                                    <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${t.code || 'EBG-001'}</span>
+                                    <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${escapeHtml(t.code || 'EBG-001')}</span>
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded ${t.format && t.format.includes('Reel') ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300'}">
                                         ${escapeHtml(t.format || 'Creative')}
                                     </span>
@@ -3999,7 +3979,7 @@
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-[10px] text-zinc-400 font-medium">1. Content Brief:</span>
                                     ${hasContentBrief ? `
-                                        <a href="${t.contentDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                                        <a href="${safeUrl(t.contentDriveUrl)}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                                             <i data-lucide="external-link" class="w-3 h-3"></i> Open Drive Doc
                                         </a>
                                     ` : `
@@ -4009,7 +3989,7 @@
                                 <div class="flex items-center justify-between gap-2">
                                     <span class="text-[10px] text-zinc-400 font-medium">2. Deliverable:</span>
                                     ${hasSubmission ? `
-                                        <a href="${t.submissionDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#137333] dark:text-emerald-400 hover:underline">
+                                        <a href="${safeUrl(t.submissionDriveUrl)}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#137333] dark:text-emerald-400 hover:underline">
                                             <i data-lucide="check-circle" class="w-3 h-3 text-[#1E8E3E]"></i> View Drive Link
                                         </a>
                                     ` : `
@@ -4019,7 +3999,7 @@
                                     `}
                                 </div>
                                 <div class="flex items-center justify-between pt-1">
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Done' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}">${t.status}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Done' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}">${escapeHtml(t.status)}</span>
                                     <button onclick="openTaskDetail('${t.id}')" class="text-[10px] text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline">
                                         Manage / Delegate
                                     </button>
@@ -4035,7 +4015,7 @@
                             <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-[#111113] dark:bg-white text-white dark:text-[#111113] shadow-2xs">${escapeHtml(brand)}</span>
                             <span class="text-xs text-[#71717A]">${tasks.length} Deliverable(s)</span>
                         </div>
-                        <button onclick="openCreateTaskModalForDesign('${brand}')" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
+                        <button onclick="openCreateTaskModalForDesign(${jsArg(brand)})" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
                             <i data-lucide="plus" class="w-3 h-3"></i> Add for ${escapeHtml(brand)}
                         </button>
                     </div>
@@ -4244,21 +4224,8 @@
                 showToast("Admin access required to manage team logins.", "error");
                 return;
             }
-            try {
-                const res = await fetch('/api/data');
-                if (res.ok) {
-                    const json = await res.json();
-                    if (json.users) {
-                        setLocalStore('registered_users', json.users);
-                    }
-                    if (json.members) {
-                        orgMembers = json.members;
-                        setLocalStore('org_members', orgMembers);
-                    }
-                }
-            } catch (err) {
-                console.warn("Failed fetching fresh admin user list:", err);
-            }
+            await syncFromServer();
+            orgMembers = getLocalStore('org_members', []);
 
             renderAdminUsersTable();
             document.getElementById('admin-user-management-modal').classList.remove('hidden');
@@ -4308,7 +4275,6 @@
                     role: m.role || userRec.role || 'Member',
                     phone: m.phone || userRec.phone || '',
                     status: status,
-                    password: userRec.password || '******',
                     rawUser: userRec
                 });
             });
@@ -4325,7 +4291,6 @@
                         role: u.role || (u.profile && u.profile.role) || 'Member',
                         phone: u.phone || (u.profile && u.profile.phone) || '',
                         status: u.status || 'active',
-                        password: u.password || '******',
                         rawUser: u
                     });
                 }
@@ -4402,17 +4367,17 @@
                     </td>
                     <td class="py-3 px-4 text-right">
                         <div class="inline-flex items-center gap-1.5">
-                            <button type="button" onclick="adminOpenEditMember('${u.uid}', '${escapeHtml(u.email)}')" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 transition" title="Edit Member Profile">
+                            <button type="button" onclick="adminOpenEditMember(${jsArg(u.uid)}, ${jsArg(u.email)})" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 transition" title="Edit Member Profile">
                                 <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="adminOpenResetPasswordModal('${escapeHtml(u.email)}', '${escapeHtml(u.displayName)}')" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-amber-600 transition" title="Reset Password">
+                            <button type="button" onclick="adminOpenResetPasswordModal(${jsArg(u.email)}, ${jsArg(u.displayName)})" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-amber-600 transition" title="Reset Password">
                                 <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
                             </button>
-                            <button type="button" onclick="adminToggleUserStatus('${escapeHtml(u.email)}', '${u.uid}')" class="px-2 py-1 rounded text-[10px] font-semibold transition ${isSuspended ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300'}" title="${isSuspended ? 'Reactivate Login' : 'Suspend Login'}">
+                            <button type="button" onclick="adminToggleUserStatus(${jsArg(u.email)}, ${jsArg(u.uid)})" class="px-2 py-1 rounded text-[10px] font-semibold transition ${isSuspended ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300'}" title="${isSuspended ? 'Reactivate Login' : 'Suspend Login'}">
                                 ${isSuspended ? 'Activate' : 'Suspend'}
                             </button>
                             ${!isCurrent ? `
-                                <button type="button" onclick="adminDeleteMember('${u.uid}', '${escapeHtml(u.email)}', '${escapeHtml(u.displayName)}')" class="p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950 text-zinc-400 hover:text-rose-600 transition" title="Delete Member">
+                                <button type="button" onclick="adminDeleteMember(${jsArg(u.uid)}, ${jsArg(u.email)}, ${jsArg(u.displayName)})" class="p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950 text-zinc-400 hover:text-rose-600 transition" title="Delete Member">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             ` : ''}
@@ -4432,29 +4397,28 @@
 
             const cleanEmail = (email || '').toLowerCase().trim();
             const usersMap = getLocalStore('registered_users', {});
-            let userRec = usersMap[cleanEmail];
-            let currentStatus = userRec?.status || 'active';
+            const userRec = usersMap[cleanEmail];
+            const memberRec = orgMembers.find(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail));
+            const currentStatus = userRec?.status || memberRec?.accountStatus || 'active';
             const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
 
+            const patch = {};
             if (userRec) {
-                userRec.status = nextStatus;
-                if (userRec.profile) userRec.profile.accountStatus = nextStatus;
-                usersMap[cleanEmail] = userRec;
-                setLocalStore('registered_users', usersMap);
+                patch.users = {
+                    [cleanEmail]: {
+                        status: nextStatus,
+                        profile: { ...(userRec.profile || {}), accountStatus: nextStatus }
+                    }
+                };
+            }
+            if (memberRec) {
+                patch.members = [{ ...memberRec, accountStatus: nextStatus }];
             }
 
-            const mIdx = orgMembers.findIndex(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail));
-            if (mIdx >= 0) {
-                orgMembers[mIdx].accountStatus = nextStatus;
-                setLocalStore('org_members', orgMembers);
+            const ok = await syncToServer(patch);
+            if (ok) {
+                showToast(`Account login for ${cleanEmail} is now ${nextStatus.toUpperCase()}.`, nextStatus === 'active' ? 'success' : 'error');
             }
-
-            await syncToServer({
-                users: userRec ? { [cleanEmail]: userRec } : undefined,
-                members: orgMembers
-            });
-
-            showToast(`Account login for ${cleanEmail} is now ${nextStatus.toUpperCase()}.`, nextStatus === 'active' ? 'success' : 'error');
             renderAdminUsersTable();
             renderTeamDirectory();
         }
@@ -4477,9 +4441,15 @@
 
         async function adminSaveResetPassword(e) {
             e.preventDefault();
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
             const email = (document.getElementById('admin-reset-target-email')?.value || '').toLowerCase().trim();
-            const newPass = document.getElementById('admin-reset-new-password')?.value || '';
-            const confPass = document.getElementById('admin-reset-confirm-password')?.value || '';
+            const newPassInput = document.getElementById('admin-reset-new-password');
+            const confPassInput = document.getElementById('admin-reset-confirm-password');
+            const newPass = newPassInput?.value || '';
+            const confPass = confPassInput?.value || '';
 
             if (!email) return;
             if (!newPass || newPass.length < 6) {
@@ -4492,35 +4462,24 @@
             }
 
             showLoading("Updating member password...");
-            const usersMap = getLocalStore('registered_users', {});
-            let userRec = usersMap[email];
-
-            if (!userRec) {
-                const member = orgMembers.find(m => m.email && m.email.toLowerCase() === email);
-                userRec = {
-                    uid: member?.uid || ('usr_' + Date.now().toString(36)),
-                    email,
-                    displayName: member?.displayName || email.split('@')[0],
-                    department: member?.department || 'Performance Marketing',
-                    role: member?.role || 'Member',
-                    phone: member?.phone || '',
-                    password: newPass,
-                    status: 'active'
-                };
-            } else {
-                userRec.password = newPass;
+            let r = null;
+            try {
+                r = await apiFetch('/api/admin/reset-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, newPassword: newPass })
+                });
+            } catch {}
+            hideLoading();
+            if (!r || !r.ok) {
+                if (!r || r.status !== 401) showToast((r && r.json && r.json.error) || "Could not reset the password.", "error");
+                return;
             }
 
-            usersMap[email] = userRec;
-            setLocalStore('registered_users', usersMap);
-
-            await syncToServer({
-                users: { [email]: userRec }
-            });
-
-            hideLoading();
+            if (newPassInput) newPassInput.value = '';
+            if (confPassInput) confPassInput.value = '';
             adminCloseResetPasswordModal();
-            showToast(`Password successfully reset for ${email}!`, "success");
+            showToast(`Password reset for ${email}. Their other sessions were signed out.`, "success");
+            await syncFromServer();
             renderAdminUsersTable();
         }
 
@@ -4552,6 +4511,10 @@
 
         async function adminSaveEditMember(e) {
             e.preventDefault();
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
             const uid = document.getElementById('admin-edit-uid')?.value;
             const email = (document.getElementById('admin-edit-email')?.value || '').toLowerCase().trim();
             const name = (document.getElementById('admin-edit-name')?.value || '').trim();
@@ -4604,21 +4567,16 @@
                     userRec.profile.role = role;
                     userRec.profile.phone = phone;
                 }
-            } else {
-                userRec = {
-                    uid: memberObj.uid,
-                    email,
-                    displayName: name,
-                    department: dept,
-                    role,
-                    phone,
-                    status: 'active',
-                    password: 'password123',
-                    profile: memberObj
-                };
+                usersMap[email] = userRec;
+                setLocalStore('registered_users', usersMap);
             }
-            usersMap[email] = userRec;
-            setLocalStore('registered_users', usersMap);
+            // No login record yet: the Admin sets a password via "Reset Password" (no shared default password)
+
+            // Keep task cards in sync with the renamed member
+            const renamedTasks = orgTasks.filter(t => t.assigneeId === memberObj.uid && t.assigneeName !== name);
+            for (const t of renamedTasks) {
+                await patchTaskById(t.id, { assigneeName: name });
+            }
 
             if (currentUser && (currentUser.uid === uid || currentUser.email.toLowerCase() === email)) {
                 currentUser.displayName = name;
@@ -4631,12 +4589,13 @@
                 enterOrganizationWorkspace(UNIFIED_ORG_ID);
             }
 
-            await syncToServer({
-                users: { [email]: userRec },
+            const saved = await syncToServer({
+                users: userRec ? { [email]: userRec } : undefined,
                 members: [memberObj]
             });
 
             hideLoading();
+            if (!saved) return;
             adminCloseEditMemberModal();
             showToast(`Colleague profile updated successfully!`, "success");
             renderAdminUsersTable();
@@ -4646,6 +4605,10 @@
 
         async function adminSubmitProvisionMember(e) {
             e.preventDefault();
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
             const name = (document.getElementById('admin-prov-name')?.value || '').trim();
             const email = (document.getElementById('admin-prov-email')?.value || '').toLowerCase().trim();
             const dept = document.getElementById('admin-prov-dept')?.value || 'Performance Marketing';
@@ -4666,59 +4629,26 @@
                 return;
             }
 
-            const usersMap = getLocalStore('registered_users', {});
-            if (usersMap[email]) {
-                showToast("An account with this email already exists.", "error");
+            showLoading("Provisioning new member account...");
+            let r = null;
+            try {
+                r = await apiFetch('/api/admin/provision', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password, displayName: name, department: dept, role, phone })
+                });
+            } catch {}
+            hideLoading();
+            if (!r || !r.ok) {
+                if (!r || r.status !== 401) showToast((r && r.json && r.json.error) || "Could not create the account.", "error");
                 return;
             }
 
-            showLoading("Provisioning new member account...");
-
-            const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-            const memberProfile = {
-                uid,
-                displayName: name,
-                email,
-                role,
-                department: dept,
-                phone,
-                orgId: UNIFIED_ORG_ID,
-                orgName: UNIFIED_ORG_NAME,
-                status: 'online',
-                accountStatus: 'active',
-                joinedAt: new Date().toISOString()
-            };
-
-            const userRecord = {
-                uid,
-                email,
-                password,
-                displayName: name,
-                department: dept,
-                role,
-                phone,
-                status: 'active',
-                profile: memberProfile
-            };
-
-            usersMap[email] = userRecord;
-            setLocalStore('registered_users', usersMap);
-
-            orgMembers.push(memberProfile);
-            setLocalStore('org_members', orgMembers);
-
-            await syncToServer({
-                users: { [email]: userRecord },
-                members: [memberProfile]
-            });
-
+            applyServerData(r.json.data);
+            refreshLocalWorkspaceData();
             document.getElementById('admin-provision-form')?.reset();
             adminToggleProvisionForm(false);
-            hideLoading();
             showToast(`Account provisioned successfully for ${name} (${email})!`, "success");
             renderAdminUsersTable();
-            renderTeamDirectory();
-            populateMemberDropdowns();
         }
 
         async function adminDeleteMember(uid, email, name) {
@@ -4748,13 +4678,13 @@
             orgMembers = orgMembers.filter(m => m.uid !== uid && (m.email || '').toLowerCase() !== cleanEmail);
             setLocalStore('org_members', orgMembers);
 
-            await syncToServer({
+            const deleted = await syncToServer({
                 deleteMemberUid: uid,
-                deleteUserEmail: cleanEmail,
-                members: orgMembers
+                deleteUserEmail: cleanEmail
             });
 
             hideLoading();
+            if (!deleted) return;
             showToast(`Member ${name || cleanEmail} removed.`, "info");
             renderAdminUsersTable();
             renderTeamDirectory();
@@ -4762,7 +4692,7 @@
         }
         function isTaskOverdue(t) {
             if (!t.dueDate || t.status === 'Done') return false;
-            return t.dueDate < new Date().toISOString().split('T')[0];
+            return t.dueDate < localDateStr(new Date());
         }
         function getPriorityBadgeClass(p) {
             switch (p) {
@@ -4813,6 +4743,26 @@
                 return "This email is already registered. Please Sign In.";
             }
             return code;
+        }
+        // Local (not UTC) YYYY-MM-DD, so "today"/overdue match the user's calendar day (e.g. IST)
+        function localDateStr(d) {
+            const dt = d instanceof Date ? d : new Date(d);
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const day = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+        // Only allow http(s) links in hrefs (blocks javascript: and data: URLs)
+        function safeUrl(url) {
+            const u = String(url || '').trim();
+            return /^https?:\/\//i.test(u) ? escapeHtml(u) : '#';
+        }
+        function isSafeUrl(url) {
+            return /^https?:\/\//i.test(String(url || '').trim());
+        }
+        // Encode a value as a JS string literal for use inside an HTML on* attribute
+        function jsArg(val) {
+            return escapeHtml(JSON.stringify(String(val ?? '')));
         }
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
