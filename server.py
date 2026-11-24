@@ -600,8 +600,16 @@ def run():
     except Exception as e:
         print("Could not check data.json for plaintext passwords:", e)
 
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), EBGHandler) as httpd:
+    # On Windows, SO_REUSEADDR lets a second server bind the same port, and requests
+    # then bounce between two processes with different sign-in sessions. Refuse instead.
+    socketserver.TCPServer.allow_reuse_address = os.name != "nt"
+    try:
+        httpd = socketserver.TCPServer(("", PORT), EBGHandler)
+    except OSError:
+        print(f"Port {PORT} is already in use: the EBG server is probably already running. "
+              f"Close the other server window first, then start this one again.")
+        sys.exit(1)
+    with httpd:
         print(f"EBG Server with shared sync API running at http://localhost:{PORT}")
         sys.stdout.flush()
         httpd.serve_forever()
