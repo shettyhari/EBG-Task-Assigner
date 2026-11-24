@@ -2715,9 +2715,6 @@
                 if (activeCount >= 5) barColor = 'bg-rose-600';
                 else if (activeCount >= 3) barColor = 'bg-amber-500';
 
-                let cleanPhone = (member.phone || '').replace(/\D/g, '');
-                if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
-                const waChatUrl = cleanPhone ? `https://wa.me/${cleanPhone}` : `https://wa.me/?text=Hi%20${encodeURIComponent(member.displayName)}`;
 
                 const card = document.createElement('div');
                 card.className = "bg-white dark:bg-[#111113] p-5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-between";
@@ -2766,7 +2763,7 @@
                     <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
                             <button onclick="filterByMember(${jsArg(member.uid)})" class="text-xs font-semibold text-[#71717A] hover:text-[#111113] dark:hover:text-white transition">Tasks (${memberTasks.length})</button>
-                            <a href="${waChatUrl}" target="_blank" class="p-1 rounded-md text-[#25D366] hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition flex items-center gap-1 text-[11px] font-semibold" title="Chat on WhatsApp">
+                            <a href="${escapeHtml(whatsAppChatUrl(member.phone))}" target="${WHATSAPP_WINDOW}" onclick="event.preventDefault(); openMemberWhatsApp(${jsArg(member.uid)}, 'chat')" class="p-1 rounded-md text-[#25D366] hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition flex items-center gap-1 text-[11px] font-semibold" title="Chat on WhatsApp">
                                 <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
                                 <span class="hidden sm:inline">WhatsApp</span>
                             </a>
@@ -3773,11 +3770,6 @@
                     else rateBadgeClass = "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300";
                 }
 
-                let cleanPhone = (member.phone || '').replace(/\D/g, '');
-                if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
-                const waUrl = cleanPhone 
-                    ? `https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(member.displayName)},%20checking%20in%20on%20your%20${pendingCount}%20pending%20tasks`
-                    : `https://wa.me/?text=Hi%20${encodeURIComponent(member.displayName)},%20checking%20in%20on%20your%20tasks`;
 
                 const rowHtml = `
                     <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
@@ -3811,7 +3803,7 @@
                             </div>
                         </td>
                         <td class="py-2.5 px-3 text-right">
-                            <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#E6F4EA] dark:bg-emerald-950/60 hover:bg-[#ceead6] text-[#137333] dark:text-emerald-300 text-[10px] font-semibold transition" title="Follow up on WhatsApp">
+                            <a href="${escapeHtml(whatsAppChatUrl(member.phone))}" target="${WHATSAPP_WINDOW}" onclick="event.preventDefault(); openMemberWhatsApp(${jsArg(member.uid)}, 'followup')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#E6F4EA] dark:bg-emerald-950/60 hover:bg-[#ceead6] text-[#137333] dark:text-emerald-300 text-[10px] font-semibold transition" title="Follow up on WhatsApp">
                                 <i data-lucide="message-circle" class="w-3 h-3"></i> Alert
                             </a>
                         </td>
@@ -4069,47 +4061,108 @@
             }, durationMs || (action ? 6500 : 3200));
         }
 
-        // WhatsApp Team Dispatch System
-        function triggerWhatsAppAlertForTask(taskId) {
+        // ---- WhatsApp: open the person's chat with the message ready to send ----
+        // WhatsApp only allows opening a chat with text filled in; the sender presses Enter.
+        const WHATSAPP_WINDOW = 'ebg_whatsapp'; // reuse one WhatsApp Web tab instead of opening a new one each time
+
+        function normalizeWhatsAppNumber(raw) {
+            let digits = String(raw || '').replace(/\D/g, '');
+            if (digits.startsWith('00')) digits = digits.slice(2);                        // 0091 98765 43210
+            if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1); // 098765 43210
+            if (digits.length === 10) digits = '91' + digits;                              // Indian number without code
+            return digits.length >= 11 && digits.length <= 15 ? digits : '';
+        }
+
+        function isMobileDevice() {
+            return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+                || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+        }
+
+        // Computers: straight into WhatsApp Web. Phones: the WhatsApp app.
+        function whatsAppChatUrl(phone, text = '') {
+            const num = normalizeWhatsAppNumber(phone);
+            const encoded = encodeURIComponent(text || '');
+            if (isMobileDevice()) {
+                return num ? `https://wa.me/${num}${text ? `?text=${encoded}` : ''}` : `https://wa.me/?text=${encoded}`;
+            }
+            const parts = [];
+            if (num) parts.push(`phone=${num}`);
+            if (text) parts.push(`text=${encoded}`);
+            return `https://web.whatsapp.com/send?${parts.join('&')}`;
+        }
+
+        function openWhatsAppChat(phone, text) {
+            const win = window.open(whatsAppChatUrl(phone, text), isMobileDevice() ? '_blank' : WHATSAPP_WINDOW);
+            if (!win) {
+                showToast("Your browser blocked the WhatsApp window. Allow pop-ups for this site and try again.", "error", null, 8000);
+                return false;
+            }
+            try { win.focus(); } catch {}
+            return true;
+        }
+
+        window.openMemberWhatsApp = function(uid, kind) {
+            const member = orgMembers.find(m => m.uid === uid);
+            if (!member) return;
+            const firstName = (member.displayName || '').split(' ')[0] || 'there';
+            let text = '';
+            if (kind === 'followup') {
+                const pending = orgTasks.filter(t => t.assigneeId === uid && t.status !== 'Done').length;
+                text = `Hi ${firstName}, checking in on your ${pending} pending task${pending === 1 ? '' : 's'} in the EBG Task Assigner: ${location.origin}`;
+            }
+            if (!normalizeWhatsAppNumber(member.phone)) {
+                showToast(`${member.displayName} has no valid WhatsApp number saved, so WhatsApp will ask you to pick the contact.`, "warning", null, 6000);
+            }
+            openWhatsAppChat(member.phone, text);
+        };
+
+        function buildTaskAlertMessage(task) {
+            const nl = '\n';
+            const firstName = (task.assigneeName || '').split(' ')[0];
+            let msg = `${firstName ? `Hi ${firstName}, ` : ''}🔔 *EBG Task Alert*` + nl + nl;
+            msg += `📋 *Task ID*: ${task.code || 'EBG'}` + nl;
+            msg += `📌 *Title*: ${task.title}` + nl;
+            msg += `🏢 *Department*: ${task.tag || 'General'}` + nl;
+            if (task.brand) msg += `🏷️ *Brand*: ${task.brand}` + nl;
+            msg += `⚡ *Priority*: ${task.priority || 'Medium'}` + nl;
+            msg += `📊 *Status*: ${task.status || 'To Do'}` + nl;
+            msg += `📅 *Due Date*: ${formatShortDate(task.dueDate)}` + nl;
+            if (task.scheduledDate) {
+                msg += `🕒 *Release*: ${formatScheduledDateTime(task.scheduledDate)}${task.recurrence && task.recurrence !== 'none' ? ` (${capitalizeWords(task.recurrence)})` : ''}` + nl;
+            }
+            if (task.description) {
+                const brief = task.description.length > 140 ? task.description.slice(0, 140) + '...' : task.description;
+                msg += `📝 *Brief*: ${brief}` + nl;
+            }
+            if (isSafeUrl(task.contentDriveUrl)) msg += `📁 *Brief Doc*: ${task.contentDriveUrl.trim()}` + nl;
+            if (currentUserProfile?.displayName) msg += `👤 *Assigned by*: ${currentUserProfile.displayName}` + nl;
+            msg += nl + `🔗 *Open Task*: ${location.origin}`;
+            return msg;
+        }
+
+        async function triggerWhatsAppAlertForTask(taskId) {
             const task = orgTasks.find(t => t.id === taskId);
             if (!task) {
                 showToast("Task not found.", "error");
                 return;
             }
-
             const assignee = orgMembers.find(m => m.uid === task.assigneeId);
-            let rawPhone = (assignee && assignee.phone) ? assignee.phone : '';
-            let cleanPhone = rawPhone.replace(/\D/g, '');
-            if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+            let phone = assignee?.phone || '';
 
-            const nl = '\n';
-            let msg = `🔔 *EBG Performance Marketing — Task Alert*` + nl + nl;
-            msg += `📋 *Task ID*: ${task.code || 'EBG'}` + nl;
-            msg += `📌 *Title*: ${task.title}` + nl;
-            msg += `🏢 *Department*: ${task.tag || 'General'}` + nl;
-            msg += `👤 *Assignee*: ${task.assigneeName || 'Team Member'}` + nl;
-            msg += `⚡ *Priority*: ${task.priority || 'Medium'}` + nl;
-            msg += `📊 *Status*: ${task.status || 'To Do'}` + nl;
-            msg += `📅 *Due Date*: ${formatShortDate(task.dueDate)}` + nl;
-
-            if (task.scheduledDate) {
-                msg += `🕒 *Release Schedule*: ${formatScheduledDateTime(task.scheduledDate)}${task.recurrence && task.recurrence !== 'none' ? ` (${capitalizeWords(task.recurrence)})` : ''}` + nl;
+            if (assignee && !normalizeWhatsAppNumber(phone)) {
+                const canEdit = isCurrentUserAdmin() || assignee.uid === currentUser?.uid;
+                if (canEdit && confirm(`${assignee.displayName} has no valid WhatsApp number saved. Add it now?`)) {
+                    await promptSetMemberPhone(assignee.uid);
+                    phone = orgMembers.find(m => m.uid === assignee.uid)?.phone || '';
+                }
+                if (!normalizeWhatsAppNumber(phone)) {
+                    showToast(`No WhatsApp number for ${assignee.displayName}: pick the contact in WhatsApp.`, "warning", null, 6000);
+                }
             }
 
-            if (task.description) {
-                const descSnippet = task.description.length > 140 ? task.description.slice(0, 140) + '...' : task.description;
-                msg += `📝 *Brief*: ${descSnippet}` + nl;
+            if (openWhatsAppChat(phone, buildTaskAlertMessage(task))) {
+                showToast(`WhatsApp chat with ${task.assigneeName || 'the team'} opened: press Enter there to send.`, "success");
             }
-
-            const appUrl = window.location.href.split('?')[0];
-            msg += nl + `🔗 *Open Task*: ${appUrl}`;
-
-            const waUrl = cleanPhone 
-                ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
-                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
-
-            window.open(waUrl, '_blank');
-            showToast(`Opening WhatsApp alert for ${task.assigneeName || 'team'}...`, "success");
         }
 
         
