@@ -3,8 +3,8 @@
     "EBG-GROUP": {
       "orgId": "EBG-GROUP",
       "orgName": "EBG Group",
-      "createdBy": "goog_mwtjmkyrchxx",
-      "createdAt": "2026-11-23T17:32:29.807Z"
+      "createdBy": "goog_mwt9w1rgo7lu",
+      "createdAt": "2026-11-24T04:40:38.000Z"
     },
     "EBGG-2504": {
       "orgId": "EBGG-2504",
@@ -63,6 +63,18 @@
       "orgName": "EBG Group",
       "status": "online",
       "joinedAt": "2026-11-23T17:32:30.273Z"
+    },
+    {
+      "uid": "goog_mwt9w1rgo7lu",
+      "displayName": "Hari Krishna",
+      "email": "hari@theebg.com",
+      "role": "Member",
+      "department": "Performance Marketing",
+      "phone": "",
+      "orgId": "EBG-GROUP",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-24T04:40:38.341Z"
     }
   ],
   "tasks": [
@@ -209,6 +221,27 @@
         "orgName": "EBG Group",
         "status": "online",
         "joinedAt": "2026-11-23T17:32:30.273Z"
+      }
+    },
+    "hari@theebg.com": {
+      "uid": "goog_mwt9w1rgo7lu",
+      "email": "hari@theebg.com",
+      "password": null,
+      "provider": "google.com",
+      "displayName": "Hari Krishna",
+      "department": "Performance Marketing",
+      "role": "Member",
+      "profile": {
+        "uid": "goog_mwt9w1rgo7lu",
+        "displayName": "Hari Krishna",
+        "email": "hari@theebg.com",
+        "role": "Member",
+        "department": "Performance Marketing",
+        "phone": "",
+        "orgId": "EBG-GROUP",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-24T04:40:38.341Z"
       }
     }
   }
