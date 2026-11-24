@@ -1,0 +1,12 @@
+# Never publish local data, sessions or tooling on Vercel (everything else in the repo is served as a file)
+data.json
+data.backup*.json
+sessions.json
+*.tmp
+server.py
+start-server.bat
+upload-data-to-vercel.py
+scratch/
+__pycache__/
+api/__pycache__/
+DEPLOY.md

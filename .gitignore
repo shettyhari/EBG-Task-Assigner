@@ -3,3 +3,5 @@ sessions.json
 *.tmp
 __pycache__/
 data.backup*.json
+# Live workspace data (contains password hashes) - never commit
+data.json
