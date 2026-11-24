@@ -107,6 +107,27 @@
       "subtasks": [],
       "comments": [],
       "createdAt": "2026-11-23T18:28:11.975Z"
+    },
+    {
+      "id": "tsk_1795494639064",
+      "code": "EBG-003",
+      "orgId": "EBG-GROUP",
+      "title": "Landing Page UI Kit & Responsive Redesign",
+      "description": "",
+      "assigneeId": "goog_mwtjmkyrchxx",
+      "assigneeName": "Priya Sharma",
+      "createdBy": "goog_mwtjmkyrchxx",
+      "createdByName": "Priya Sharma",
+      "priority": "High",
+      "status": "To Do",
+      "isScheduled": false,
+      "scheduledDate": "",
+      "recurrence": "none",
+      "tag": "Graphic Designing",
+      "dueDate": "2026-11-27",
+      "subtasks": [],
+      "comments": [],
+      "createdAt": "2026-11-24T04:30:39.064Z"
     }
   ],
   "users": {
