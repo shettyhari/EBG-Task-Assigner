@@ -12,8 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Identity Services (GIS) Client SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -162,13 +160,13 @@
                 
                 <!-- STEP 1: TEAM SIGN IN OR ACCOUNT CREATION -->
                 <div id="auth-step-login">
-                    <div class="mb-6">
+                    <div class="mb-5">
                         <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E6F4EA] dark:bg-emerald-950/70 text-[#137333] dark:text-emerald-300 text-[11px] font-semibold mb-3">
                             <span class="w-1.5 h-1.5 rounded-full bg-[#1E8E3E]"></span>
-                            <span>EBG Team Workspace Portal</span>
+                            <span>EBG Operations Portal &middot; @theebg.com only</span>
                         </div>
                         <h1 class="text-2xl font-bold text-[#18181B] dark:text-white tracking-tight" id="auth-heading">Sign in to your workspace</h1>
-                        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1" id="auth-subheading">Log in with your team credentials or create a new member account.</p>
+                        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1" id="auth-subheading">Enter your official @theebg.com credentials to access the workspace.</p>
                     </div>
 
                     <!-- Mode Switcher (Sign In vs Create Account) -->
@@ -179,14 +177,14 @@
 
                     <form id="email-auth-form" onsubmit="handleEmailAuth(event)" class="space-y-3.5">
                         <!-- Extra registration fields (shown when Create Account is selected) -->
-                        <div id="register-extra-fields" class="hidden space-y-3.5">
+                        <div id="register-extra-fields" class="hidden space-y-3">
                             <div>
                                 <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Full Name *</label>
                                 <input type="text" id="reg-full-name" placeholder="e.g. Hari Krishna" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
                             </div>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
+                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department *</label>
                                     <select id="reg-department" class="w-full px-3 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
                                         <option value="Performance Marketing">Performance Marketing</option>
                                         <option value="Graphic Designing">Graphic Designing</option>
@@ -194,18 +192,32 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Role</label>
+                                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Role *</label>
                                     <select id="reg-role" class="w-full px-3 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
                                         <option value="Admin">Admin</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Member" selected>Member</option>
+                                        <option value="Performance Marketer" selected>Performance Marketer</option>
+                                        <option value="Graphic Design Team Lead">Graphic Design Team Lead</option>
+                                        <option value="Graphic Designer">Graphic Designer</option>
+                                        <option value="Senior Web Developer">Senior Web Developer</option>
+                                        <option value="Member">Member</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">WhatsApp Phone Number *</label>
+                                <div class="relative flex items-center">
+                                    <i data-lucide="phone" class="w-4 h-4 text-[#25D366] absolute left-3 pointer-events-none"></i>
+                                    <input type="tel" id="reg-phone" placeholder="e.g. +91 98765 43210" class="w-full pl-9 pr-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                                </div>
+                                <span class="text-[10px] text-[#71717A] dark:text-zinc-400 mt-1 block">Used for direct WhatsApp task notifications and alerts.</span>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Work Email *</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300">Official Work Email *</label>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 font-semibold">@theebg.com only</span>
+                            </div>
                             <input type="email" id="auth-email" required placeholder="name@theebg.com" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
                         </div>
 
@@ -214,26 +226,22 @@
                             <input type="password" id="auth-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
                         </div>
 
-                        <button type="submit" id="email-auth-btn" class="w-full py-2.5 px-4 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 mt-1">
+                        <!-- Confirm Password (Registration Only) -->
+                        <div id="reg-confirm-password-group" class="hidden">
+                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Confirm Password *</label>
+                            <input type="password" id="reg-confirm-password" minlength="6" placeholder="Re-type your password" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white focus:ring-1 focus:ring-[#111113] dark:focus:ring-white outline-none">
+                        </div>
+
+                        <div class="p-2.5 rounded-lg bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] flex items-center gap-2 text-[11px] text-[#71717A] dark:text-zinc-400">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i>
+                            <span>Strict restriction: Only verified <strong>@theebg.com</strong> accounts can access this workspace.</span>
+                        </div>
+
+                        <button type="submit" id="email-auth-btn" class="w-full py-2.5 px-4 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 mt-2 shadow-2xs">
                             <span>Sign In</span>
                             <i data-lucide="arrow-right" class="w-4 h-4"></i>
                         </button>
                     </form>
-
-                    <div class="relative my-5">
-                        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[#E4E4E7] dark:border-[#27272A]"></div></div>
-                        <div class="relative flex justify-center text-[11px] uppercase tracking-wider"><span class="bg-white dark:bg-[#111113] px-3 text-[#71717A] font-medium">Or</span></div>
-                    </div>
-
-                    <button type="button" onclick="handleGoogleSignIn()" class="w-full py-2.5 px-4 bg-white dark:bg-[#18181B] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 font-medium rounded-lg text-xs border border-[#D4D4D8] dark:border-[#3F3F46] transition flex items-center justify-center gap-2.5">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
-                            <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
-                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
-                        </svg>
-                        <span>Continue with Google</span>
-                    </button>
                 </div>
 
                 <!-- STEP 2: PROFILE CONFIRMATION (DIRECT ACCESS) -->
@@ -1385,61 +1393,7 @@
 
 
 
-    <!-- ===================================================================== -->
-    <!-- 6. MODAL: GOOGLE ACCOUNT CHOOSER (CHOOSE AN ACCOUNT)                  -->
-    <!-- ===================================================================== -->
-    <div id="google-auth-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-[#111113] rounded-2xl shadow-2xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-md overflow-hidden animate-slide-in">
-            <div class="p-6 sm:p-7">
-                <!-- Google 4-Color Logo -->
-                <div class="flex items-center justify-center mb-3">
-                    <svg class="w-9 h-9" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96z"/>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold text-center text-[#18181B] dark:text-white tracking-tight">Choose an account</h3>
-                <p class="text-xs text-center text-[#71717A] dark:text-[#A1A1AA] mt-1 mb-5">to continue to <strong>EBG Operations Dashboard</strong></p>
 
-                <!-- Selectable Google Accounts List -->
-                <div id="google-account-list" class="space-y-2 mb-4 max-h-64 overflow-y-auto pr-1">
-                    <!-- Populated dynamically with @theebg.com accounts -->
-                </div>
-
-                <!-- Custom Account Input (Hidden by default, shown when clicking 'Use another account') -->
-                <div id="custom-google-account-section" class="hidden pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
-                    <form id="google-auth-form" onsubmit="submitGoogleAuthModal(event)" class="space-y-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Enter your @theebg.com Google Account</label>
-                            <input type="email" id="google-email-input" placeholder="name@theebg.com" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs focus:border-[#111113] outline-none">
-                            <div id="google-auth-error" class="hidden text-[11px] text-rose-600 font-medium mt-1.5 flex items-center gap-1">
-                                <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
-                                <span id="google-auth-error-text">Access denied: Only @theebg.com Google accounts can sign in.</span>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Full Name (optional for new signups)</label>
-                            <input type="text" id="google-name-input" placeholder="e.g. Hari Krishna" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs focus:border-[#111113] outline-none">
-                        </div>
-                        <div class="flex items-center justify-end gap-2 pt-1">
-                            <button type="button" onclick="toggleCustomGoogleAccountInput(false)" class="px-3 py-1.5 text-xs text-[#71717A] hover:text-[#18181B]">Back</button>
-                            <button type="submit" class="px-4 py-1.5 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] rounded-lg text-xs font-semibold transition">Continue</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                    <button type="button" onclick="configureGoogleClientIdPrompt()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition flex items-center gap-1">
-                        <i data-lucide="settings" class="w-3 h-3"></i>
-                        <span>Google Client ID</span>
-                    </button>
-                    <button type="button" onclick="closeGoogleAuthModal()" class="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-semibold">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- ===================================================================== -->
     <!-- FIREBASE & REAL-TIME STATE ENGINE (ZERO MOCK DATA)                    -->
@@ -1519,7 +1473,6 @@
         Object.assign(window, {
             setAuthTab,
             handleEmailAuth,
-            handleGoogleSignIn,
             handleWorkspaceComplete,
             signOutUser,
             toggleDarkMode,
@@ -1554,13 +1507,6 @@
             allowDrop,
             handleDragStart,
             handleDrop,
-            openGoogleAuthModal,
-            closeGoogleAuthModal,
-            submitGoogleAuthModal,
-            selectGoogleAccount,
-            toggleCustomGoogleAccountInput,
-            configureGoogleClientIdPrompt,
-            renderGoogleAccountList,
             toggleCustomBrandInput,
             openCreateTaskModalForDesign,
             updateContentDriveLinkFromDrawer,
@@ -1685,9 +1631,8 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
                         const userEmail = (user.email || '').toLowerCase().trim();
-                        if (isGoogle && !userEmail.endsWith('@theebg.com')) {
+                        if (!userEmail.endsWith('@theebg.com')) {
                             try {
                                 await deleteUser(user);
                             } catch (delErr) {
@@ -1696,7 +1641,7 @@
                             currentUser = null;
                             hideLoading();
                             showAuthStep('login');
-                            showToast("Access denied: Only @theebg.com Google accounts can sign in or register.", "error");
+                            showToast("Access denied: Only @theebg.com accounts can sign in or register.", "error");
                             return;
                         }
                     }
@@ -1756,453 +1701,225 @@
             const btnSignIn = document.getElementById('tab-signin');
             const btnRegister = document.getElementById('tab-register');
             const extraFields = document.getElementById('register-extra-fields');
-            const submitBtnSpan = document.getElementById('email-auth-btn').querySelector('span');
+            const confirmPassGroup = document.getElementById('reg-confirm-password-group');
+            const submitBtnSpan = document.getElementById('email-auth-btn')?.querySelector('span');
             const heading = document.getElementById('auth-heading');
             const subheading = document.getElementById('auth-subheading');
 
             if (mode === 'signin') {
-                btnSignIn.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
-                btnRegister.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
-                extraFields.classList.add('hidden');
-                submitBtnSpan.textContent = "Sign In";
-                heading.textContent = "Sign in to your workspace";
-                subheading.textContent = "Enter your email and password to access your organization.";
+                if (btnSignIn) btnSignIn.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                if (btnRegister) btnRegister.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                if (extraFields) extraFields.classList.add('hidden');
+                if (confirmPassGroup) confirmPassGroup.classList.add('hidden');
+                if (submitBtnSpan) submitBtnSpan.textContent = "Sign In";
+                if (heading) heading.textContent = "Sign in to your workspace";
+                if (subheading) subheading.textContent = "Enter your official @theebg.com credentials to access the workspace.";
             } else {
-                btnRegister.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
-                btnSignIn.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
-                extraFields.classList.remove('hidden');
-                submitBtnSpan.textContent = "Create Member Account";
-                heading.textContent = "Create your team login";
-                subheading.textContent = "Set up your user account, then create or join your organization.";
+                if (btnRegister) btnRegister.className = "py-2 rounded-md bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                if (btnSignIn) btnSignIn.className = "py-2 rounded-md text-[#71717A] dark:text-[#A1A1AA] hover:text-[#18181B] transition";
+                if (extraFields) extraFields.classList.remove('hidden');
+                if (confirmPassGroup) confirmPassGroup.classList.remove('hidden');
+                if (submitBtnSpan) submitBtnSpan.textContent = "Create Account & Join Workspace";
+                if (heading) heading.textContent = "Create EBG Member Account";
+                if (subheading) subheading.textContent = "Fill in your details below to register your official @theebg.com account.";
             }
+            lucide.createIcons();
         }
 
         async function handleEmailAuth(e) {
             e.preventDefault();
-            const email = document.getElementById('auth-email').value.trim().toLowerCase();
-            const password = document.getElementById('auth-password').value;
+            const emailInput = document.getElementById('auth-email');
+            const passwordInput = document.getElementById('auth-password');
+            const email = (emailInput?.value || '').trim().toLowerCase();
+            const password = passwordInput?.value || '';
 
-            let fullName = '';
-            let department = 'Performance Marketing';
-            let role = 'Member';
+            // 1. Strict restriction: Only official @theebg.com email addresses
+            if (!email.endsWith('@theebg.com')) {
+                showToast("Access restricted: Only official @theebg.com email addresses are permitted.", "error");
+                return;
+            }
 
+            if (!password || password.length < 6) {
+                showToast("Password must be at least 6 characters.", "error");
+                return;
+            }
+
+            // ==========================================
+            // REGISTRATION (CREATE ACCOUNT) FLOW
+            // ==========================================
             if (authTabMode === 'register') {
-                fullName = document.getElementById('reg-full-name').value.trim();
-                department = document.getElementById('reg-department').value;
-                role = document.getElementById('reg-role').value;
+                const fullName = (document.getElementById('reg-full-name')?.value || '').trim();
+                const department = document.getElementById('reg-department')?.value || 'Performance Marketing';
+                const role = document.getElementById('reg-role')?.value || 'Member';
+                const phone = (document.getElementById('reg-phone')?.value || '').trim();
+                const confirmPassword = document.getElementById('reg-confirm-password')?.value || '';
+
                 if (!fullName) {
                     showToast("Please enter your full name.", "error");
                     return;
                 }
-            }
 
-            showLoading(authTabMode === 'signin' ? "Signing in..." : "Creating your account...");
-
-            if (useCloudSync && auth) {
-                try {
-                    if (authTabMode === 'signin') {
-                        await signInWithEmailAndPassword(auth, email, password);
-                    } else {
-                        const cred = await createUserWithEmailAndPassword(auth, email, password);
-                        // Pre-populate step 2 fields
-                        document.getElementById('ws-display-name').value = fullName;
-                        document.getElementById('ws-department').value = department;
-                        document.getElementById('ws-role').value = role;
-                        currentUser = cred.user;
-                    }
-                    showToast("Authenticated successfully!", "success");
-                } catch (err) {
-                    hideLoading();
-                    showToast(formatAuthError(err.code || err.message), "error");
+                if (password !== confirmPassword) {
+                    showToast("Passwords do not match. Please verify.", "error");
+                    return;
                 }
-            } else {
-                // Local user account registry
+
+                showLoading("Creating your EBG workspace account...");
+
+                // Check local and server registered users
                 const usersMap = getLocalStore('registered_users', {});
-                if (authTabMode === 'signin') {
-                    const existing = usersMap[email];
-                    if (!existing) {
-                        hideLoading();
-                        showToast("No account found for this email. Click 'Create Account' to register.", "error");
-                        return;
-                    }
-                    if (existing.password !== password) {
-                        hideLoading();
-                        showToast("Incorrect password. Please try again.", "error");
-                        return;
-                    }
-                    currentUser = { uid: existing.uid, email: existing.email, displayName: existing.displayName };
-                    setLocalStore('current_user', currentUser);
-
-                    if (existing.profile && existing.profile.orgId) {
-                        currentUserProfile = existing.profile;
-                        currentOrgId = existing.profile.orgId;
-                        setLocalStore('current_profile', currentUserProfile);
-                        await enterOrganizationWorkspace(currentOrgId);
-                    } else {
-                        document.getElementById('ws-display-name').value = existing.displayName;
-                        document.getElementById('ws-department').value = existing.department || 'Performance Marketing';
-                        document.getElementById('ws-role').value = existing.role || 'Member';
-                        hideLoading();
-                        showAuthStep('workspace');
-                    }
-                } else {
-                    if (usersMap[email]) {
-                        hideLoading();
-                        showToast("An account with this email already exists. Please Sign In.", "error");
-                        return;
-                    }
-                    const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-                    usersMap[email] = {
-                        uid,
-                        email,
-                        password,
-                        displayName: fullName,
-                        department,
-                        role,
-                        profile: null
-                    };
-                    setLocalStore('registered_users', usersMap);
-
-                    currentUser = { uid, email, displayName: fullName };
-                    setLocalStore('current_user', currentUser);
-
-                    document.getElementById('ws-display-name').value = fullName;
-                    document.getElementById('ws-department').value = department;
-                    document.getElementById('ws-role').value = role;
-
+                if (usersMap[email]) {
                     hideLoading();
-                    showAuthStep('workspace');
-                    showToast("Account created! Now create or join your organization.", "success");
+                    showToast("An account with this email already exists. Please Sign In.", "error");
+                    return;
                 }
-            }
-        }
 
-        function renderGoogleAccountList() {
-            const listEl = document.getElementById('google-account-list');
-            if (!listEl) return;
-
-            const usersMap = getLocalStore('registered_users', {});
-            const savedMembers = getLocalStore('org_members', []);
-
-            // Collect known @theebg.com accounts
-            const accountMap = new Map();
-
-            // Default company preset accounts
-            const presets = [
-                { displayName: 'Hari Shetty', email: 'hari@theebg.com', role: 'Head of Marketing', bg: 'bg-emerald-600' },
-                { displayName: 'Admin Hari', email: 'admin@theebg.com', role: 'Workspace Admin', bg: 'bg-indigo-600' },
-                { displayName: 'Priya Sharma', email: 'priya@theebg.com', role: 'Graphic Designer', bg: 'bg-rose-600' },
-                { displayName: 'Rahul Verma', email: 'member@theebg.com', role: 'Performance Marketer', bg: 'bg-blue-600' }
-            ];
-
-            presets.forEach(p => accountMap.set(p.email.toLowerCase(), p));
-
-            // Load from registered users
-            Object.values(usersMap).forEach(u => {
-                if (u && u.email && u.email.endsWith('@theebg.com')) {
-                    const email = u.email.toLowerCase();
-                    const existing = accountMap.get(email) || {};
-                    accountMap.set(email, {
-                        displayName: u.displayName || existing.displayName || capitalizeWords(email.split('@')[0]),
-                        email: email,
-                        role: u.role || existing.role || 'Team Member',
-                        bg: existing.bg || 'bg-zinc-700'
-                    });
-                }
-            });
-
-            // Load from org members
-            (orgMembers.length ? orgMembers : savedMembers).forEach(m => {
-                if (m && m.email && m.email.endsWith('@theebg.com')) {
-                    const email = m.email.toLowerCase();
-                    const existing = accountMap.get(email) || {};
-                    accountMap.set(email, {
-                        displayName: m.displayName || existing.displayName || capitalizeWords(email.split('@')[0]),
-                        email: email,
-                        role: m.role || existing.role || 'Team Member',
-                        bg: existing.bg || 'bg-amber-600'
-                    });
-                }
-            });
-
-            const accounts = Array.from(accountMap.values());
-            const avatarColors = ['bg-indigo-600', 'bg-emerald-600', 'bg-blue-600', 'bg-rose-600', 'bg-amber-600', 'bg-violet-600'];
-
-            listEl.innerHTML = accounts.map((acc, idx) => {
-                const initials = (acc.displayName || acc.email)
-                    .split(' ')
-                    .map(w => w[0])
-                    .join('')
-                    .toUpperCase()
-                    .substring(0, 2);
-                const bg = acc.bg || avatarColors[idx % avatarColors.length];
-
-                return `
-                    <div onclick="selectGoogleAccount('${acc.email}', '${acc.displayName}')" class="group flex items-center justify-between p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-900/70 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer transition shadow-2xs">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${bg}">
-                                ${initials}
-                            </div>
-                            <div class="min-w-0 text-left">
-                                <div class="text-xs font-semibold text-[#18181B] dark:text-zinc-100 truncate">${acc.displayName}</div>
-                                <div class="text-[11px] text-[#71717A] dark:text-[#A1A1AA] truncate">${acc.email}</div>
-                            </div>
-                        </div>
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition shrink-0"></i>
-                    </div>
-                `;
-            }).join('') + `
-                <div onclick="toggleCustomGoogleAccountInput(true)" class="group flex items-center justify-between p-3 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-50/60 dark:bg-zinc-900/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 cursor-pointer transition">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shrink-0">
-                            <i data-lucide="user-plus" class="w-4 h-4"></i>
-                        </div>
-                        <div class="text-left">
-                            <div class="text-xs font-semibold text-[#18181B] dark:text-zinc-100">Use another account</div>
-                            <div class="text-[11px] text-[#71717A] dark:text-[#A1A1AA]">Sign in with a different @theebg.com email</div>
-                        </div>
-                    </div>
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition shrink-0"></i>
-                </div>
-            `;
-
-            lucide.createIcons();
-        }
-
-        function toggleCustomGoogleAccountInput(show) {
-            const customSection = document.getElementById('custom-google-account-section');
-            const listSection = document.getElementById('google-account-list');
-            const emailInput = document.getElementById('google-email-input');
-            const errBox = document.getElementById('google-auth-error');
-
-            if (errBox) errBox.classList.add('hidden');
-
-            if (show) {
-                if (customSection) customSection.classList.remove('hidden');
-                if (listSection) listSection.classList.add('hidden');
-                if (emailInput) {
-                    emailInput.value = '';
-                    emailInput.focus();
-                }
-            } else {
-                if (customSection) customSection.classList.add('hidden');
-                if (listSection) listSection.classList.remove('hidden');
-            }
-            lucide.createIcons();
-        }
-
-        function configureGoogleClientIdPrompt() {
-            const current = localStorage.getItem('ebg_google_client_id') || '';
-            const val = prompt('Enter your Google Cloud OAuth 2.0 Client ID for live accounts.google.com sign-in:', current);
-            if (val !== null) {
-                const cleaned = val.trim();
-                if (cleaned) {
-                    localStorage.setItem('ebg_google_client_id', cleaned);
-                    showToast("Google Client ID saved! Google popup auth enabled.", "success");
-                } else {
-                    localStorage.removeItem('ebg_google_client_id');
-                    showToast("Google Client ID cleared. Using Google Account Chooser.", "info");
-                }
-            }
-        }
-
-        function openGoogleAuthModal() {
-            toggleCustomGoogleAccountInput(false);
-            renderGoogleAccountList();
-            document.getElementById('google-auth-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function closeGoogleAuthModal() {
-            document.getElementById('google-auth-modal').classList.add('hidden');
-        }
-
-        async function selectGoogleAccount(email, displayName) {
-            const cleanEmail = (email || '').trim().toLowerCase();
-            const cleanName = (displayName || '').trim() || capitalizeWords(cleanEmail.split('@')[0].replace(/[._-]/g, ' '));
-
-            if (!cleanEmail.endsWith('@theebg.com')) {
-                showToast("Access denied: Only @theebg.com Google accounts are allowed.", "error");
-                return;
-            }
-
-            closeGoogleAuthModal();
-            showLoading("Signing in with Google...");
-
-            const usersMap = getLocalStore('registered_users', {});
-            const existing = usersMap[cleanEmail];
-
-            if (existing) {
-                currentUser = {
-                    uid: existing.uid,
-                    email: existing.email,
-                    displayName: existing.displayName || cleanName,
-                    provider: 'google.com'
-                };
-                setLocalStore('current_user', currentUser);
-
-                if (existing.profile && existing.profile.orgId) {
-                    currentUserProfile = existing.profile;
-                    currentOrgId = existing.profile.orgId;
-                    setLocalStore('current_profile', currentUserProfile);
-                    await enterOrganizationWorkspace(currentOrgId);
-                } else {
-                    document.getElementById('ws-display-name').value = existing.displayName || cleanName;
-                    document.getElementById('ws-department').value = existing.department || 'Performance Marketing';
-                    document.getElementById('ws-role').value = existing.role || 'Member';
-                    hideLoading();
-                    showAuthStep('workspace');
-                }
-                showToast(`Signed in with Google as ${existing.displayName || cleanEmail}!`, "success");
-            } else {
-                const uid = 'goog_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
-                usersMap[cleanEmail] = {
+                const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+                const memberProfile = {
                     uid,
-                    email: cleanEmail,
-                    password: null,
-                    provider: 'google.com',
-                    displayName: cleanName,
-                    department: 'Performance Marketing',
-                    role: 'Member',
-                    profile: null
+                    displayName: fullName,
+                    email,
+                    role,
+                    department,
+                    phone,
+                    orgId: UNIFIED_ORG_ID,
+                    orgName: UNIFIED_ORG_NAME,
+                    status: 'online',
+                    joinedAt: new Date().toISOString()
                 };
+
+                const userRecord = {
+                    uid,
+                    email,
+                    password,
+                    displayName: fullName,
+                    department,
+                    role,
+                    phone,
+                    profile: memberProfile
+                };
+
+                usersMap[email] = userRecord;
                 setLocalStore('registered_users', usersMap);
 
-                currentUser = {
-                    uid,
-                    email: cleanEmail,
-                    displayName: cleanName,
-                    provider: 'google.com'
-                };
-                setLocalStore('current_user', currentUser);
-
-                document.getElementById('ws-display-name').value = cleanName;
-                document.getElementById('ws-department').value = 'Performance Marketing';
-                document.getElementById('ws-role').value = 'Member';
-                hideLoading();
-                showAuthStep('workspace');
-                showToast(`Google account verified (${cleanEmail}). Now complete your workspace setup.`, "success");
-            }
-        }
-
-        async function submitGoogleAuthModal(e) {
-            e.preventDefault();
-            const emailInput = document.getElementById('google-email-input');
-            const nameInput = document.getElementById('google-name-input');
-            const errBox = document.getElementById('google-auth-error');
-            const errText = document.getElementById('google-auth-error-text');
-
-            const email = (emailInput?.value || '').trim().toLowerCase();
-            let fullName = (nameInput?.value || '').trim();
-
-            if (!email.endsWith('@theebg.com')) {
-                if (errBox && errText) {
-                    errText.textContent = "Access denied: Only @theebg.com Google accounts can sign in or register.";
-                    errBox.classList.remove('hidden');
+                // Add to orgMembers
+                const currentMembers = getLocalStore('org_members', []);
+                const existingIdx = currentMembers.findIndex(m => m.email && m.email.toLowerCase() === email);
+                if (existingIdx >= 0) {
+                    currentMembers[existingIdx] = memberProfile;
+                } else {
+                    currentMembers.push(memberProfile);
                 }
-                showToast("Access denied: Only @theebg.com Google accounts are allowed.", "error");
+                setLocalStore('org_members', currentMembers);
+
+                currentUser = { uid, email, displayName: fullName };
+                currentUserProfile = memberProfile;
+                currentOrgId = UNIFIED_ORG_ID;
+
+                setLocalStore('current_user', currentUser);
+                setLocalStore('current_profile', currentUserProfile);
+
+                // Sync new member and user record to server
+                await syncToServer({
+                    users: { [email]: userRecord },
+                    members: [memberProfile]
+                });
+
+                if (useCloudSync && auth) {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                    } catch (fbErr) {
+                        console.warn("Firebase Auth registration fallback:", fbErr);
+                    }
+                }
+
+                await enterOrganizationWorkspace(UNIFIED_ORG_ID);
+                hideLoading();
+                showToast(`Welcome to EBG Group, ${fullName}! Your account is active.`, "success");
                 return;
             }
 
-            if (!fullName) {
-                fullName = capitalizeWords(email.split('@')[0].replace(/[._-]/g, ' '));
-            }
+            // ==========================================
+            // SIGN IN FLOW
+            // ==========================================
+            showLoading("Signing in to EBG Workspace...");
 
-            await selectGoogleAccount(email, fullName);
-        }
+            const usersMap = getLocalStore('registered_users', {});
+            let user = usersMap[email];
 
-        async function handleGoogleSignIn() {
-            // 1. If Google Client ID configured and Google Identity Services SDK loaded, open live Google token popup
-            const googleClientId = localStorage.getItem('ebg_google_client_id');
-            if (window.google && window.google.accounts && googleClientId) {
+            // If not in local store, fetch latest from server /api/data
+            if (!user) {
                 try {
-                    showLoading("Connecting to Google Accounts...");
-                    const client = google.accounts.oauth2.initTokenClient({
-                        client_id: googleClientId,
-                        scope: 'email profile openid',
-                        callback: async (tokenResponse) => {
-                            if (tokenResponse && tokenResponse.access_token) {
-                                try {
-                                    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                                        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                                    });
-                                    const data = await res.json();
-                                    const email = (data.email || '').toLowerCase().trim();
-                                    if (!email.endsWith('@theebg.com')) {
-                                        hideLoading();
-                                        showToast("Access denied: Only @theebg.com Google accounts can sign in or register.", "error");
-                                        return;
-                                    }
-                                    await selectGoogleAccount(email, data.name || data.given_name || email.split('@')[0]);
-                                } catch (fetchErr) {
-                                    hideLoading();
-                                    showToast("Failed to fetch Google profile. Opening account chooser.", "error");
-                                    openGoogleAuthModal();
-                                }
-                            } else {
-                                hideLoading();
-                            }
+                    const res = await fetch('/api/data');
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.users && json.users[email]) {
+                            user = json.users[email];
+                            usersMap[email] = user;
+                            setLocalStore('registered_users', usersMap);
                         }
-                    });
-                    client.requestAccessToken();
-                    return;
-                } catch (gisErr) {
-                    console.warn("GIS token client error, falling back to account chooser:", gisErr);
-                    hideLoading();
+                    }
+                } catch (e) {
+                    console.warn("Fetch users error:", e);
                 }
             }
 
-            // 2. If Firebase Auth is configured and active, open Firebase Google popup
+            if (!user) {
+                hideLoading();
+                showToast("No account found for this @theebg.com email. Click 'Create Account' to register.", "error");
+                return;
+            }
+
+            if (user.password && user.password !== password) {
+                hideLoading();
+                showToast("Incorrect password. Please try again.", "error");
+                return;
+            }
+
+            const profile = user.profile || {
+                uid: user.uid,
+                displayName: user.displayName || capitalizeWords(email.split('@')[0]),
+                email: email,
+                role: user.role || 'Member',
+                department: user.department || 'Performance Marketing',
+                phone: user.phone || '',
+                orgId: UNIFIED_ORG_ID,
+                orgName: UNIFIED_ORG_NAME,
+                status: 'online',
+                joinedAt: new Date().toISOString()
+            };
+
+            currentUser = { uid: user.uid, email: user.email, displayName: profile.displayName };
+            currentUserProfile = profile;
+            currentOrgId = UNIFIED_ORG_ID;
+
+            setLocalStore('current_user', currentUser);
+            setLocalStore('current_profile', currentUserProfile);
+
             if (useCloudSync && auth) {
-                showLoading("Connecting with Google...");
                 try {
-                    const provider = new GoogleAuthProvider();
-                    provider.setCustomParameters({
-                        hd: 'theebg.com',
-                        prompt: 'select_account'
-                    });
-                    const result = await signInWithPopup(auth, provider);
-                    const user = result.user;
-                    const email = (user?.email || '').toLowerCase().trim();
-                    if (!email.endsWith('@theebg.com')) {
-                        try {
-                            await deleteUser(user);
-                        } catch (delErr) {
-                            await signOut(auth);
-                        }
-                        currentUser = null;
-                        hideLoading();
-                        showAuthStep('login');
-                        showToast("Access denied: Only @theebg.com Google accounts can sign in or register.", "error");
-                        return;
-                    }
-                    showToast("Signed in with Google!", "success");
-                    return;
-                } catch (err) {
-                    hideLoading();
-                    if (err.code === 'auth/popup-closed-by-user') {
-                        return;
-                    }
-                    console.warn("Firebase popup error, opening Google Auth dialog:", err);
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (fbErr) {
+                    console.warn("Firebase sign-in fallback:", fbErr);
                 }
             }
 
-            // 3. Built-in interactive Google Account Chooser
-            openGoogleAuthModal();
+            await enterOrganizationWorkspace(UNIFIED_ORG_ID);
+            hideLoading();
+            showToast(`Welcome back, ${profile.displayName}!`, "success");
         }
 
         async function signOutUser() {
             cleanupListeners();
             currentUserProfile = null;
+            currentUser = null;
             currentOrgId = null;
+            localStorage.removeItem('ebg_prod_current_user');
+            localStorage.removeItem('ebg_prod_current_profile');
             if (useCloudSync && auth) {
-                await signOut(auth);
-            } else {
-                localStorage.removeItem('ebg_prod_current_user');
-                localStorage.removeItem('ebg_prod_current_profile');
-                currentUser = null;
-                showAuthStep('login');
+                await signOut(auth).catch(() => {});
             }
+            showAuthStep('login');
             showToast("Signed out.", "info");
         }
 
@@ -2470,7 +2187,7 @@
                         renderAll();
                     };
                 } else if (orgMembers.length <= 1) {
-                    alertText.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i><span>Welcome to <strong>EBG Group</strong>! Colleagues with <strong>@theebg.com</strong> Google accounts can sign in directly to receive task assignments.</span>`;
+                    alertText.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i><span>Welcome to <strong>EBG Group</strong>! Colleagues with <strong>@theebg.com</strong> accounts can register or sign in to receive task assignments.</span>`;
                     alertBtn.textContent = 'Assign Task';
                     alertBtn.onclick = openCreateTaskModal;
                 } else {

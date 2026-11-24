@@ -239,8 +239,7 @@
     "hari@theebg.com": {
       "uid": "goog_mwt9w1rgo7lu",
       "email": "hari@theebg.com",
-      "password": null,
-      "provider": "google.com",
+      "password": "ebg123",
       "displayName": "Hari Krishna",
       "department": "Performance Marketing",
       "role": "Admin",
@@ -260,8 +259,7 @@
     "priya@theebg.com": {
       "uid": "goog_mwtjmkyrchxx",
       "email": "priya@theebg.com",
-      "password": null,
-      "provider": "google.com",
+      "password": "ebg123",
       "displayName": "Priya Sharma",
       "department": "Graphic Designing",
       "role": "Graphic Design Team Lead",
@@ -281,8 +279,7 @@
     "ananya@theebg.com": {
       "uid": "goog_ananya_ebg",
       "email": "ananya@theebg.com",
-      "password": null,
-      "provider": "google.com",
+      "password": "ebg123",
       "displayName": "Ananya Roy",
       "department": "Graphic Designing",
       "role": "Graphic Designer",
@@ -302,8 +299,7 @@
     "karan@theebg.com": {
       "uid": "goog_karan_ebg",
       "email": "karan@theebg.com",
-      "password": null,
-      "provider": "google.com",
+      "password": "ebg123",
       "displayName": "Karan Verma",
       "department": "Web Developer",
       "role": "Senior Web Developer",
