@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@1.79.0/dist/umd/lucide.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -244,69 +244,6 @@
                     </form>
                 </div>
 
-                <!-- STEP 2: PROFILE CONFIRMATION (DIRECT ACCESS) -->
-                <div id="auth-step-workspace" class="hidden">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#111113] dark:text-zinc-300">Welcome to EBG</span>
-                            <h2 class="text-xl font-bold text-[#18181B] dark:text-white mt-0.5">Complete Your Profile</h2>
-                        </div>
-                        <button onclick="signOutUser()" class="text-xs text-[#71717A] hover:text-rose-600 font-medium flex items-center gap-1">
-                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
-                        </button>
-                    </div>
-
-                    <div class="p-3.5 rounded-xl bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] flex items-center gap-3 mb-4">
-                        <div class="w-9 h-9 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center font-bold text-sm shrink-0">
-                            EBG
-                        </div>
-                        <div>
-                            <div class="text-xs font-bold text-[#18181B] dark:text-white">EBG Group Workspace</div>
-                            <div class="text-[11px] text-[#71717A] dark:text-zinc-400">Performance Marketing &amp; Operations</div>
-                        </div>
-                    </div>
-
-                    <form id="workspace-setup-form" onsubmit="handleWorkspaceComplete(event)" class="space-y-4">
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Your Display Name *</label>
-                                <input type="text" id="ws-display-name" required placeholder="Your full name" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
-                                <select id="ws-department" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
-                                    <option value="Performance Marketing">Performance Marketing</option>
-                                    <option value="Graphic Designing">Graphic Designing</option>
-                                    <option value="Web Developer">Web Developer</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Workspace Role</label>
-                            <select id="ws-role" class="w-full px-3.5 py-2.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
-                                <option value="Admin">Admin (Organization Owner &amp; Task Assigner)</option>
-                                <option value="Manager">Manager (Department Lead &amp; Task Assigner)</option>
-                                <option value="Member">Member (Team Contributor)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">WhatsApp Phone Number (for Task Alerts)</label>
-                            <div class="relative flex items-center">
-                                <i data-lucide="message-circle" class="w-4 h-4 text-[#25D366] absolute left-3 pointer-events-none"></i>
-                                <input type="tel" id="ws-phone" placeholder="e.g. +91 98765 43210" class="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
-                            </div>
-                            <span class="text-[10px] text-[#71717A] dark:text-zinc-400 mt-1 block">Used by managers to dispatch instant 1-click WhatsApp alerts when tasks are assigned to you.</span>
-                        </div>
-
-                        <button type="submit" class="w-full py-2.5 px-4 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] font-semibold rounded-lg text-sm transition flex items-center justify-center gap-2 mt-2">
-                            <span>Launch Workspace</span>
-                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </button>
-                    </form>
-                </div>
 
             </div>
         </div>
@@ -403,6 +340,9 @@
                         </div>
                         <button id="menu-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full px-4 py-2 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
                             <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
+                        </button>
+                        <button onclick="openChangePasswordModal()" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Change Password
                         </button>
                         <button onclick="signOutUser()" class="w-full px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2.5">
                             <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
@@ -1694,54 +1634,40 @@
     <!-- ===================================================================== -->
     <!-- FIREBASE & REAL-TIME STATE ENGINE (ZERO MOCK DATA)                    -->
     <!-- ===================================================================== -->
+
+    <!-- Change Password Modal -->
+    <div id="change-password-modal" class="hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#111113] w-full max-w-sm rounded-xl border border-[#E4E4E7] dark:border-[#27272A] shadow-xl">
+            <div class="px-5 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="key-round" class="w-4 h-4 text-[#111113] dark:text-white"></i>
+                    <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Change your password</h3>
+                </div>
+                <button type="button" onclick="closeChangePasswordModal()" class="p-1 rounded text-[#71717A] hover:text-[#18181B] dark:hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="submitChangePassword(event)" class="p-5 space-y-3">
+                <div>
+                    <label for="chpw-current" class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Current password</label>
+                    <input type="password" id="chpw-current" required autocomplete="current-password" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm outline-none focus:border-[#111113]">
+                </div>
+                <div>
+                    <label for="chpw-new" class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">New password (min. 6 characters)</label>
+                    <input type="password" id="chpw-new" required minlength="6" autocomplete="new-password" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm outline-none focus:border-[#111113]">
+                </div>
+                <div>
+                    <label for="chpw-confirm" class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Confirm new password</label>
+                    <input type="password" id="chpw-confirm" required minlength="6" autocomplete="new-password" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm outline-none focus:border-[#111113]">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeChangePasswordModal()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800">Cancel</button>
+                    <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-xs font-semibold">Update password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithCustomToken, 
-            signInWithEmailAndPassword,
-            createUserWithEmailAndPassword,
-            GoogleAuthProvider,
-            signInWithPopup,
-            signOut,
-            deleteUser,
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            getDoc, 
-            setDoc, 
-            addDoc, 
-            updateDoc, 
-            deleteDoc, 
-            onSnapshot, 
-            collection 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // 1. Initialize Firebase (with automatic localStorage persistence fallback if offline/unconfigured)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ebg-task-assigner-prod';
-        let firebaseConfig = {};
-        let useCloudSync = false;
-        let auth = null;
-        let db = null;
-
-        try {
-            const savedFirebaseConfig = localStorage.getItem('ebg_firebase_config');
-            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                firebaseConfig = JSON.parse(__firebase_config);
-            } else if (savedFirebaseConfig) {
-                firebaseConfig = JSON.parse(savedFirebaseConfig);
-            }
-            if (firebaseConfig && firebaseConfig.apiKey) {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                useCloudSync = true;
-            }
-        } catch (e) {
-            useCloudSync = false;
-        }
+        // EBG Task Assigner client. All data lives on server.py; this page talks to its /api endpoints.
 
         // 2. Application State (Starts Completely Empty - Zero Mock Data)
         let currentUser = null;
@@ -1762,14 +1688,11 @@
         let orgMembers = [];
         let orgTasks = [];
 
-        let unsubMembers = null;
-        let unsubTasks = null;
 
         // Expose functions to global window
         Object.assign(window, {
             setAuthTab,
             handleEmailAuth,
-            handleWorkspaceComplete,
             signOutUser,
             toggleDarkMode,
             toggleSidebarExpand,
@@ -1823,7 +1746,10 @@
             adminCloseEditMemberModal,
             adminSaveEditMember,
             adminSubmitProvisionMember,
-            adminDeleteMember
+            adminDeleteMember,
+            openChangePasswordModal,
+            closeChangePasswordModal,
+            submitChangePassword
         });
 
         // 3. Theme Initialization
@@ -1982,89 +1908,72 @@
 
         // 5. Authentication Bootstrap
         async function initAuth() {
-            if (useCloudSync && auth) {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    }
-                } catch (err) {
-                    console.warn("Token auth skipped:", err.message);
-                }
+            document.getElementById('live-sync-label').textContent = 'Live workspace';
+            // Older versions cached every user's password (and an optional Firebase config) in the browser
+            localStorage.removeItem('ebg_prod_registered_users');
+            localStorage.removeItem('ebg_firebase_config');
+            loadSignupOptions();
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        const userEmail = (user.email || '').toLowerCase().trim();
-                        if (!userEmail.endsWith('@theebg.com')) {
-                            try {
-                                await deleteUser(user);
-                            } catch (delErr) {
-                                await signOut(auth);
-                            }
-                            currentUser = null;
-                            hideLoading();
-                            showAuthStep('login');
-                            showToast("Access denied: Only @theebg.com accounts can sign in or register.", "error");
-                            return;
-                        }
-                    }
-                    currentUser = user;
-                    if (!user) {
-                        cleanupListeners();
-                        hideLoading();
-                        showAuthStep('login');
+            let authMessage = '';
+            if (getSessionToken()) {
+                try {
+                    const r = await apiFetch('/api/me');
+                    if (r.ok && r.json && r.json.profile) {
+                        setCurrentUserFromProfile(r.json.profile);
+                        await syncFromServer();
+                        await enterOrganizationWorkspace(UNIFIED_ORG_ID);
                         return;
                     }
-                    await loadAuthenticatedUserProfile(user);
-                });
-            } else {
-                document.getElementById('live-sync-label').textContent = 'Live workspace';
-                // Older versions cached every user's password in the browser; drop it
-                localStorage.removeItem('ebg_prod_registered_users');
-                let authMessage = '';
-                if (getSessionToken()) {
-                    try {
-                        const r = await apiFetch('/api/me');
-                        if (r.ok && r.json && r.json.profile) {
-                            setCurrentUserFromProfile(r.json.profile);
-                            await syncFromServer();
-                            await enterOrganizationWorkspace(UNIFIED_ORG_ID);
-                            return;
-                        }
-                        authMessage = (r.json && r.json.error) || '';
-                    } catch {
-                        authMessage = "Cannot reach the EBG server. Please make sure server.py is running.";
-                    }
+                    authMessage = (r.json && r.json.error) || '';
+                } catch {
+                    authMessage = "Cannot reach the EBG server. Please make sure server.py is running.";
                 }
-                clearLocalSessionCache();
-                currentUser = null;
-                currentUserProfile = null;
-                hideLoading();
-                showAuthStep('login');
-                if (authMessage && !/sign in again/i.test(authMessage)) showToast(authMessage, "error");
             }
+            clearLocalSessionCache();
+            currentUser = null;
+            currentUserProfile = null;
+            hideLoading();
+            showAuthStep('login');
+            if (authMessage && !/sign in again/i.test(authMessage)) showToast(authMessage, "error");
         }
 
-        async function loadAuthenticatedUserProfile(user) {
-            showLoading("Entering EBG workspace...");
+        // Only the very first account may pick "Admin" when signing up
+        async function loadSignupOptions() {
             try {
-                const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'main');
-                const userSnap = await getDoc(userDocRef);
-
-                if (userSnap.exists()) {
-                    currentUserProfile = userSnap.data();
-                    currentOrgId = UNIFIED_ORG_ID;
-                    await enterOrganizationWorkspace(currentOrgId);
-                } else {
-                    hideLoading();
-                    const prefillName = user.displayName || (user.email ? capitalizeWords(user.email.split('@')[0].replace(/[._-]/g, ' ')) : '');
-                    document.getElementById('ws-display-name').value = prefillName;
-                    showAuthStep('workspace');
+                const res = await fetch('/api/bootstrap', { cache: 'no-store' });
+                const info = await res.json();
+                const adminOpt = document.querySelector('#reg-role option[value="Admin"]');
+                if (adminOpt && info.hasAdmin) {
+                    if (adminOpt.selected) document.getElementById('reg-role').value = 'Performance Marketer';
+                    adminOpt.remove();
                 }
-            } catch (error) {
-                hideLoading();
-                showAuthStep('workspace');
-            }
+            } catch {}
         }
+
+        // ---- Background refresh so everyone sees each other's changes ----
+        let pollTimer = null;
+        const POLL_INTERVAL_MS = 20000;
+
+        function startPolling() {
+            stopPolling();
+            pollTimer = setInterval(pollServer, POLL_INTERVAL_MS);
+        }
+        function stopPolling() {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = null;
+        }
+        async function pollServer() {
+            if (!currentUser || document.hidden) return;
+            const before = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '');
+            await syncFromServer();
+            const after = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '');
+            if (currentUser && before !== after) refreshLocalWorkspaceData();
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) pollServer();
+        });
+
+        
 
         initAuth();
 
@@ -2183,159 +2092,34 @@
             orgMembers = [];
             orgTasks = [];
             clearLocalSessionCache();
-            if (useCloudSync && auth) {
-                await signOut(auth).catch(() => {});
-            }
             showAuthStep('login');
             showToast("Signed out.", "info");
         }
 
-        function openSwitchWorkspaceModal() {
-            cleanupListeners();
-            if (currentUserProfile) {
-                document.getElementById('ws-display-name').value = currentUserProfile.displayName || '';
-                document.getElementById('ws-department').value = currentUserProfile.department || 'Performance Marketing';
-                document.getElementById('ws-role').value = currentUserProfile.role || 'Admin';
-            }
-            showAuthStep('workspace');
-        }
+        
 
         // 7. Profile Setup & Workspace Entry
-        async function handleWorkspaceComplete(e) {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const displayName = document.getElementById('ws-display-name').value.trim() || currentUser.displayName || 'Team Member';
-            const department = document.getElementById('ws-department').value || 'Performance Marketing';
-            const role = document.getElementById('ws-role').value || 'Member';
-            const phone = document.getElementById('ws-phone')?.value.trim() || '';
-
-            showLoading("Entering EBG workspace...");
-
-            try {
-                const orgId = UNIFIED_ORG_ID;
-                const orgName = UNIFIED_ORG_NAME;
-
-                const orgRecord = {
-                    orgId,
-                    orgName,
-                    createdBy: currentUser.uid,
-                    createdAt: new Date().toISOString()
-                };
-
-                if (useCloudSync && db) {
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'organizations', orgId), orgRecord, { merge: true });
-                } else {
-                    const orgs = getLocalStore('organizations', {});
-                    orgs[orgId] = orgRecord;
-                    setLocalStore('organizations', orgs);
-                    await syncToServer({ organizations: { [orgId]: orgRecord } });
-                }
-
-                const profileData = {
-                    uid: currentUser.uid,
-                    displayName,
-                    email: currentUser.email || '',
-                    role,
-                    department,
-                    phone,
-                    orgId,
-                    orgName,
-                    status: 'online',
-                    joinedAt: new Date().toISOString()
-                };
-
-                if (useCloudSync && db) {
-                    await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'main'), profileData);
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', `EBG_${currentUser.uid}`), profileData);
-                } else {
-                    setLocalStore('current_profile', profileData);
-                    const usersMap = getLocalStore('registered_users', {});
-                    if (currentUser.email && usersMap[currentUser.email]) {
-                        usersMap[currentUser.email].profile = profileData;
-                        setLocalStore('registered_users', usersMap);
-                    }
-                    const members = getLocalStore('org_members', []);
-                    const idx = members.findIndex(m => m.uid === profileData.uid);
-                    if (idx >= 0) members[idx] = profileData;
-                    else members.push(profileData);
-                    setLocalStore('org_members', members);
-
-                    // Persist to central server
-                    await syncToServer({
-                        members: [profileData],
-                        users: currentUser.email ? { [currentUser.email]: usersMap[currentUser.email] } : {}
-                    });
-                }
-
-                currentUserProfile = profileData;
-                currentOrgId = orgId;
-
-                await enterOrganizationWorkspace(orgId);
-                showToast(`Welcome to ${orgName}, ${displayName}!`, "success");
-            } catch (err) {
-                hideLoading();
-                showToast("Workspace entry error: " + err.message, "error");
-            }
-        }
+        
 
         // 8. Enter Workspace & Synchronize Real-Time Listeners
         async function enterOrganizationWorkspace(orgId) {
             cleanupListeners();
 
-            const hOrg = document.getElementById('header-org-subtitle');
-            if (hOrg) hOrg.textContent = `EBG Group · Task Assigner`;
-            const oOrg = document.getElementById('overview-org-label');
-            if (oOrg) oOrg.textContent = `EBG Group Workspace`;
+            const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+            setText('header-org-subtitle', 'EBG Group · Task Assigner');
+            setText('overview-org-label', 'EBG Group Workspace');
+            setText('header-user-name', currentUserProfile.displayName);
+            setText('header-user-role', currentUserProfile.role);
+            setText('header-user-avatar', getInitials(currentUserProfile.displayName));
+            setText('menu-user-name', currentUserProfile.displayName);
+            setText('menu-user-dept', `${currentUserProfile.department} · ${currentUserProfile.role}`);
 
-            const hName = document.getElementById('header-user-name');
-            if (hName) hName.textContent = currentUserProfile.displayName;
-            const hRole = document.getElementById('header-user-role');
-            if (hRole) hRole.textContent = currentUserProfile.role;
-            const hAvatar = document.getElementById('header-user-avatar');
-            if (hAvatar) hAvatar.textContent = getInitials(currentUserProfile.displayName);
-            const mName = document.getElementById('menu-user-name');
-            if (mName) mName.textContent = currentUserProfile.displayName;
-            const mDept = document.getElementById('menu-user-dept');
-            if (mDept) mDept.textContent = `${currentUserProfile.department} · ${currentUserProfile.role}`;
+            const isAdmin = isCurrentUserAdmin();
+            document.getElementById('menu-btn-admin-manage')?.classList.toggle('hidden', !isAdmin);
+            document.getElementById('team-btn-admin-manage')?.classList.toggle('hidden', !isAdmin);
 
-            const isAdmin = currentUserProfile && currentUserProfile.role === 'Admin';
-            const adminMenuBtn = document.getElementById('menu-btn-admin-manage');
-            if (adminMenuBtn) adminMenuBtn.classList.toggle('hidden', !isAdmin);
-            const teamAdminBtn = document.getElementById('team-btn-admin-manage');
-            if (teamAdminBtn) teamAdminBtn.classList.toggle('hidden', !isAdmin);
-
-            if (useCloudSync && db) {
-                const memberDocId = `EBG_${currentUser.uid}`;
-                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', memberDocId), {
-                    ...currentUserProfile,
-                    status: 'online',
-                    lastActive: new Date().toISOString()
-                }, { merge: true }).catch(() => {});
-
-                unsubMembers = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'org_members'), (snap) => {
-                    if (!currentUser) return;
-                    const list = [];
-                    snap.forEach(d => {
-                        list.push(d.data());
-                    });
-                    orgMembers = list;
-                    syncAfterDataChange();
-                }, (err) => console.error(err));
-
-                unsubTasks = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'org_tasks'), (snap) => {
-                    if (!currentUser) return;
-                    const list = [];
-                    snap.forEach(d => {
-                        list.push({ id: d.id, ...d.data() });
-                    });
-                    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-                    orgTasks = list;
-                    syncAfterDataChange();
-                }, (err) => console.error(err));
-            } else {
-                refreshLocalWorkspaceData();
-            }
+            refreshLocalWorkspaceData();
+            startPolling();
 
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
@@ -2364,8 +2148,7 @@
         }
 
         function cleanupListeners() {
-            if (unsubMembers) { unsubMembers(); unsubMembers = null; }
-            if (unsubTasks) { unsubTasks(); unsubTasks = null; }
+            stopPolling();
         }
 
         // 9. Filtering & Rendering Pipeline
@@ -2387,7 +2170,7 @@
                 if (brand !== 'all' && (t.brand || 'EBG Performance') !== brand) return false;
                 if (memberId !== 'all' && t.assigneeId !== memberId) return false;
                 if (priority !== 'all' && t.priority !== priority) return false;
-                if (filterOnlyMine && t.assigneeId !== currentUser.uid && t.delegatedTo !== currentUserProfile?.displayName) return false;
+                if (filterOnlyMine && t.assigneeId !== currentUser.uid && t.delegatedToUid !== currentUser.uid) return false;
                 if (filterOnlyUrgent && t.priority !== 'Urgent' && !isTaskOverdue(t)) return false;
 
                 if (timeframe === 'overdue' && !isTaskOverdue(t)) return false;
@@ -2464,7 +2247,7 @@
                     alertBtn.textContent = 'Assign Task';
                     alertBtn.onclick = openCreateTaskModal;
                 } else {
-                    alertText.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i><span><strong>${orgMembers.length} active team members</strong> connected. All deliverables are within SLA schedules.</span>`;
+                    alertText.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i><span><strong>${orgMembers.length} team members</strong> in the workspace. No overdue tasks in the current view.</span>`;
                     alertBtn.textContent = 'Assign Task';
                     alertBtn.onclick = openCreateTaskModal;
                 }
@@ -2538,34 +2321,25 @@
             };
             document.getElementById('chart-legend-label').textContent = `${metricNames[selectedKpiMetric]} · Last 14 Days`;
 
-            // Map real tasks to the 14-day timeline
-            if (tasks.length === 0) {
-                days.forEach(d => {
-                    d.val = selectedKpiMetric === 'sla' ? 100 : 0;
+            // Rebuild each day's numbers from the tasks' status history
+            days.forEach(day => {
+                const snapshot = [];
+                tasks.forEach(t => {
+                    const st = statusOnDay(t, day.iso);
+                    if (st) snapshot.push({ t, st });
                 });
-            } else {
-                days.forEach((day, idx) => {
-                    const createdUpToDay = tasks.filter(t => t.createdAt && localDateStr(new Date(t.createdAt)) <= day.iso);
-                    const subset = createdUpToDay.length > 0 ? createdUpToDay : (idx === days.length - 1 ? tasks : []);
-
-                    if (selectedKpiMetric === 'total') {
-                        day.val = subset.length;
-                    } else if (selectedKpiMetric === 'todo') {
-                        day.val = subset.filter(t => t.status === 'To Do').length;
-                    } else if (selectedKpiMetric === 'inprogress') {
-                        day.val = subset.filter(t => t.status === 'In Progress').length;
-                    } else if (selectedKpiMetric === 'review') {
-                        day.val = subset.filter(t => t.status === 'In Review').length;
-                    } else if (selectedKpiMetric === 'done') {
-                        day.val = subset.filter(t => t.status === 'Done').length;
-                    } else if (selectedKpiMetric === 'overdue') {
-                        day.val = subset.filter(t => t.dueDate && t.dueDate < day.iso && t.status !== 'Done').length;
-                    } else if (selectedKpiMetric === 'sla') {
-                        const ov = subset.filter(t => t.dueDate && t.dueDate < day.iso && t.status !== 'Done').length;
-                        day.val = subset.length > 0 ? Math.round(((subset.length - ov) / subset.length) * 100) : 100;
-                    }
-                });
-            }
+                const overdueCount = snapshot.filter(x => x.st !== 'Done' && x.t.dueDate && x.t.dueDate < day.iso).length;
+                const byStatus = (name) => snapshot.filter(x => x.st === name).length;
+                switch (selectedKpiMetric) {
+                    case 'total': day.val = snapshot.length; break;
+                    case 'todo': day.val = byStatus('To Do'); break;
+                    case 'inprogress': day.val = byStatus('In Progress'); break;
+                    case 'review': day.val = byStatus('In Review'); break;
+                    case 'done': day.val = byStatus('Done'); break;
+                    case 'overdue': day.val = overdueCount; break;
+                    case 'sla': day.val = snapshot.length > 0 ? Math.round(((snapshot.length - overdueCount) / snapshot.length) * 100) : 100; break;
+                }
+            });
 
             const width = 900;
             const height = 190;
@@ -2744,7 +2518,7 @@
                             <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> Drive Ready
                         </a>
                     ` : (task.tag === 'Graphic Designing' ? `
-                        <button type="button" onclick="event.stopPropagation(); promptSubmitDriveLink('${task.id}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 transition">
+                        <button type="button" onclick="event.stopPropagation(); promptSubmitDriveLink(${jsArg(task.id)})" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 transition">
                             <i data-lucide="upload" class="w-2.5 h-2.5"></i> Submit Drive
                         </button>
                     ` : '')}
@@ -2775,12 +2549,12 @@
                 <div class="pt-2 border-t border-zinc-200/70 dark:border-zinc-700/70 flex items-center justify-between text-[11px]">
                     <div class="flex items-center gap-1.5 min-w-0">
                         <div class="w-5 h-5 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[9px] flex items-center justify-center shrink-0">
-                            ${getInitials(task.assigneeName)}
+                            ${escapeHtml(getInitials(task.assigneeName))}
                         </div>
                         <span class="text-[#18181B] dark:text-zinc-300 font-medium truncate max-w-[85px]">${escapeHtml(task.assigneeName)}</span>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0 text-[#71717A]">
-                        <button type="button" onclick="event.stopPropagation(); triggerWhatsAppAlertForTask('${task.id}')" class="p-1 hover:text-[#25D366] text-[#71717A] hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded transition" title="Send WhatsApp alert">
+                        <button type="button" onclick="event.stopPropagation(); triggerWhatsAppAlertForTask(${jsArg(task.id)})" class="p-1 hover:text-[#25D366] text-[#71717A] hover:bg-emerald-50 dark:hover:bg-emerald-950/50 rounded transition" title="Send WhatsApp alert">
                             <i data-lucide="message-circle" class="w-3.5 h-3.5 text-[#25D366]"></i>
                         </button>
                         ${commentsCount > 0 ? `<span class="flex items-center gap-0.5"><i data-lucide="message-square" class="w-3 h-3"></i>${commentsCount}</span>` : ''}
@@ -2830,7 +2604,7 @@
                             <i data-lucide="external-link" class="w-3 h-3"></i> Drive Ready
                         </a>
                     ` : `
-                        <button type="button" onclick="promptSubmitDriveLink('${task.id}')" class="px-2 py-1 text-[11px] font-semibold rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 transition">
+                        <button type="button" onclick="promptSubmitDriveLink(${jsArg(task.id)})" class="px-2 py-1 text-[11px] font-semibold rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 transition">
                             + Submit Link
                         </button>
                     `}
@@ -2838,7 +2612,7 @@
                 <td class="py-3 px-4">
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[10px] flex items-center justify-center">
-                            ${getInitials(task.assigneeName)}
+                            ${escapeHtml(getInitials(task.assigneeName))}
                         </div>
                         <div>
                             <span class="font-medium text-[#18181B] dark:text-zinc-200 block">${escapeHtml(task.assigneeName)}</span>
@@ -2850,7 +2624,7 @@
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getPriorityBadgeClass(task.priority)}">${escapeHtml(task.priority)}</span>
                 </td>
                 <td class="py-3 px-4" onclick="event.stopPropagation()">
-                    <select onchange="quickUpdateStatusFromTable('${task.id}', this.value)" class="px-2.5 py-1 rounded-lg text-xs font-medium border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[#18181B] dark:text-zinc-200 outline-none">
+                    <select onchange="quickUpdateStatusFromTable(${jsArg(task.id)}, this.value)" class="px-2.5 py-1 rounded-lg text-xs font-medium border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[#18181B] dark:text-zinc-200 outline-none">
                         <option value="Scheduled" ${task.status === 'Scheduled' ? 'selected' : ''}>Scheduled</option>
                         <option value="To Do" ${task.status === 'To Do' ? 'selected' : ''}>To Do</option>
                         <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
@@ -2862,7 +2636,7 @@
                     ${formatShortDate(task.dueDate)}
                 </td>
                 <td class="py-3 px-4 text-right">
-                    <button onclick="event.stopPropagation(); triggerWhatsAppAlertForTask('${task.id}')" class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 font-semibold text-[11px] hover:bg-emerald-100 transition inline-flex items-center gap-1 border border-emerald-200/60 mr-1.5" title="Send WhatsApp Alert">
+                    <button onclick="event.stopPropagation(); triggerWhatsAppAlertForTask(${jsArg(task.id)})" class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 font-semibold text-[11px] hover:bg-emerald-100 transition inline-flex items-center gap-1 border border-emerald-200/60 mr-1.5" title="Send WhatsApp Alert">
                         <i data-lucide="message-circle" class="w-3 h-3 text-[#25D366]"></i>
                         <span>Alert</span>
                     </button>
@@ -2923,7 +2697,7 @@
                         <div class="flex items-start justify-between gap-3 mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-xs flex items-center justify-center shrink-0">
-                                    ${getInitials(member.displayName)}
+                                    ${escapeHtml(getInitials(member.displayName))}
                                 </div>
                                 <div>
                                     <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-1.5">
@@ -2933,11 +2707,11 @@
                                     <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                                         <span class="text-[11px] text-[#71717A]">${escapeHtml(member.email || '')}</span>
                                         ${member.phone ? `
-                                            <span class="text-[10px] text-[#25D366] font-semibold flex items-center gap-0.5 cursor-pointer hover:underline" onclick="promptSetMemberPhone('${member.uid}')" title="Click to edit WhatsApp phone">
+                                            <span class="text-[10px] text-[#25D366] font-semibold flex items-center gap-0.5 cursor-pointer hover:underline" onclick="promptSetMemberPhone(${jsArg(member.uid)})" title="Click to edit WhatsApp phone">
                                                 <i data-lucide="phone" class="w-2.5 h-2.5"></i>${escapeHtml(member.phone)}
                                             </span>
                                         ` : `
-                                            <button onclick="promptSetMemberPhone('${member.uid}')" class="text-[10px] text-zinc-400 hover:text-[#25D366] transition underline">+ WhatsApp No.</button>
+                                            <button onclick="promptSetMemberPhone(${jsArg(member.uid)})" class="text-[10px] text-zinc-400 hover:text-[#25D366] transition underline">+ WhatsApp No.</button>
                                         `}
                                     </div>
                                 </div>
@@ -2962,7 +2736,7 @@
 
                     <div class="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
-                            <button onclick="filterByMember('${member.uid}')" class="text-xs font-semibold text-[#71717A] hover:text-[#111113] dark:hover:text-white transition">Tasks (${memberTasks.length})</button>
+                            <button onclick="filterByMember(${jsArg(member.uid)})" class="text-xs font-semibold text-[#71717A] hover:text-[#111113] dark:hover:text-white transition">Tasks (${memberTasks.length})</button>
                             <a href="${waChatUrl}" target="_blank" class="p-1 rounded-md text-[#25D366] hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition flex items-center gap-1 text-[11px] font-semibold" title="Chat on WhatsApp">
                                 <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
                                 <span class="hidden sm:inline">WhatsApp</span>
@@ -2974,7 +2748,7 @@
                                     <i data-lucide="shield" class="w-3 h-3"></i> Manage
                                 </button>
                             ` : ''}
-                            <button onclick="openCreateTaskForMember('${member.uid}')" class="px-3 py-1.5 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 text-xs font-semibold transition flex items-center gap-1">
+                            <button onclick="openCreateTaskForMember(${jsArg(member.uid)})" class="px-3 py-1.5 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 text-xs font-semibold transition flex items-center gap-1">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign
                             </button>
                         </div>
@@ -3179,6 +2953,10 @@
             if (!currentUser || !currentOrgId) return;
 
             const title = document.getElementById('task-title').value.trim();
+            if (!title) {
+                showToast("Please enter a task title.", "error");
+                return;
+            }
             const description = document.getElementById('task-desc').value.trim();
             const assigneeId = document.getElementById('task-assignee').value;
             const priority = document.getElementById('task-priority').value;
@@ -3198,33 +2976,22 @@
             const isScheduled = document.getElementById('task-is-scheduled')?.checked || false;
             const scheduledDate = isScheduled ? (document.getElementById('task-scheduled-date')?.value || '') : '';
             const recurrence = isScheduled ? (document.getElementById('task-recurrence')?.value || 'none') : 'none';
+            if (isScheduled && !scheduledDate) {
+                showToast("Please pick a release date and time for the scheduled task.", "error");
+                return;
+            }
 
-            const assignee = orgMembers.find(m => m.uid === assigneeId);
-            const assigneeName = assignee ? assignee.displayName : currentUserProfile.displayName;
-            const maxSeq = orgTasks.reduce((mx, t) => {
-                const n = parseInt(String(t.code || '').replace(/^EBG-/, ''), 10);
-                return Number.isFinite(n) && n > mx ? n : mx;
-            }, 0);
-            const nextSeq = String(maxSeq + 1).padStart(3, '0');
-
+            // The server assigns the task code, creator and timestamps
+            const taskId = newClientId('tsk');
             const newTask = {
-                code: `EBG-${nextSeq}`,
-                orgId: currentOrgId,
+                id: taskId,
                 title,
                 description,
                 brand,
                 format,
                 contentDriveUrl,
-                submissionDriveUrl: '',
                 assigneeId,
-                assigneeName,
-                createdBy: currentUser.uid,
-                createdByName: currentUserProfile.displayName,
-                assignedByRole: currentUserProfile.role || 'Admin',
-                delegatedBy: '',
-                delegatedTo: '',
-                delegatedAt: '',
-                delegationNote: '',
+                assignedByRole: currentUserProfile.role || '',
                 priority,
                 status: isScheduled ? 'Scheduled' : 'To Do',
                 isScheduled,
@@ -3232,37 +2999,37 @@
                 recurrence,
                 tag,
                 dueDate,
-                subtasks: draftSubtasks,
-                comments: [],
-                createdAt: new Date().toISOString()
+                subtasks: draftSubtasks
             };
 
-            let createdTaskId = null;
-            try {
-                if (useCloudSync && db) {
-                    const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'org_tasks'), newTask);
-                    createdTaskId = docRef.id;
-                } else {
-                    const all = getLocalStore('org_tasks', []);
-                    createdTaskId = 'tsk_' + Date.now();
-                    const createdTask = { id: createdTaskId, ...newTask };
-                    all.push(createdTask);
-                    setLocalStore('org_tasks', all);
-                    refreshLocalWorkspaceData();
-                    await syncToServer({ tasks: [createdTask] });
+            const submitBtn = document.querySelector('#create-task-form button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+            const ok = await syncToServer({ tasks: [newTask] });
+            if (submitBtn) submitBtn.disabled = false;
+            if (!ok) return;
+
+            const saved = orgTasks.find(t => t.id === taskId) || newTask;
+            closeCreateTaskModal();
+            showToast(
+                isScheduled ? `Task ${saved.code || ''} scheduled!` : `Task ${saved.code || ''} (${brand}) assigned to ${saved.assigneeName || 'team'}!`,
+                "success",
+                {
+                    label: `<i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp Alert`,
+                    onclick: `triggerWhatsAppAlertForTask(${jsArg(taskId)})`
                 }
-                closeCreateTaskModal();
-                showToast(
-                    isScheduled ? `Task ${newTask.code} scheduled!` : `Task ${newTask.code} (${brand}) assigned to ${assigneeName}!`,
-                    "success",
-                    {
-                        label: `<i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp Alert`,
-                        onclick: `triggerWhatsAppAlertForTask('${createdTaskId}')`
-                    }
-                );
-            } catch (err) {
-                showToast("Error assigning task: " + err.message, "error");
+            );
+        }
+
+        function newClientId(prefix) {
+            let rand = '';
+            if (window.crypto && crypto.getRandomValues) {
+                const bytes = new Uint8Array(10);
+                crypto.getRandomValues(bytes);
+                rand = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+            } else {
+                rand = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
             }
+            return `${prefix}_${rand}`;
         }
 
         // 15. Task Detail Slide-Over Drawer
@@ -3281,6 +3048,8 @@
         }
 
         function renderTaskDetailDrawerContent(task) {
+            const delBtn = document.getElementById('btn-delete-task');
+            if (delBtn) delBtn.classList.toggle('hidden', !(isCurrentUserAdmin() || task.createdBy === currentUser?.uid));
             document.getElementById('detail-code').textContent = task.code || 'EBG-001';
             document.getElementById('detail-tag').textContent = task.tag || 'General';
             const brandEl = document.getElementById('detail-brand');
@@ -3565,22 +3334,16 @@
             showToast("Task released to 'To Do' pipeline!", "success");
         }
 
+        // Sends only the changed fields, so two people editing different fields don't overwrite each other
         async function patchTaskById(taskId, patch) {
             if (patch.status && patch.status !== 'Scheduled') patch = { ...patch, isScheduled: false };
-            if (useCloudSync && db) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_tasks', taskId), patch);
-            } else {
-                const all = getLocalStore('org_tasks', []);
-                const idx = all.findIndex(t => t.id === taskId);
-                if (idx >= 0) {
-                    all[idx] = { ...all[idx], ...patch };
-                    setLocalStore('org_tasks', all);
-                    refreshLocalWorkspaceData();
-                    return await syncToServer({ tasks: [all[idx]] });
-                }
-                return false;
-            }
-            return true;
+            const all = getLocalStore('org_tasks', []);
+            const idx = all.findIndex(t => t.id === taskId);
+            if (idx < 0) return false;
+            all[idx] = { ...all[idx], ...patch };
+            setLocalStore('org_tasks', all);
+            refreshLocalWorkspaceData();
+            return await syncToServer({ tasks: [{ id: taskId, ...patch }] });
         }
 
         async function updateTaskFieldFromDrawer(field, value) {
@@ -3622,34 +3385,180 @@
             const input = document.getElementById('detail-comment-input');
             const text = input.value.trim();
             if (!text) return;
-            const task = orgTasks.find(t => t.id === activeDetailTaskId);
-            if (!task) return;
-
-            const updated = [...(task.comments || []), {
-                author: currentUserProfile.displayName,
-                authorId: currentUser.uid,
-                text,
-                timestamp: new Date().toISOString()
-            }];
-            input.value = '';
-            await patchTaskById(activeDetailTaskId, { comments: updated });
+            // Appended on the server (author comes from your session), so simultaneous comments are kept
+            const ok = await syncToServer({ addComment: { taskId: activeDetailTaskId, text } });
+            if (ok) input.value = '';
         }
 
         async function deleteCurrentTask() {
             if (!activeDetailTaskId) return;
             const targetTaskId = activeDetailTaskId;
-            if (useCloudSync && db) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_tasks', targetTaskId));
-            } else {
-                const all = getLocalStore('org_tasks', []).filter(t => t.id !== targetTaskId);
-                setLocalStore('org_tasks', all);
-                refreshLocalWorkspaceData();
-                const ok = await syncToServer({ deleteTaskId: targetTaskId });
-                if (!ok) return;
-            }
+            const task = orgTasks.find(t => t.id === targetTaskId);
+            if (!task) return;
+            if (!confirm(`Delete ${task.code || 'this task'} "${task.title}"? This cannot be undone.`)) return;
+            const ok = await syncToServer({ deleteTaskId: targetTaskId });
+            if (!ok) return;
             closeTaskDetailDrawer();
             showToast("Task deleted.", "info");
         }
+
+        async function promptSetMemberPhone(uid) {
+            const member = orgMembers.find(m => m.uid === uid);
+            if (!member) return;
+            if (!isCurrentUserAdmin() && uid !== currentUser?.uid) {
+                showToast("You can only change your own WhatsApp number. Ask an Admin to update others.", "error");
+                return;
+            }
+            const newPhone = prompt(`Enter WhatsApp Phone Number for ${member.displayName} (e.g. +91 98765 43210):`, member.phone || '');
+            if (newPhone === null) return;
+            const cleaned = newPhone.trim();
+            if (cleaned && cleaned.replace(/\D/g, '').length < 10) {
+                showToast("Please enter a valid phone number with at least 10 digits.", "error");
+                return;
+            }
+            const ok = await syncToServer({ members: [{ uid, phone: cleaned }] });
+            if (ok) showToast(`WhatsApp phone updated for ${member.displayName}!`, "success");
+        }
+
+        async function adminToggleUserStatus(email, uid) {
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
+            const cleanEmail = (email || '').toLowerCase().trim();
+            const memberRec = orgMembers.find(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail));
+            if (!memberRec) {
+                showToast("This account has no member profile to update.", "error");
+                return;
+            }
+            const userRec = getLocalStore('registered_users', {})[cleanEmail];
+            const currentStatus = memberRec.accountStatus || userRec?.status || 'active';
+            const nextStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+
+            const ok = await syncToServer({ members: [{ uid: memberRec.uid, accountStatus: nextStatus }] });
+            if (ok) {
+                showToast(`Account login for ${cleanEmail} is now ${nextStatus.toUpperCase()}.`, nextStatus === 'active' ? 'success' : 'error');
+            }
+            renderAdminUsersTable();
+        }
+
+        async function adminSaveEditMember(e) {
+            e.preventDefault();
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
+            const uid = document.getElementById('admin-edit-uid')?.value;
+            const name = (document.getElementById('admin-edit-name')?.value || '').trim();
+            const dept = document.getElementById('admin-edit-dept')?.value;
+            const role = document.getElementById('admin-edit-role')?.value;
+            const phone = (document.getElementById('admin-edit-phone')?.value || '').trim();
+
+            if (!name) {
+                showToast("Display name cannot be empty.", "error");
+                return;
+            }
+            if (!orgMembers.some(m => m.uid === uid)) {
+                showToast("This account has no member profile to update.", "error");
+                return;
+            }
+
+            showLoading("Saving member changes...");
+            // The server also updates the login record and renames the member on their tasks
+            const ok = await syncToServer({ members: [{ uid, displayName: name, department: dept, role, phone }] });
+            hideLoading();
+            if (!ok) return;
+
+            if (currentUser && currentUser.uid === uid) {
+                currentUser.displayName = name;
+                setLocalStore('current_user', currentUser);
+                await enterOrganizationWorkspace(UNIFIED_ORG_ID);
+            }
+            adminCloseEditMemberModal();
+            showToast("Colleague profile updated successfully!", "success");
+            renderAdminUsersTable();
+        }
+
+        async function adminDeleteMember(uid, email, name) {
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin access required.", "error");
+                return;
+            }
+            const cleanEmail = (email || '').toLowerCase().trim();
+            if (currentUser && (currentUser.uid === uid || (currentUser.email || '').toLowerCase() === cleanEmail)) {
+                showToast("You cannot delete your own active Admin account.", "error");
+                return;
+            }
+            const openTasks = orgTasks.filter(t => t.assigneeId === uid && t.status !== 'Done').length;
+            const extra = openTasks ? ` Their ${openTasks} open task(s) will become Unassigned.` : '';
+            if (!confirm(`Remove ${name || email} and delete their login? This cannot be undone.${extra}`)) return;
+
+            showLoading("Deleting member account...");
+            const ok = await syncToServer({ deleteMemberUid: uid, deleteUserEmail: cleanEmail });
+            hideLoading();
+            if (!ok) return;
+            showToast(`Member ${name || cleanEmail} removed.`, "info");
+            renderAdminUsersTable();
+        }
+
+        // ---- Change own password ----
+        function openChangePasswordModal() {
+            document.getElementById('user-dropdown-menu')?.classList.add('hidden');
+            ['chpw-current', 'chpw-new', 'chpw-confirm'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            document.getElementById('change-password-modal')?.classList.remove('hidden');
+            document.getElementById('chpw-current')?.focus();
+            lucide.createIcons();
+        }
+        function closeChangePasswordModal() {
+            document.getElementById('change-password-modal')?.classList.add('hidden');
+        }
+        async function submitChangePassword(e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById('chpw-current').value;
+            const newPassword = document.getElementById('chpw-new').value;
+            const confirmPassword = document.getElementById('chpw-confirm').value;
+            if (newPassword.length < 6) {
+                showToast("New password must be at least 6 characters.", "error");
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showToast("New passwords do not match.", "error");
+                return;
+            }
+            let r = null;
+            try {
+                r = await apiFetch('/api/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+            } catch {}
+            if (!r || !r.ok) {
+                if (!r || r.status !== 401) showToast((r && r.json && r.json.error) || "Could not change the password.", "error");
+                return;
+            }
+            closeChangePasswordModal();
+            showToast("Password changed. Your other devices were signed out.", "success");
+        }
+
+        // Day-by-day status of a task, rebuilt from its status history (for the trend chart)
+        function statusOnDay(task, dayIso) {
+            const created = task.createdAt ? localDateStr(new Date(task.createdAt)) : '';
+            if (!created || created > dayIso) return null;
+            const history = Array.isArray(task.statusHistory) ? task.statusHistory : [];
+            if (history.length === 0) return task.status || 'To Do';
+            let status = history[0].status;
+            for (const h of history) {
+                if (h.at && localDateStr(new Date(h.at)) <= dayIso) status = h.status;
+                else break;
+            }
+            return status;
+        }
+
+        function csvCell(value) {
+            let text = String(value ?? '');
+            // Stop spreadsheet apps from running cell text as a formula
+            if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+            return `"${text.replace(/"/g, '""')}"`;
+        }
+
+        
 
         // 16. Utility & Excel CSV Export
         function copyTextToClipboard(text) {
@@ -3681,25 +3590,13 @@
             const headers = ['Task ID', 'Title', 'Brand', 'Creative Format', 'Department', 'Assignee', 'Delegated To', 'Priority', 'Status', 'Content Brief Drive Link', 'Submission Drive Link', 'Release Schedule', 'Due Date', 'Created By'];
             const csvLines = [headers.join(',')];
             rows.forEach(t => {
-                const vals = [
-                    t.code || '',
-                    `"${(t.title || '').replace(/"/g, '""')}"`,
-                    `"${(t.brand || 'EBG Performance').replace(/"/g, '""')}"`,
-                    `"${(t.format || 'Standard Deliverable').replace(/"/g, '""')}"`,
-                    `"${(t.tag || '').replace(/"/g, '""')}"`,
-                    `"${(t.assigneeName || '').replace(/"/g, '""')}"`,
-                    `"${(t.delegatedTo || '').replace(/"/g, '""')}"`,
-                    t.priority || '',
-                    t.status || '',
-                    `"${(t.contentDriveUrl || '').replace(/"/g, '""')}"`,
-                    `"${(t.submissionDriveUrl || '').replace(/"/g, '""')}"`,
-                    `"${(t.scheduledDate || '').replace(/"/g, '""')}"`,
-                    t.dueDate || '',
-                    `"${(t.createdByName || '').replace(/"/g, '""')}"`
-                ];
-                csvLines.push(vals.join(','));
+                csvLines.push([
+                    t.code, t.title, t.brand || 'EBG Performance', t.format || 'Standard Deliverable', t.tag,
+                    t.assigneeName, t.delegatedTo, t.priority, t.status, t.contentDriveUrl, t.submissionDriveUrl,
+                    t.scheduledDate, t.dueDate, t.createdByName
+                ].map(csvCell).join(','));
             });
-            const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(['\ufeff' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -3858,7 +3755,7 @@
                         <td class="py-2.5 px-3">
                             <div class="flex items-center gap-2">
                                 <div class="w-6 h-6 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-[10px] font-bold flex items-center justify-center shrink-0">
-                                    ${getInitials(member.displayName)}
+                                    ${escapeHtml(getInitials(member.displayName))}
                                 </div>
                                 <div>
                                     <span class="font-semibold text-[#18181B] dark:text-white block">${escapeHtml(member.displayName)}</span>
@@ -3963,7 +3860,7 @@
                                         ${escapeHtml(t.format || 'Creative')}
                                     </span>
                                 </div>
-                                <h4 onclick="openTaskDetail('${t.id}')" class="text-xs font-bold text-[#18181B] dark:text-white hover:underline cursor-pointer mb-1">
+                                <h4 onclick="openTaskDetail(${jsArg(t.id)})" class="text-xs font-bold text-[#18181B] dark:text-white hover:underline cursor-pointer mb-1">
                                     ${escapeHtml(t.title)}
                                 </h4>
                                 <p class="text-[11px] text-zinc-500 line-clamp-2 mb-2">${escapeHtml(t.description || 'No description.')}</p>
@@ -3993,14 +3890,14 @@
                                             <i data-lucide="check-circle" class="w-3 h-3 text-[#1E8E3E]"></i> View Drive Link
                                         </a>
                                     ` : `
-                                        <button onclick="promptSubmitDriveLink('${t.id}')" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 transition">
+                                        <button onclick="promptSubmitDriveLink(${jsArg(t.id)})" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 transition">
                                             + Submit Drive Link
                                         </button>
                                     `}
                                 </div>
                                 <div class="flex items-center justify-between pt-1">
                                     <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Done' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}">${escapeHtml(t.status)}</span>
-                                    <button onclick="openTaskDetail('${t.id}')" class="text-[10px] text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline">
+                                    <button onclick="openTaskDetail(${jsArg(t.id)})" class="text-[10px] text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline">
                                         Manage / Delegate
                                     </button>
                                 </div>
@@ -4034,7 +3931,7 @@
             document.getElementById('app-screen').classList.add('hidden');
             document.getElementById('auth-screen').classList.remove('hidden');
             document.getElementById('auth-step-login').classList.toggle('hidden', step !== 'login');
-            document.getElementById('auth-step-workspace').classList.toggle('hidden', step !== 'workspace');
+            document.getElementById('auth-step-workspace')?.classList.toggle('hidden', step !== 'workspace');
             lucide.createIcons();
         }
 
@@ -4186,31 +4083,7 @@
             showToast(`Opening WhatsApp alert for ${task.assigneeName || 'team'}...`, "success");
         }
 
-        async function promptSetMemberPhone(uid) {
-            const member = orgMembers.find(m => m.uid === uid);
-            if (!member) return;
-            const currentPhone = member.phone || '';
-            const newPhone = prompt(`Enter WhatsApp Phone Number for ${member.displayName} (e.g. +91 98765 43210):`, currentPhone);
-            if (newPhone === null) return;
-            const cleaned = newPhone.trim();
-            member.phone = cleaned;
-
-            if (useCloudSync && db) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'org_members', `EBG_${uid}`), { phone: cleaned }).catch(() => {});
-            } else {
-                const members = getLocalStore('org_members', []);
-                const idx = members.findIndex(m => m.uid === uid);
-                if (idx >= 0) members[idx].phone = cleaned;
-                setLocalStore('org_members', members);
-                if (currentUser && currentUser.uid === uid && currentUserProfile) {
-                    currentUserProfile.phone = cleaned;
-                    setLocalStore('current_profile', currentUserProfile);
-                }
-                await syncToServer({ members: [member] });
-            }
-            renderTeamDirectory();
-            showToast(`WhatsApp phone updated for ${member.displayName}!`, "success");
-        }
+        
 
         // =====================================================================
         // ADMIN TEAM MEMBERS & LOGIN CREDENTIALS MANAGEMENT CONSOLE
@@ -4339,7 +4212,7 @@
                     <td class="py-3 px-4">
                         <div class="flex items-center gap-2.5">
                             <div class="w-8 h-8 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[11px] flex items-center justify-center shrink-0">
-                                ${getInitials(u.displayName)}
+                                ${escapeHtml(getInitials(u.displayName))}
                             </div>
                             <div>
                                 <div class="font-bold text-[#18181B] dark:text-white flex items-center gap-1.5">
@@ -4389,39 +4262,7 @@
             lucide.createIcons();
         }
 
-        async function adminToggleUserStatus(email, uid) {
-            if (!isCurrentUserAdmin()) {
-                showToast("Admin privilege required.", "error");
-                return;
-            }
-
-            const cleanEmail = (email || '').toLowerCase().trim();
-            const usersMap = getLocalStore('registered_users', {});
-            const userRec = usersMap[cleanEmail];
-            const memberRec = orgMembers.find(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail));
-            const currentStatus = userRec?.status || memberRec?.accountStatus || 'active';
-            const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
-
-            const patch = {};
-            if (userRec) {
-                patch.users = {
-                    [cleanEmail]: {
-                        status: nextStatus,
-                        profile: { ...(userRec.profile || {}), accountStatus: nextStatus }
-                    }
-                };
-            }
-            if (memberRec) {
-                patch.members = [{ ...memberRec, accountStatus: nextStatus }];
-            }
-
-            const ok = await syncToServer(patch);
-            if (ok) {
-                showToast(`Account login for ${cleanEmail} is now ${nextStatus.toUpperCase()}.`, nextStatus === 'active' ? 'success' : 'error');
-            }
-            renderAdminUsersTable();
-            renderTeamDirectory();
-        }
+        
 
         function adminOpenResetPasswordModal(email, name) {
             const modal = document.getElementById('admin-reset-password-modal');
@@ -4509,99 +4350,7 @@
             document.getElementById('admin-edit-member-modal')?.classList.add('hidden');
         }
 
-        async function adminSaveEditMember(e) {
-            e.preventDefault();
-            if (!isCurrentUserAdmin()) {
-                showToast("Admin privilege required.", "error");
-                return;
-            }
-            const uid = document.getElementById('admin-edit-uid')?.value;
-            const email = (document.getElementById('admin-edit-email')?.value || '').toLowerCase().trim();
-            const name = (document.getElementById('admin-edit-name')?.value || '').trim();
-            const dept = document.getElementById('admin-edit-dept')?.value;
-            const role = document.getElementById('admin-edit-role')?.value;
-            const phone = (document.getElementById('admin-edit-phone')?.value || '').trim();
-
-            if (!name) {
-                showToast("Display name cannot be empty.", "error");
-                return;
-            }
-
-            showLoading("Saving member changes...");
-
-            const mIdx = orgMembers.findIndex(m => m.uid === uid || (m.email && m.email.toLowerCase() === email));
-            let memberObj;
-            if (mIdx >= 0) {
-                orgMembers[mIdx].displayName = name;
-                orgMembers[mIdx].department = dept;
-                orgMembers[mIdx].role = role;
-                orgMembers[mIdx].phone = phone;
-                memberObj = orgMembers[mIdx];
-            } else {
-                memberObj = {
-                    uid: uid || ('usr_' + Date.now().toString(36)),
-                    displayName: name,
-                    email,
-                    department: dept,
-                    role,
-                    phone,
-                    orgId: UNIFIED_ORG_ID,
-                    orgName: UNIFIED_ORG_NAME,
-                    status: 'online',
-                    joinedAt: new Date().toISOString()
-                };
-                orgMembers.push(memberObj);
-            }
-            setLocalStore('org_members', orgMembers);
-
-            const usersMap = getLocalStore('registered_users', {});
-            let userRec = usersMap[email];
-            if (userRec) {
-                userRec.displayName = name;
-                userRec.department = dept;
-                userRec.role = role;
-                userRec.phone = phone;
-                if (userRec.profile) {
-                    userRec.profile.displayName = name;
-                    userRec.profile.department = dept;
-                    userRec.profile.role = role;
-                    userRec.profile.phone = phone;
-                }
-                usersMap[email] = userRec;
-                setLocalStore('registered_users', usersMap);
-            }
-            // No login record yet: the Admin sets a password via "Reset Password" (no shared default password)
-
-            // Keep task cards in sync with the renamed member
-            const renamedTasks = orgTasks.filter(t => t.assigneeId === memberObj.uid && t.assigneeName !== name);
-            for (const t of renamedTasks) {
-                await patchTaskById(t.id, { assigneeName: name });
-            }
-
-            if (currentUser && (currentUser.uid === uid || currentUser.email.toLowerCase() === email)) {
-                currentUser.displayName = name;
-                currentUserProfile.displayName = name;
-                currentUserProfile.department = dept;
-                currentUserProfile.role = role;
-                currentUserProfile.phone = phone;
-                setLocalStore('current_user', currentUser);
-                setLocalStore('current_profile', currentUserProfile);
-                enterOrganizationWorkspace(UNIFIED_ORG_ID);
-            }
-
-            const saved = await syncToServer({
-                users: userRec ? { [email]: userRec } : undefined,
-                members: [memberObj]
-            });
-
-            hideLoading();
-            if (!saved) return;
-            adminCloseEditMemberModal();
-            showToast(`Colleague profile updated successfully!`, "success");
-            renderAdminUsersTable();
-            renderTeamDirectory();
-            populateMemberDropdowns();
-        }
+        
 
         async function adminSubmitProvisionMember(e) {
             e.preventDefault();
@@ -4651,45 +4400,7 @@
             renderAdminUsersTable();
         }
 
-        async function adminDeleteMember(uid, email, name) {
-            if (!isCurrentUserAdmin()) {
-                showToast("Admin access required.", "error");
-                return;
-            }
-
-            if (currentUser && (currentUser.uid === uid || currentUser.email.toLowerCase() === email.toLowerCase())) {
-                showToast("You cannot delete your own active Admin account.", "error");
-                return;
-            }
-
-            if (!confirm(`Are you sure you want to remove member ${name || email} and delete their account access? This action cannot be undone.`)) {
-                return;
-            }
-
-            showLoading("Deleting member account...");
-
-            const cleanEmail = (email || '').toLowerCase().trim();
-            const usersMap = getLocalStore('registered_users', {});
-            if (cleanEmail in usersMap) {
-                delete usersMap[cleanEmail];
-                setLocalStore('registered_users', usersMap);
-            }
-
-            orgMembers = orgMembers.filter(m => m.uid !== uid && (m.email || '').toLowerCase() !== cleanEmail);
-            setLocalStore('org_members', orgMembers);
-
-            const deleted = await syncToServer({
-                deleteMemberUid: uid,
-                deleteUserEmail: cleanEmail
-            });
-
-            hideLoading();
-            if (!deleted) return;
-            showToast(`Member ${name || cleanEmail} removed.`, "info");
-            renderAdminUsersTable();
-            renderTeamDirectory();
-            populateMemberDropdowns();
-        }
+        
         function isTaskOverdue(t) {
             if (!t.dueDate || t.status === 'Done') return false;
             return t.dueDate < localDateStr(new Date());
