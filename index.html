@@ -1937,17 +1937,27 @@
             if (authMessage && !/sign in again/i.test(authMessage)) showToast(authMessage, "error");
         }
 
-        // Only the very first account may pick "Admin" when signing up
+        const SERVER_HELP = "Can't reach the EBG server. Start it with start-server.bat (keep its window open), then open http://localhost:8090";
+
+        // Only the very first account may pick "Admin" when signing up.
+        // Also tells the user straight away if this page isn't connected to server.py.
         async function loadSignupOptions() {
+            if (location.protocol === 'file:') {
+                showToast(SERVER_HELP, "error", null, 20000);
+                return;
+            }
             try {
                 const res = await fetch('/api/bootstrap', { cache: 'no-store' });
                 const info = await res.json();
+                if (info.server !== 'ebg') throw new Error('not the EBG server');
                 const adminOpt = document.querySelector('#reg-role option[value="Admin"]');
                 if (adminOpt && info.hasAdmin) {
                     if (adminOpt.selected) document.getElementById('reg-role').value = 'Performance Marketer';
                     adminOpt.remove();
                 }
-            } catch {}
+            } catch {
+                showToast(SERVER_HELP, "error", null, 20000);
+            }
         }
 
         // ---- Background refresh so everyone sees each other's changes ----
@@ -2055,12 +2065,18 @@
                 r = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
             } catch {
                 hideLoading();
-                showToast("Cannot reach the EBG server. Please make sure server.py is running.", "error");
+                showToast(SERVER_HELP, "error", null, 12000);
                 return;
             }
-            if (!r.ok || !r.json || !r.json.token) {
+            if (!r.json) {
+                // Not a JSON answer: this page is not being served by server.py
                 hideLoading();
-                showToast((r.json && r.json.error) || "Sign in failed. Please try again.", "error");
+                showToast(`${SERVER_HELP} (HTTP ${r.status})`, "error", null, 12000);
+                return;
+            }
+            if (!r.ok || !r.json.token) {
+                hideLoading();
+                showToast(r.json.error || "Sign in failed. Please try again.", "error");
                 return;
             }
 
@@ -4009,7 +4025,7 @@
         function hideLoading() {
             document.getElementById('loading-overlay').classList.add('hidden');
         }
-        function showToast(message, type = 'info', action = null) {
+        function showToast(message, type = 'info', action = null, durationMs = null) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             const styles = {
@@ -4037,7 +4053,7 @@
             setTimeout(() => {
                 toast.style.opacity = '0';
                 setTimeout(() => toast.remove(), 250);
-            }, action ? 6500 : 3200);
+            }, durationMs || (action ? 6500 : 3200));
         }
 
         // WhatsApp Team Dispatch System

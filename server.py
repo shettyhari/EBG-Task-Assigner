@@ -19,6 +19,7 @@ import sys
 import threading
 import time
 import urllib.request
+import webbrowser
 from datetime import datetime, timedelta, timezone
 
 PORT = int(os.environ.get("EBG_PORT", "8090"))
@@ -56,6 +57,8 @@ MEMBER_SELF_FIELDS = {"displayName", "phone"}
 MEMBER_ADMIN_FIELDS = {"displayName", "phone", "role", "department", "accountStatus"}
 
 FAILED_LOGINS = {}  # (email, ip) -> {"count": int, "until": float}
+# Requests are handled on separate threads; this lock keeps data.json / sessions.json consistent.
+DATA_LOCK = threading.RLock()
 
 
 def now_iso():
@@ -547,6 +550,8 @@ class Ctx:
 # HTTP handler
 # ---------------------------------------------------------------------------
 class EBGHandler(http.server.SimpleHTTPRequestHandler):
+    timeout = 30  # seconds; drop idle or stalled connections
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIR, **kwargs)
 
@@ -624,27 +629,31 @@ class EBGHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
             return
         try:
-            data = load_data()
-            if path == "/api/bootstrap":
-                # Public: lets the sign-up form know whether the first Admin still has to register
-                self.send_json(200, {"hasAdmin": has_admin(data)})
-                return
-            ctx = self.require_session(data)
-            if path == "/api/me":
-                self.send_json(200, {"success": True, "profile": profile_for(data, ctx.email)})
-            elif path == "/api/data":
-                released = release_due_tasks(data)
-                if released:
-                    save_data(data)
-                    notify([t for t in released if t.get("status") == "To Do"], data["members"])
-                self.send_json(200, view_for(data, ctx.is_admin))
-            else:
-                raise ApiError(404, "Not found")
+            with DATA_LOCK:
+                self.handle_api_get(path)
         except ApiError as e:
             self.send_json(e.status, {"success": False, "error": e.message})
         except Exception as e:
             print("GET error:", repr(e))
             self.send_json(500, {"success": False, "error": "Server error"})
+
+    def handle_api_get(self, path):
+        data = load_data()
+        if path == "/api/bootstrap":
+            # Public: lets the sign-up form know whether the first Admin still has to register
+            self.send_json(200, {"hasAdmin": has_admin(data), "server": "ebg"})
+            return
+        ctx = self.require_session(data)
+        if path == "/api/me":
+            self.send_json(200, {"success": True, "profile": profile_for(data, ctx.email)})
+        elif path == "/api/data":
+            released = release_due_tasks(data)
+            if released:
+                save_data(data)
+                notify([t for t in released if t.get("status") == "To Do"], data["members"])
+            self.send_json(200, view_for(data, ctx.is_admin))
+        else:
+            raise ApiError(404, "Not found")
 
     def do_HEAD(self):
         if self.path_only() not in PUBLIC_FILES:
@@ -668,8 +677,9 @@ class EBGHandler(http.server.SimpleHTTPRequestHandler):
             return
         try:
             body = self.read_body()
-            data = load_data()
-            status, result = handler(body, data)
+            with DATA_LOCK:
+                data = load_data()
+                status, result = handler(body, data)
             self.send_json(status, result)
         except ApiError as e:
             self.send_json(e.status, {"success": False, "error": e.message})
@@ -935,6 +945,11 @@ class EBGHandler(http.server.SimpleHTTPRequestHandler):
         return 200, {"success": True, "data": view_for(data, ctx.is_admin)}
 
 
+class ThreadingServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    # One slow or idle browser connection must not block everyone else's requests
+    daemon_threads = True
+
+
 def run():
     try:
         data = load_data()
@@ -954,14 +969,17 @@ def run():
     # On Windows SO_REUSEADDR lets a second server bind the same port. Refuse instead.
     socketserver.TCPServer.allow_reuse_address = os.name != "nt"
     try:
-        httpd = socketserver.TCPServer(("", PORT), EBGHandler)
+        httpd = ThreadingServer(("", PORT), EBGHandler)
     except OSError:
         print(f"Port {PORT} is already in use: the EBG server is probably already running. "
               f"Close the other server window first, then start this one again.")
         sys.exit(1)
     with httpd:
         print(f"EBG Server running at http://localhost:{PORT}")
+        print("Keep this window open while the team uses the app. Press Ctrl+C to stop.")
         sys.stdout.flush()
+        if "--open" in sys.argv:
+            webbrowser.open(f"http://localhost:{PORT}/")
         httpd.serve_forever()
 
 
