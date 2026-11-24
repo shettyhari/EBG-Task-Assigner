@@ -3,10 +3,41 @@ import json
 import os
 import socketserver
 import sys
+import threading
+import urllib.request
 
 PORT = 8090
 DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(DIR, "data.json")
+
+def dispatch_whatsapp_webhook(tasks, members):
+    webhook_url = os.environ.get("WHATSAPP_WEBHOOK_URL")
+    if not webhook_url:
+        return
+    for t in tasks:
+        try:
+            assignee_phone = ""
+            for m in members:
+                if m.get("uid") == t.get("assigneeId"):
+                    assignee_phone = m.get("phone", "")
+                    break
+            payload = json.dumps({
+                "event": "task_alert",
+                "taskId": t.get("code"),
+                "title": t.get("title"),
+                "department": t.get("tag"),
+                "assignee": t.get("assigneeName"),
+                "assigneePhone": assignee_phone,
+                "priority": t.get("priority"),
+                "status": t.get("status"),
+                "dueDate": t.get("dueDate"),
+                "scheduledDate": t.get("scheduledDate", "")
+            }).encode("utf-8")
+            req = urllib.request.Request(webhook_url, data=payload, headers={"Content-Type": "application/json"})
+            urllib.request.urlopen(req, timeout=5)
+            print(f"[WhatsApp Webhook] Dispatched alert for {t.get('code')} to {webhook_url}")
+        except Exception as e:
+            print("[WhatsApp Webhook Error]:", e)
 
 def load_data():
     if os.path.exists(DATA_FILE):
@@ -85,6 +116,9 @@ class EBGHandler(http.server.SimpleHTTPRequestHandler):
                     current["users"].update(patch["users"])
 
                 save_data(current)
+
+                if "tasks" in patch and isinstance(patch["tasks"], list) and patch["tasks"]:
+                    threading.Thread(target=dispatch_whatsapp_webhook, args=(patch["tasks"], current.get("members", []))).start()
                 response = json.dumps({"success": True, "data": current}, ensure_ascii=False).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")

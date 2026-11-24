@@ -86,6 +86,27 @@
       "subtasks": [],
       "comments": [],
       "createdAt": "2026-11-23T17:58:07.733Z"
+    },
+    {
+      "id": "tsk_1795458491975",
+      "code": "EBG-002",
+      "orgId": "EBG-GROUP",
+      "title": "Meta Ads Retargeting & Bid Scaling",
+      "description": "",
+      "assigneeId": "goog_mwtjmkyrchxx",
+      "assigneeName": "Priya Sharma",
+      "createdBy": "goog_mwtjmkyrchxx",
+      "createdByName": "Priya Sharma",
+      "priority": "Medium",
+      "status": "To Do",
+      "isScheduled": false,
+      "scheduledDate": "",
+      "recurrence": "none",
+      "tag": "Performance Marketing",
+      "dueDate": "2026-11-26",
+      "subtasks": [],
+      "comments": [],
+      "createdAt": "2026-11-23T18:28:11.975Z"
     }
   ],
   "users": {
