@@ -317,6 +317,9 @@
                     <button id="menu-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full px-4 py-2 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
                         <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
                     </button>
+                    <button id="menu-btn-brands" onclick="openBrandManager()" class="hidden w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        <i data-lucide="tags" class="w-3.5 h-3.5"></i> Manage Brands
+                    </button>
                     <button onclick="openChangePasswordModal()" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
                         <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Change Password
                     </button>
@@ -353,6 +356,7 @@
                 <div class="flex-1"></div>
                 <div class="px-4 py-3 border-t border-white/10 text-[11px] text-zinc-500">
                     <button id="team-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full mb-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/15 text-zinc-200 text-xs font-medium flex items-center gap-2"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage team &amp; logins</button>
+                    <button id="sidebar-btn-brands" onclick="openBrandManager()" class="hidden w-full mb-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/15 text-zinc-200 text-xs font-medium flex items-center gap-2"><i data-lucide="tags" class="w-3.5 h-3.5"></i> Manage brands</button>
                     EBG Group &middot; Task Assigner
                 </div>
             </aside>
@@ -500,9 +504,7 @@
                         <select id="priority-filter" onchange="renderAll()" class="toolbar-select">
                             <option value="all">All priorities</option><option value="Urgent">Urgent</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
                         </select>
-                        <select id="brand-filter" onchange="renderAll()" class="toolbar-select">
-                            <option value="all">All brands</option><option value="EBG Performance">EBG Performance</option><option value="EBG Retail">EBG Retail</option><option value="Brand Alpha">Brand Alpha</option><option value="Brand Beta">Brand Beta</option><option value="Brand Gamma">Brand Gamma</option>
-                        </select>
+                        <select id="brand-filter" onchange="renderAll()" class="toolbar-select"><option value="all">All brands</option></select>
                         <select id="timeframe-filter" onchange="renderAll()" class="toolbar-select">
                             <option value="all">Any date</option><option value="scheduled">Scheduled</option><option value="week">Due in 7 days</option><option value="overdue">Overdue</option>
                         </select>
@@ -933,13 +935,7 @@
                         <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Brand / Client *</label>
                         <select id="task-brand" onchange="toggleCustomBrandInput(this.value)" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
                             <option value="EBG Performance">EBG Performance</option>
-                            <option value="EBG Retail">EBG Retail</option>
-                            <option value="Brand Alpha">Brand Alpha</option>
-                            <option value="Brand Beta">Brand Beta</option>
-                            <option value="Brand Gamma">Brand Gamma</option>
-                            <option value="__custom__">+ Enter Custom Brand...</option>
                         </select>
-                        <input type="text" id="task-custom-brand" placeholder="Type custom brand name..." class="hidden mt-1.5 w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Deliverable Format / Type</label>
@@ -1627,6 +1623,28 @@
         </div>
     </div>
 
+
+    <!-- Manage Brands Modal (Admins) -->
+    <div id="brand-manager-modal" class="hidden fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#111113] w-full max-w-lg rounded-xl border border-[#E4E4E7] dark:border-[#27272A] shadow-xl flex flex-col max-h-[85vh]">
+            <div class="px-5 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2"><i data-lucide="tags" class="w-4 h-4"></i> Manage brands</h3>
+                    <p class="text-[11px] text-[#71717A] mt-0.5">Brands appear in the task form and filters. Renaming updates existing tasks.</p>
+                </div>
+                <button type="button" onclick="closeBrandManager()" class="p-1 rounded text-[#71717A] hover:text-[#18181B] dark:hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="addBrandFromManager(event)" class="px-5 py-3 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center gap-2">
+                <input id="brand-new-name" type="text" maxlength="60" placeholder="New brand name, e.g. Acme Foods" class="flex-1 px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm outline-none focus:border-[#111113]">
+                <button type="submit" class="px-3.5 py-2 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-xs font-semibold flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add brand</button>
+            </form>
+            <div id="brand-manager-list" class="flex-1 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"></div>
+            <div class="px-5 py-3 border-t border-[#E4E4E7] dark:border-[#27272A] text-[11px] text-[#71717A]">
+                Removing a brand hides it from new tasks. Tasks that already use it keep their brand.
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         // EBG Task Assigner client. All data lives on server.py; this page talks to its /api endpoints.
 
@@ -1753,7 +1771,7 @@
         }
         function clearLocalSessionCache() {
             setSessionToken('');
-            ['current_user', 'current_profile', 'registered_users', 'org_members', 'org_tasks', 'org_messages', 'organizations']
+            ['current_user', 'current_profile', 'registered_users', 'org_members', 'org_tasks', 'org_messages', 'org_brands', 'organizations']
                 .forEach(k => localStorage.removeItem(`ebg_prod_${k}`));
         }
 
@@ -1800,6 +1818,7 @@
             if (Array.isArray(data.members)) setLocalStore('org_members', data.members);
             if (Array.isArray(data.tasks)) setLocalStore('org_tasks', data.tasks);
             if (Array.isArray(data.messages)) setLocalStore('org_messages', data.messages);
+            if (Array.isArray(data.brands)) setLocalStore('org_brands', data.brands);
             setLocalStore('registered_users', (data.users && typeof data.users === 'object') ? data.users : {});
             // Pick up role/department changes an Admin made to the signed-in user
             if (currentUser && currentUserProfile && Array.isArray(data.members)) {
@@ -1949,9 +1968,9 @@
         }
         async function pollServer() {
             if (!currentUser || document.hidden) return;
-            const before = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '');
+            const before = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '') + (localStorage.getItem('ebg_prod_org_brands') || '');
             await syncFromServer();
-            const after = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '');
+            const after = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '') + (localStorage.getItem('ebg_prod_org_brands') || '');
             if (currentUser && before !== after) refreshLocalWorkspaceData();
         }
         document.addEventListener('visibilitychange', () => {
@@ -2123,6 +2142,7 @@
             orgMembers = getLocalStore('org_members', []);
             orgTasks = getLocalStore('org_tasks', []);
             orgMessages = getLocalStore('org_messages', []);
+            orgBrands = getLocalStore('org_brands', []);
             orgTasks.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
             syncAfterDataChange();
         }
@@ -2131,6 +2151,7 @@
             const teamCountEl = document.getElementById('btn-team-count');
             if (teamCountEl) teamCountEl.textContent = orgMembers.length;
             populateMemberDropdowns();
+            populateBrandSelects();
             renderAll();
 
             if (activeDetailTaskId) {
@@ -2954,9 +2975,8 @@
             const dueDate = document.getElementById('task-due-date').value;
             const tag = document.getElementById('task-tag').value;
 
-            const brandVal = document.getElementById('task-brand')?.value || 'EBG Performance';
-            const brandCustom = document.getElementById('task-custom-brand')?.value.trim() || '';
-            const brand = (brandVal === '__custom__' && brandCustom) ? brandCustom : (brandVal === '__custom__' ? 'Custom Brand' : brandVal);
+            const brandVal = document.getElementById('task-brand')?.value || '';
+            const brand = brandNames().includes(brandVal) ? brandVal : (brandNames()[0] || '');
             const format = document.getElementById('task-format')?.value || 'General Deliverable';
             const contentDriveUrl = document.getElementById('task-content-drive')?.value.trim() || '';
             if (contentDriveUrl && !isSafeUrl(contentDriveUrl)) {
@@ -3201,9 +3221,10 @@
         }
 
         function toggleCustomBrandInput(val) {
-            const customDiv = document.getElementById('task-custom-brand-group');
-            if (customDiv) {
-                customDiv.classList.toggle('hidden', val !== '__custom__');
+            if (val === '__manage__') {
+                const sel = document.getElementById('task-brand');
+                if (sel) sel.value = brandNames()[0] || '';
+                openBrandManager();
             }
         }
 
@@ -3222,11 +3243,7 @@
             if (brand) {
                 const brandSelect = document.getElementById('task-brand');
                 if (brandSelect) {
-                    const isListed = [...brandSelect.options].some(o => o.value === brand);
-                    brandSelect.value = isListed ? brand : '__custom__';
-                    toggleCustomBrandInput(brandSelect.value);
-                    const customInput = document.getElementById('task-custom-brand');
-                    if (!isListed && customInput) customInput.value = brand;
+                    brandSelect.value = brandNames().includes(brand) ? brand : (brandNames()[0] || '');
                 }
             }
             const formatSelect = document.getElementById('task-format');
@@ -4657,6 +4674,149 @@
                 + (people.length ? section('People', `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${people.map(m => `<button onclick="document.getElementById('header-member-filter').value=${jsArg(m.uid)}; openProject('all','list')" class="widget p-3 flex items-center gap-3 text-left hover:border-zinc-400">${avatarHtml(m.displayName, m.uid, 32)}<span><span class="block text-sm text-zinc-900 dark:text-white">${escapeHtml(m.displayName)}</span><span class="block text-xs text-zinc-500">${escapeHtml(m.role || '')} · ${escapeHtml(m.department || '')}</span></span></button>`).join('')}</div>`) : '')
                 + (msgs.length ? section('Messages', msgs.map(m => `<button onclick="openProject(${jsArg(m.project)}, 'messages')" class="widget w-full p-3 mb-2 text-left hover:border-zinc-400"><div class="text-xs text-zinc-500"><strong class="text-zinc-800 dark:text-zinc-100">${escapeHtml(m.author)}</strong> in ${escapeHtml(getProject(m.project).name)} · ${escapeHtml(timeAgo(m.timestamp))}</div><div class="text-sm text-zinc-700 dark:text-zinc-200 mt-1 line-clamp-2">${escapeHtml(m.text)}</div></button>`).join('')) : '')
                 || '<p class="text-sm text-zinc-500 py-10 text-center">No tasks, people or messages match your search.</p>';
+        }
+
+
+        // =====================================================================
+        // BRANDS: one list kept on the server; only Admins can change it
+        // =====================================================================
+        let orgBrands = [];
+        let editingBrandId = null;
+
+        Object.assign(window, {
+            openBrandManager, closeBrandManager, addBrandFromManager, startRenameBrand,
+            cancelRenameBrand, saveRenameBrand, removeBrand
+        });
+
+        function brandNames() {
+            return orgBrands.map(b => b.name);
+        }
+
+        // Rebuild every brand dropdown from the managed list
+        function populateBrandSelects() {
+            const names = brandNames();
+            const taskBrand = document.getElementById('task-brand');
+            if (taskBrand) {
+                const keep = taskBrand.value;
+                taskBrand.innerHTML = '';
+                names.forEach(n => taskBrand.add(new Option(n, n)));
+                if (isCurrentUserAdmin()) taskBrand.add(new Option('+ Add or edit brands…', '__manage__'));
+                if (names.includes(keep)) taskBrand.value = keep;
+            }
+            const filter = document.getElementById('brand-filter');
+            if (filter) {
+                const keep = filter.value;
+                const used = [...new Set(orgTasks.map(t => t.brand).filter(Boolean))].filter(n => !names.includes(n)).sort();
+                filter.innerHTML = '';
+                filter.add(new Option('All brands', 'all'));
+                names.forEach(n => filter.add(new Option(n, n)));
+                used.forEach(n => filter.add(new Option(`${n} (removed)`, n)));
+                filter.value = [...filter.options].some(o => o.value === keep) ? keep : 'all';
+            }
+            const adminOnly = !isCurrentUserAdmin();
+            document.getElementById('menu-btn-brands')?.classList.toggle('hidden', adminOnly);
+            document.getElementById('sidebar-btn-brands')?.classList.toggle('hidden', adminOnly);
+            if (!document.getElementById('brand-manager-modal')?.classList.contains('hidden')) renderBrandManager();
+        }
+
+        function openBrandManager() {
+            if (!isCurrentUserAdmin()) {
+                showToast("Only an Admin can manage brands.", "error");
+                return;
+            }
+            document.getElementById('user-dropdown-menu')?.classList.add('hidden');
+            editingBrandId = null;
+            renderBrandManager();
+            document.getElementById('brand-manager-modal')?.classList.remove('hidden');
+            document.getElementById('brand-new-name')?.focus();
+            lucide.createIcons();
+        }
+
+        function closeBrandManager() {
+            document.getElementById('brand-manager-modal')?.classList.add('hidden');
+            editingBrandId = null;
+        }
+
+        function renderBrandManager() {
+            const box = document.getElementById('brand-manager-list');
+            if (!box) return;
+            box.innerHTML = orgBrands.map(b => {
+                const count = orgTasks.filter(t => t.brand === b.name).length;
+                if (editingBrandId === b.id) {
+                    return `<form onsubmit="event.preventDefault(); saveRenameBrand(${jsArg(b.id)})" class="px-5 py-2.5 flex items-center gap-2">
+                        <input id="brand-rename-input" type="text" maxlength="60" value="${escapeHtml(b.name)}" class="flex-1 px-3 py-1.5 rounded-lg border border-[#111113] dark:border-white bg-white dark:bg-[#18181B] text-sm outline-none">
+                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-xs font-semibold">Save</button>
+                        <button type="button" onclick="cancelRenameBrand()" class="px-2 py-1.5 text-xs text-[#71717A] hover:text-[#18181B] dark:hover:text-white">Cancel</button>
+                    </form>`;
+                }
+                return `<div class="px-5 py-2.5 flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0" style="background:${avatarColor(b.id)}">${escapeHtml(getInitials(b.name))}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-[#18181B] dark:text-white truncate">${escapeHtml(b.name)}</div>
+                        <div class="text-[11px] text-[#71717A]">${count} task${count === 1 ? '' : 's'}</div>
+                    </div>
+                    <button type="button" onclick="startRenameBrand(${jsArg(b.id)})" class="p-1.5 rounded-md text-zinc-500 hover:text-indigo-600 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Rename"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button type="button" onclick="removeBrand(${jsArg(b.id)})" class="p-1.5 rounded-md text-zinc-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950" title="Remove"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>`;
+            }).join('') || '<p class="px-5 py-8 text-center text-sm text-[#71717A]">No brands yet. Add your first brand above.</p>';
+            lucide.createIcons();
+            if (editingBrandId) {
+                const input = document.getElementById('brand-rename-input');
+                if (input) { input.focus(); input.select(); }
+            }
+        }
+
+        async function addBrandFromManager(e) {
+            e.preventDefault();
+            const input = document.getElementById('brand-new-name');
+            const name = (input?.value || '').trim();
+            if (!name) return;
+            const ok = await syncToServer({ addBrand: { name } });
+            if (!ok) return;
+            input.value = '';
+            showToast(`Brand "${name}" added.`, "success");
+            renderBrandManager();
+            // If the task form is open, pick the new brand there
+            const taskBrand = document.getElementById('task-brand');
+            if (taskBrand && !document.getElementById('create-task-modal')?.classList.contains('hidden')) {
+                const match = orgBrands.find(b => b.name.toLowerCase() === name.toLowerCase());
+                if (match) taskBrand.value = match.name;
+            }
+        }
+
+        function startRenameBrand(id) {
+            editingBrandId = id;
+            renderBrandManager();
+        }
+        function cancelRenameBrand() {
+            editingBrandId = null;
+            renderBrandManager();
+        }
+
+        async function saveRenameBrand(id) {
+            const brand = orgBrands.find(b => b.id === id);
+            const name = (document.getElementById('brand-rename-input')?.value || '').trim();
+            if (!brand || !name) return;
+            if (name === brand.name) { cancelRenameBrand(); return; }
+            const count = orgTasks.filter(t => t.brand === brand.name).length;
+            const ok = await syncToServer({ renameBrand: { id, name } });
+            if (!ok) return;
+            editingBrandId = null;
+            showToast(`Renamed "${brand.name}" to "${name}"${count ? ` on ${count} task${count === 1 ? '' : 's'}` : ''}.`, "success");
+            renderBrandManager();
+        }
+
+        async function removeBrand(id) {
+            const brand = orgBrands.find(b => b.id === id);
+            if (!brand) return;
+            const count = orgTasks.filter(t => t.brand === brand.name).length;
+            const note = count ? `\n\n${count} existing task${count === 1 ? '' : 's'} will keep "${brand.name}" as their brand.` : '';
+            if (!confirm(`Remove the brand "${brand.name}"? It will no longer be offered for new tasks.${note}`)) return;
+            const ok = await syncToServer({ deleteBrand: { id } });
+            if (ok) {
+                showToast(`Brand "${brand.name}" removed.`, "info");
+                renderBrandManager();
+            }
         }
 
         function showLoading(text) {

@@ -57,6 +57,9 @@ MEMBER_ADMIN_FIELDS = {"displayName", "phone", "role", "department", "accountSta
 # Projects are the departments, plus "all" for workspace-wide messages
 MESSAGE_PROJECTS = {"all", "Performance Marketing", "Graphic Designing", "Web Developer"}
 MAX_MESSAGES = 2000
+# Brands offered when creating tasks; Admins can add, rename and remove them
+DEFAULT_BRANDS = ["EBG Performance", "EBG Retail", "Brand Alpha", "Brand Beta", "Brand Gamma"]
+MAX_BRAND_NAME = 60
 
 
 class ApiError(Exception):
@@ -93,7 +96,35 @@ def normalize_data(data):
     data["members"] = [m for m in data["members"] if isinstance(m, dict)]
     data["tasks"] = [t for t in data["tasks"] if isinstance(t, dict)]
     data["messages"] = [m for m in data["messages"] if isinstance(m, dict)]
+    if "brands" in data:
+        data["brands"] = [b for b in data["brands"] if isinstance(b, dict) and b.get("id") and b.get("name")] \
+            if isinstance(data["brands"], list) else []
     return data
+
+
+def brand_slug(name):
+    return "brd_" + re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40]
+
+
+def brand_list(data):
+    """The workspace's brands. Workspaces created before brand management start with the defaults."""
+    if not isinstance(data.get("brands"), list):
+        data["brands"] = [{"id": brand_slug(n), "name": n} for n in DEFAULT_BRANDS]
+    return data["brands"]
+
+
+def clean_brand_name(data, name, ignore_id=None):
+    name = re.sub(r"\s+", " ", str(name or "")).strip()
+    if not name:
+        raise ApiError(400, "Brand name cannot be empty.")
+    if len(name) > MAX_BRAND_NAME:
+        raise ApiError(400, f"Brand name must be {MAX_BRAND_NAME} characters or fewer.")
+    if name.startswith("__"):
+        raise ApiError(400, "Please choose a different brand name.")
+    for b in brand_list(data):
+        if b["id"] != ignore_id and b["name"].lower() == name.lower():
+            raise ApiError(400, f'A brand called "{b["name"]}" already exists.')
+    return name
 
 
 # ---------------------------------------------------------------------------
@@ -435,6 +466,7 @@ def view_for(data, is_admin):
         "members": data["members"],
         "tasks": data["tasks"],
         "messages": data.get("messages", []),
+        "brands": [dict(b) for b in brand_list(data)],
         "users": {e: public_user(u) for e, u in data["users"].items() if isinstance(u, dict)} if is_admin else {},
     }
 
@@ -997,6 +1029,34 @@ class Api:
                 if rec["status"] == "suspended":
                     revoke.add(email)
 
+        # Brands (Admin only)
+        if any(k in patch for k in ("addBrand", "renameBrand", "deleteBrand")):
+            if not ctx.is_admin:
+                raise ApiError(403, "Only an Admin can manage brands.")
+            brands = brand_list(data)
+            if isinstance(patch.get("addBrand"), dict):
+                name = clean_brand_name(data, patch["addBrand"].get("name"))
+                brand_id = brand_slug(name)
+                while any(b["id"] == brand_id for b in brands):
+                    brand_id = brand_slug(name) + "-" + secrets.token_hex(2)
+                brands.append({"id": brand_id, "name": name, "createdAt": now_iso(), "createdBy": ctx.name})
+            if isinstance(patch.get("renameBrand"), dict):
+                target = next((b for b in brands if b["id"] == patch["renameBrand"].get("id")), None)
+                if not target:
+                    raise ApiError(404, "That brand no longer exists.")
+                new_name = clean_brand_name(data, patch["renameBrand"].get("name"), ignore_id=target["id"])
+                old_name = target["name"]
+                target["name"] = new_name
+                for t in data["tasks"]:  # keep existing tasks under the renamed brand
+                    if t.get("brand") == old_name:
+                        t["brand"] = new_name
+            if isinstance(patch.get("deleteBrand"), dict):
+                target = next((b for b in brands if b["id"] == patch["deleteBrand"].get("id")), None)
+                if target:
+                    if len(brands) == 1:
+                        raise ApiError(400, "Keep at least one brand so tasks can be created.")
+                    data["brands"] = [b for b in brands if b is not target]
+
         # Tasks: create, or update only the fields that were sent
         if isinstance(patch.get("tasks"), list):
             for raw in patch["tasks"]:
@@ -1012,6 +1072,10 @@ class Api:
                     delegate = find_member(data, uid=fields["delegatedToUid"])
                     fields["delegatedTo"] = delegate.get("displayName", "") if delegate else ""
                 existing = find_task(data, raw["id"])
+                if "brand" in fields:
+                    allowed = {b["name"] for b in brand_list(data)}
+                    if fields["brand"] not in allowed and not (existing and existing.get("brand") == fields["brand"]):
+                        raise ApiError(400, f'"{fields["brand"]}" is not a listed brand. Ask an Admin to add it.')
                 if existing:
                     new_status = fields.pop("status", None)
                     old_assignee = existing.get("assigneeId")
@@ -1027,7 +1091,7 @@ class Api:
                     created = now_iso()
                     task = {
                         "id": raw["id"], "code": next_task_code(data), "orgId": ORG_ID,
-                        "title": "", "description": "", "brand": "EBG Performance", "format": "General Deliverable",
+                        "title": "", "description": "", "brand": (brand_list(data) or [{"name": ""}])[0]["name"], "format": "General Deliverable",
                         "tag": "Performance Marketing", "priority": "Medium", "dueDate": "",
                         "assigneeId": ctx.uid, "assigneeName": ctx.name,
                         "contentDriveUrl": "", "submissionDriveUrl": "",
