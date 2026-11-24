@@ -2299,14 +2299,21 @@
         async function enterOrganizationWorkspace(orgId) {
             cleanupListeners();
 
-            document.getElementById('header-org-subtitle').textContent = `EBG Group · Task Assigner`;
-            document.getElementById('overview-org-label').textContent = `EBG Group Workspace`;
+            const hOrg = document.getElementById('header-org-subtitle');
+            if (hOrg) hOrg.textContent = `EBG Group · Task Assigner`;
+            const oOrg = document.getElementById('overview-org-label');
+            if (oOrg) oOrg.textContent = `EBG Group Workspace`;
 
-            document.getElementById('header-user-name').textContent = currentUserProfile.displayName;
-            document.getElementById('header-user-role').textContent = currentUserProfile.role;
-            document.getElementById('header-user-avatar').textContent = getInitials(currentUserProfile.displayName);
-            document.getElementById('menu-user-name').textContent = currentUserProfile.displayName;
-            document.getElementById('menu-user-dept').textContent = `${currentUserProfile.department} · ${currentUserProfile.role}`;
+            const hName = document.getElementById('header-user-name');
+            if (hName) hName.textContent = currentUserProfile.displayName;
+            const hRole = document.getElementById('header-user-role');
+            if (hRole) hRole.textContent = currentUserProfile.role;
+            const hAvatar = document.getElementById('header-user-avatar');
+            if (hAvatar) hAvatar.textContent = getInitials(currentUserProfile.displayName);
+            const mName = document.getElementById('menu-user-name');
+            if (mName) mName.textContent = currentUserProfile.displayName;
+            const mDept = document.getElementById('menu-user-dept');
+            if (mDept) mDept.textContent = `${currentUserProfile.department} · ${currentUserProfile.role}`;
 
             if (useCloudSync && db) {
                 const memberDocId = `EBG_${currentUser.uid}`;
@@ -2354,7 +2361,8 @@
         }
 
         function syncAfterDataChange() {
-            document.getElementById('btn-team-count').textContent = orgMembers.length;
+            const teamCountEl = document.getElementById('btn-team-count');
+            if (teamCountEl) teamCountEl.textContent = orgMembers.length;
             populateMemberDropdowns();
             renderAll();
 
@@ -2372,12 +2380,12 @@
 
         // 9. Filtering & Rendering Pipeline
         function getFilteredTasks() {
-            const search = document.getElementById('search-input').value.toLowerCase().trim();
-            const dept = document.getElementById('header-dept-filter').value;
-            const memberId = document.getElementById('header-member-filter').value;
-            const priority = document.getElementById('priority-filter').value;
+            const search = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const dept = document.getElementById('header-dept-filter')?.value || 'all';
+            const memberId = document.getElementById('header-member-filter')?.value || 'all';
+            const priority = document.getElementById('priority-filter')?.value || 'all';
             const brand = document.getElementById('brand-filter')?.value || 'all';
-            const timeframe = document.getElementById('timeframe-filter').value;
+            const timeframe = document.getElementById('timeframe-filter')?.value || 'all';
 
             const todayStr = new Date().toISOString().split('T')[0];
             const nextWeekDate = new Date();
@@ -2428,39 +2436,48 @@
             if (badgeWeb) badgeWeb.textContent = `${webCount} Assets`;
 
             const emptyCallout = document.getElementById('empty-workspace-callout');
-            if (orgTasks.length === 0 && activeMainTab !== 'team') {
-                emptyCallout.classList.remove('hidden');
-            } else {
-                emptyCallout.classList.add('hidden');
+            if (emptyCallout) {
+                if (orgTasks.length === 0 && activeMainTab !== 'team') {
+                    emptyCallout.classList.remove('hidden');
+                } else {
+                    emptyCallout.classList.add('hidden');
+                }
             }
 
             lucide.createIcons();
         }
 
         function updateScopeAndBanner(filtered) {
-            const dept = document.getElementById('header-dept-filter').value;
+            const deptEl = document.getElementById('header-dept-filter');
+            const dept = deptEl ? deptEl.value : 'all';
             const deptText = dept === 'all' ? 'All listed departments' : dept;
-            document.getElementById('scope-summary-heading').textContent = `${deptText} · ${currentUserProfile?.orgName || 'Workspace'} (${filtered.length} tasks)`;
+            const headingEl = document.getElementById('scope-summary-heading');
+            if (headingEl) {
+                headingEl.textContent = `${deptText} · ${currentUserProfile?.orgName || 'Workspace'} (${filtered.length} tasks)`;
+            }
 
             const overdueCount = filtered.filter(t => isTaskOverdue(t)).length;
             const alertText = document.getElementById('ops-alert-text');
             const alertBtn = document.getElementById('ops-alert-btn');
 
-            if (overdueCount > 0) {
-                alertText.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i><span><strong>${overdueCount} task${overdueCount > 1 ? 's' : ''}</strong> ${overdueCount > 1 ? 'are' : 'is'} past due date and require immediate team review or reassignment.</span>`;
-                alertBtn.textContent = 'Review Overdue';
-                alertBtn.onclick = () => {
-                    document.getElementById('timeframe-filter').value = 'overdue';
-                    renderAll();
-                };
-            } else if (orgMembers.length <= 1) {
-                alertText.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i><span>Welcome to <strong>EBG Group</strong>! Colleagues with <strong>@theebg.com</strong> Google accounts can sign in directly to receive task assignments.</span>`;
-                alertBtn.textContent = 'Assign Task';
-                alertBtn.onclick = openCreateTaskModal;
-            } else {
-                alertText.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i><span><strong>${orgMembers.length} active team members</strong> connected. All deliverables are within SLA schedules.</span>`;
-                alertBtn.textContent = 'Assign Task';
-                alertBtn.onclick = openCreateTaskModal;
+            if (alertText && alertBtn) {
+                if (overdueCount > 0) {
+                    alertText.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i><span><strong>${overdueCount} task${overdueCount > 1 ? 's' : ''}</strong> ${overdueCount > 1 ? 'are' : 'is'} past due date and require immediate team review or reassignment.</span>`;
+                    alertBtn.textContent = 'Review Overdue';
+                    alertBtn.onclick = () => {
+                        const tf = document.getElementById('timeframe-filter');
+                        if (tf) tf.value = 'overdue';
+                        renderAll();
+                    };
+                } else if (orgMembers.length <= 1) {
+                    alertText.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i><span>Welcome to <strong>EBG Group</strong>! Colleagues with <strong>@theebg.com</strong> Google accounts can sign in directly to receive task assignments.</span>`;
+                    alertBtn.textContent = 'Assign Task';
+                    alertBtn.onclick = openCreateTaskModal;
+                } else {
+                    alertText.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4 text-[#1E8E3E] shrink-0"></i><span><strong>${orgMembers.length} active team members</strong> connected. All deliverables are within SLA schedules.</span>`;
+                    alertBtn.textContent = 'Assign Task';
+                    alertBtn.onclick = openCreateTaskModal;
+                }
             }
         }
 
@@ -2474,13 +2491,20 @@
             const overdue = tasks.filter(t => isTaskOverdue(t)).length;
             const slaPct = total > 0 ? Math.max(0, Math.round(((total - overdue) / total) * 100)) : 100;
 
-            document.getElementById('kpi-val-total').textContent = total;
-            document.getElementById('kpi-val-todo').textContent = todo;
-            document.getElementById('kpi-val-inprogress').textContent = inprog;
-            document.getElementById('kpi-val-review').textContent = review;
-            document.getElementById('kpi-val-done').textContent = done;
-            document.getElementById('kpi-val-overdue').textContent = overdue;
-            document.getElementById('kpi-val-sla').textContent = `${slaPct}%`;
+            const elTotal = document.getElementById('kpi-val-total');
+            if (elTotal) elTotal.textContent = total;
+            const elTodo = document.getElementById('kpi-val-todo');
+            if (elTodo) elTodo.textContent = todo;
+            const elInprog = document.getElementById('kpi-val-inprogress');
+            if (elInprog) elInprog.textContent = inprog;
+            const elReview = document.getElementById('kpi-val-review');
+            if (elReview) elReview.textContent = review;
+            const elDone = document.getElementById('kpi-val-done');
+            if (elDone) elDone.textContent = done;
+            const elOverdue = document.getElementById('kpi-val-overdue');
+            if (elOverdue) elOverdue.textContent = overdue;
+            const elSla = document.getElementById('kpi-val-sla');
+            if (elSla) elSla.textContent = `${slaPct}%`;
         }
 
         function selectKpiMetric(metric) {
