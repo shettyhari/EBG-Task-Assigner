@@ -54,6 +54,9 @@ TASK_CLIENT_FIELDS = {
 URL_FIELDS = {"contentDriveUrl", "submissionDriveUrl"}
 MEMBER_SELF_FIELDS = {"displayName", "phone"}
 MEMBER_ADMIN_FIELDS = {"displayName", "phone", "role", "department", "accountStatus"}
+# Projects are the departments, plus "all" for workspace-wide messages
+MESSAGE_PROJECTS = {"all", "Performance Marketing", "Graphic Designing", "Web Developer"}
+MAX_MESSAGES = 2000
 
 
 class ApiError(Exception):
@@ -79,16 +82,17 @@ def team_now():
 
 
 def empty_data():
-    return {"organizations": {}, "members": [], "tasks": [], "users": {}}
+    return {"organizations": {}, "members": [], "tasks": [], "users": {}, "messages": []}
 
 
 def normalize_data(data):
     data = data if isinstance(data, dict) else {}
-    for key, default in (("organizations", {}), ("members", []), ("tasks", []), ("users", {})):
+    for key, default in (("organizations", {}), ("members", []), ("tasks", []), ("users", {}), ("messages", [])):
         if not isinstance(data.get(key), type(default)):
             data[key] = default
     data["members"] = [m for m in data["members"] if isinstance(m, dict)]
     data["tasks"] = [t for t in data["tasks"] if isinstance(t, dict)]
+    data["messages"] = [m for m in data["messages"] if isinstance(m, dict)]
     return data
 
 
@@ -430,6 +434,7 @@ def view_for(data, is_admin):
         "organizations": data["organizations"],
         "members": data["members"],
         "tasks": data["tasks"],
+        "messages": data.get("messages", []),
         "users": {e: public_user(u) for e, u in data["users"].items() if isinstance(u, dict)} if is_admin else {},
     }
 
@@ -1049,6 +1054,28 @@ class Api:
                     "id": "cmt_" + secrets.token_hex(6), "author": ctx.name, "authorId": ctx.uid,
                     "text": text, "timestamp": now_iso(),
                 })
+
+        # Project messages (the Messages tab)
+        message = patch.get("addMessage")
+        if isinstance(message, dict):
+            project = str(message.get("project") or "all")
+            text = clean_text(message.get("text"), 4000).strip()
+            if project not in MESSAGE_PROJECTS:
+                raise ApiError(400, "Unknown project for this message.")
+            if not text:
+                raise ApiError(400, "Message is empty.")
+            data["messages"].append({
+                "id": "msg_" + secrets.token_hex(6), "project": project,
+                "author": ctx.name, "authorId": ctx.uid, "text": text, "timestamp": now_iso(),
+            })
+            data["messages"] = data["messages"][-MAX_MESSAGES:]
+
+        if patch.get("deleteMessageId"):
+            target = next((m for m in data["messages"] if m.get("id") == patch["deleteMessageId"]), None)
+            if target:
+                if not ctx.is_admin and target.get("authorId") != ctx.uid:
+                    raise ApiError(403, "Only the author or an Admin can delete this message.")
+                data["messages"] = [m for m in data["messages"] if m is not target]
 
         if patch.get("deleteTaskId"):
             task = find_task(data, patch["deleteTaskId"])

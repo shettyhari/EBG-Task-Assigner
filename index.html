@@ -114,6 +114,23 @@
         .kanban-column {
             min-height: 440px;
         }
+
+        /* Workspace shell */
+        .nav-item { display: flex; align-items: center; gap: .65rem; width: 100%; padding: .42rem .7rem; border-radius: .45rem; color: #d4d4d8; transition: background .15s; }
+        .nav-item:hover { background: rgba(255,255,255,.08); }
+        .nav-item.active { background: rgba(255,255,255,.15); color: #fff; }
+        .widget { background: #fff; border: 1px solid #e4e4e7; border-radius: .8rem; }
+        .dark .widget { background: #18181b; border-color: #27272a; }
+        .home-tab, .ptab { padding: .55rem 0; color: #6b7280; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+        .home-tab:hover, .ptab:hover { color: #18181b; }
+        .home-tab.active, .ptab.active { color: #18181b; border-color: #18181b; font-weight: 500; }
+        .dark .home-tab:hover, .dark .ptab:hover, .dark .home-tab.active, .dark .ptab.active { color: #fff; border-color: #fff; }
+        .toolbar-select { padding: .3rem .55rem; border: 1px solid #e4e4e7; border-radius: .45rem; font-size: .75rem; background: transparent; color: inherit; outline: none; }
+        .dark .toolbar-select { border-color: #3f3f46; background: #18181b; }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary::before { content: '\25B8'; display: inline-block; margin-right: .4rem; color: #a1a1aa; transition: transform .15s; }
+        details[open] > summary::before { transform: rotate(90deg); }
     </style>
 </head>
 <body class="bg-[#F8F9FA] dark:bg-[#09090B] text-[#18181B] dark:text-[#FAFAFA] font-sans antialiased selection:bg-zinc-200 selection:text-zinc-950 dark:selection:bg-zinc-800 dark:selection:text-white overflow-x-hidden transition-colors duration-150">
@@ -252,460 +269,259 @@
     <!-- ===================================================================== -->
     <!-- 2. MAIN EBG OPERATIONS DASHBOARD (MONOCHROME OBSIDIAN & ZINC THEME)   -->
     <!-- ===================================================================== -->
-    <div id="app-screen" class="hidden min-h-screen flex flex-col">
-        
-        <!-- TOP HEADER BAR (Matches dashboard-pm.theebg.com Layout in Monochrome) -->
-        <header class="h-16 bg-white dark:bg-[#111113] border-b border-[#E4E4E7] dark:border-[#27272A] px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30">
-            
-            <!-- Left Cluster: Hamburger + EBG Logo + Scope Dropdown Pills -->
-            <div class="flex items-center gap-3 min-w-0">
-                <button onclick="toggleSidebarExpand()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#71717A] dark:text-zinc-300 transition" title="Toggle Navigation Rail">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
+    <div id="app-screen" class="hidden h-screen flex flex-col bg-[#1E1F21]">
 
-                <!-- EBG Geometric Logo -->
-                <div class="flex items-center gap-2 pr-2 shrink-0 cursor-pointer" onclick="switchMainTab('overview')">
-                    <div class="flex items-center gap-1.5">
-                        <span class="font-extrabold text-2xl tracking-tighter text-[#111113] dark:text-white leading-none">EBG</span>
-                        <svg class="w-6 h-6 text-[#111113] dark:text-white" viewBox="0 0 28 24" fill="none">
-                            <rect x="2" y="14" width="3.5" height="8" rx="1" fill="currentColor"/>
-                            <rect x="8" y="10" width="3.5" height="12" rx="1" fill="currentColor"/>
-                            <rect x="14" y="6" width="3.5" height="16" rx="1" fill="currentColor"/>
-                            <path d="M18 11L25 4M25 4H19.5M25 4V9.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="hidden sm:block leading-none">
-                        <div class="text-[8px] font-bold tracking-[0.14em] text-[#71717A] uppercase">OPERATIONS &amp; TASK</div>
-                        <div class="text-[8px] font-bold tracking-[0.18em] text-[#71717A] uppercase mt-0.5">DASHBOARD</div>
-                    </div>
-                </div>
+        <!-- ================= TOP BAR ================= -->
+        <header class="h-14 shrink-0 bg-[#1E1F21] px-3 flex items-center gap-3 border-b border-white/5">
+            <button onclick="toggleSidebarExpand()" class="p-2 rounded-md text-zinc-300 hover:bg-white/10 transition" title="Show or hide the sidebar">
+                <i data-lucide="menu" class="w-5 h-5"></i>
+            </button>
+            <button onclick="toggleCreateMenu(event)" class="pl-2 pr-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white text-sm font-medium flex items-center gap-2 transition relative">
+                <span class="w-5 h-5 rounded-full bg-[#F06A6A] flex items-center justify-center"><i data-lucide="plus" class="w-3.5 h-3.5 text-white"></i></span>
+                Create
+            </button>
+            <div id="create-menu" class="hidden absolute top-12 left-14 z-50 w-56 bg-white dark:bg-[#18181B] rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700 py-1.5 text-sm">
+                <button onclick="hideCreateMenu(); openCreateTaskModal()" class="w-full px-3.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 text-zinc-800 dark:text-zinc-200"><i data-lucide="circle-check" class="w-4 h-4 text-zinc-500"></i> Task</button>
+                <button onclick="hideCreateMenu(); openCreateTaskModal(true)" class="w-full px-3.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 text-zinc-800 dark:text-zinc-200"><i data-lucide="calendar-clock" class="w-4 h-4 text-zinc-500"></i> Scheduled task</button>
+                <button onclick="hideCreateMenu(); openCreateTaskModalForDesign()" class="w-full px-3.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 text-zinc-800 dark:text-zinc-200"><i data-lucide="clapperboard" class="w-4 h-4 text-zinc-500"></i> Creative / reel request</button>
+                <button onclick="hideCreateMenu(); openProject(activeProject || 'all', 'messages')" class="w-full px-3.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 text-zinc-800 dark:text-zinc-200"><i data-lucide="message-square" class="w-4 h-4 text-zinc-500"></i> Message</button>
+            </div>
 
-                <!-- Organization Name Breadcrumb -->
-                <span class="hidden xl:inline-block text-xs font-medium text-[#71717A] dark:text-[#A1A1AA] truncate max-w-[200px]" id="header-org-subtitle">
-                    Organization Workspace
-                </span>
-
-                <!-- Scope Pill 1: Department / Channel Filter -->
-                <div class="hidden md:flex items-center relative">
-                    <span class="w-2.5 h-2.5 rounded-full bg-[#111113] dark:bg-white absolute left-3.5 pointer-events-none"></span>
-                    <select id="header-dept-filter" onchange="syncHeaderFilters()" class="pl-8 pr-8 py-1.5 rounded-full border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer transition appearance-none">
-                        <option value="all">All Departments</option>
-                        <option value="Performance Marketing">Performance Marketing</option>
-                        <option value="Graphic Designing">Graphic Designing</option>
-                        <option value="Web Developer">Web Developer</option>
-                    </select>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-3 pointer-events-none"></i>
-                </div>
-
-                <!-- Scope Pill 2: Brand / Member & Task Count -->
-                <div class="hidden lg:flex items-center relative">
-                    <span class="w-2.5 h-2.5 rounded-full bg-zinc-500 absolute left-3.5 pointer-events-none"></span>
-                    <select id="header-member-filter" onchange="syncHeaderMemberFilter()" class="pl-8 pr-8 py-1.5 rounded-full border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-semibold text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer transition appearance-none">
-                        <option value="all">All members &middot; 0 tasks</option>
-                    </select>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-3 pointer-events-none"></i>
+            <div class="flex-1 flex justify-center min-w-0">
+                <div class="relative w-full max-w-xl">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-2"></i>
+                    <input id="global-search" type="search" oninput="handleGlobalSearch(this.value)" placeholder="Search tasks, people and messages" class="w-full pl-10 pr-4 py-1.5 rounded-full bg-white/10 hover:bg-white/15 focus:bg-white focus:text-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-400 outline-none transition">
                 </div>
             </div>
 
-            <!-- Right Cluster: EBG Workspace Badge, Dark Mode, User Profile Dropdown -->
-            <div class="flex items-center gap-2.5">
-                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F4F4F5] dark:bg-[#18181B] text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>EBG Group</span>
-                </div>
-
-                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#71717A] dark:text-zinc-300 transition" title="Toggle Dark Mode">
-                    <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
-                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
-                </button>
-
-                <!-- User Profile Pill -->
-                <div class="relative">
-                    <button onclick="toggleUserMenu()" class="flex items-center gap-2.5 pl-1.5 pr-3 py-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-[#E4E4E7] dark:hover:border-[#27272A] transition">
-                        <div id="header-user-avatar" class="w-8 h-8 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-xs flex items-center justify-center shrink-0">
-                            EB
-                        </div>
-                        <div class="hidden sm:block text-left">
-                            <div id="header-user-name" class="text-xs font-semibold text-[#18181B] dark:text-white leading-tight">User</div>
-                            <div id="header-user-role" class="text-[10px] text-[#71717A] leading-tight">Member</div>
-                        </div>
-                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A]"></i>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-[#111113] rounded-xl shadow-lg border border-[#E4E4E7] dark:border-[#27272A] py-2 z-50">
-                        <div class="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
-                            <div class="text-xs font-bold text-[#18181B] dark:text-white" id="menu-user-name">User</div>
-                            <div class="text-[11px] text-[#71717A]" id="menu-user-dept">Department</div>
-                        </div>
-                        <button id="menu-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full px-4 py-2 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
-                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
-                        </button>
-                        <button onclick="openChangePasswordModal()" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
-                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Change Password
-                        </button>
-                        <button onclick="signOutUser()" class="w-full px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2.5">
-                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
-                        </button>
+            <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[11px] font-medium text-zinc-200">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot-pulse"></span><span id="live-sync-label">Live workspace</span>
+            </span>
+            <button onclick="toggleDarkMode()" class="p-2 rounded-md text-zinc-300 hover:bg-white/10 transition" title="Dark mode">
+                <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-300"></i>
+            </button>
+            <div class="relative">
+                <button onclick="toggleUserMenu()" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-white/10 transition" title="Account">
+                    <div id="header-user-avatar" class="w-8 h-8 rounded-full bg-amber-400 text-zinc-900 font-bold text-xs flex items-center justify-center">EB</div>
+                    <div class="hidden lg:block text-left">
+                        <div id="header-user-name" class="text-xs font-semibold text-white leading-tight">User</div>
+                        <div id="header-user-role" class="text-[10px] text-zinc-400 leading-tight">Member</div>
                     </div>
+                </button>
+                <div id="user-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-[#111113] rounded-xl shadow-lg border border-[#E4E4E7] dark:border-[#27272A] py-2 z-50">
+                    <div class="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        <div class="text-xs font-bold text-[#18181B] dark:text-white" id="menu-user-name">User</div>
+                        <div class="text-[11px] text-[#71717A]" id="menu-user-dept">Department</div>
+                    </div>
+                    <button id="menu-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full px-4 py-2 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
+                    </button>
+                    <button onclick="openChangePasswordModal()" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Change Password
+                    </button>
+                    <button onclick="exportTasksToCSV()" class="w-full px-4 py-2 text-left text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                        <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Download Excel
+                    </button>
+                    <button onclick="signOutUser()" class="w-full px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2.5">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- BODY SHELL: SLIM WHITE ICON RAIL + MAIN WORKSPACE -->
         <div class="flex-1 flex min-h-0">
-            
-            <!-- Left Slim Icon Rail (64px collapsed, 224px expanded) -->
-            <aside id="left-icon-rail" class="w-16 bg-white dark:bg-[#111113] border-r border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-between py-3 shrink-0 transition-all duration-200 select-none z-20">
-                <div class="space-y-1 px-2.5">
-                    <!-- Overview (KPI + Trend Chart + Team Productivity) -->
-                    <button onclick="switchMainTab('overview')" id="rail-overview" class="rail-btn w-full h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center gap-3 px-3 transition" title="Overview & Velocity">
-                        <i data-lucide="layout-grid" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-semibold truncate">Overview</span>
-                    </button>
-
-                    <!-- Kanban Board -->
-                    <button onclick="switchMainTab('board')" id="rail-board" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Kanban Board">
-                        <i data-lucide="kanban" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Task Board</span>
-                    </button>
-
-                    <!-- Table / List View -->
-                    <button onclick="switchMainTab('list')" id="rail-list" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Structured Table">
-                        <i data-lucide="table-2" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Task Table</span>
-                    </button>
-
-                    <!-- Brand Creatives & Reels Studio -->
-                    <button onclick="switchMainTab('creatives')" id="rail-creatives" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Brand Creatives & Reels">
-                        <i data-lucide="clapperboard" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Creatives &amp; Reels</span>
-                    </button>
-
-                    <!-- Team Directory & Workload -->
-                    <button onclick="switchMainTab('team')" id="rail-team" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Team & Workload">
-                        <i data-lucide="users" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Team &amp; Workload</span>
-                    </button>
-
-                    <div class="my-2 border-t border-[#E4E4E7] dark:border-[#27272A]"></div>
-
-                    <!-- Quick Filter: Assigned to Me -->
-                    <button onclick="toggleMyTasksFilter()" id="rail-mine" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Assigned to Me">
-                        <i data-lucide="user-check" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Assigned to Me</span>
-                    </button>
-
-                    <!-- Quick Filter: Overdue / Urgent -->
-                    <button onclick="toggleUrgentFilter()" id="rail-urgent" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Urgent & Overdue">
-                        <i data-lucide="clock-alert" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Urgent &amp; Overdue</span>
-                    </button>
+            <!-- ================= SIDEBAR ================= -->
+            <aside id="left-icon-rail" class="w-60 shrink-0 bg-[#1E1F21] text-zinc-300 flex flex-col overflow-y-auto select-none">
+                <nav class="px-2.5 pt-2 space-y-0.5 text-sm">
+                    <button onclick="navigate('home')" id="nav-home" class="nav-item"><i data-lucide="house" class="w-4 h-4"></i><span>Home</span></button>
+                    <button onclick="navigate('inbox')" id="nav-inbox" class="nav-item"><i data-lucide="bell" class="w-4 h-4"></i><span class="flex-1 text-left">Inbox</span><span id="inbox-badge" class="hidden min-w-5 h-5 px-1.5 rounded-full bg-[#F06A6A] text-white text-[10px] font-bold flex items-center justify-center">0</span></button>
+                </nav>
+                <div class="mx-4 my-2.5 border-t border-white/10"></div>
+                <nav class="px-2.5 space-y-0.5 text-sm">
+                    <button onclick="navigate('mytasks')" id="nav-mytasks" class="nav-item"><i data-lucide="circle-check" class="w-4 h-4"></i><span>My tasks</span></button>
+                    <button onclick="navigate('projects')" id="nav-projects" class="nav-item"><i data-lucide="clipboard-list" class="w-4 h-4"></i><span>Projects</span></button>
+                    <button onclick="navigate('creatives')" id="nav-creatives" class="nav-item"><i data-lucide="clapperboard" class="w-4 h-4"></i><span>Creatives &amp; Reels</span></button>
+                    <button onclick="navigate('team')" id="nav-team" class="nav-item"><i data-lucide="users" class="w-4 h-4"></i><span>People</span></button>
+                    <button onclick="openProject('all', 'dashboard')" id="nav-reporting" class="nav-item"><i data-lucide="chart-column" class="w-4 h-4"></i><span>Reporting</span></button>
+                </nav>
+                <div class="px-5 mt-5 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 flex items-center justify-between">
+                    <span>Projects</span>
+                    <button onclick="openCreateTaskModal()" class="p-0.5 rounded hover:bg-white/10 text-zinc-400" title="Add a task"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                 </div>
-
-                <!-- Bottom Rail Actions -->
-                <div class="space-y-1 px-2.5 pt-3 border-t border-[#E4E4E7] dark:border-[#27272A]">
-                    <button onclick="switchMainTab('team')" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Team Directory">
-                        <i data-lucide="users" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Team Directory</span>
-                    </button>
-                    <button onclick="exportTasksToCSV()" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Download Excel (CSV)">
-                        <i data-lucide="file-spreadsheet" class="w-4 h-4 shrink-0"></i>
-                        <span class="rail-label hidden text-xs font-medium truncate">Download Excel</span>
-                    </button>
+                <nav id="sidebar-projects" class="px-2.5 space-y-0.5 text-sm"></nav>
+                <div class="flex-1"></div>
+                <div class="px-4 py-3 border-t border-white/10 text-[11px] text-zinc-500">
+                    <button id="team-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full mb-2 px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/15 text-zinc-200 text-xs font-medium flex items-center gap-2"><i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage team &amp; logins</button>
+                    EBG Group &middot; Task Assigner
                 </div>
             </aside>
 
-            <!-- MAIN CONTENT CANVAS -->
-            <main class="flex-1 min-w-0 p-5 lg:p-8 max-w-[1440px] mx-auto w-full space-y-5">
-                
-                <!-- OVERVIEW HEADER ROW (Matches screenshot layout in Monochrome) -->
-                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <!-- ================= MAIN CANVAS ================= -->
+            <main id="main-canvas" class="flex-1 min-w-0 bg-white dark:bg-[#0F0F11] rounded-tl-xl overflow-y-auto">
+
+                <!-- HOME -->
+                <section id="screen-home" class="screen max-w-[1180px] mx-auto px-6 lg:px-10 py-8 space-y-6">
                     <div>
-                        <h1 id="main-page-title" class="text-[22px] font-semibold text-[#18181B] dark:text-white tracking-tight">Overview</h1>
-                        <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">
-                            Your team execution at a glance: tasks assigned, in progress, review velocity and SLA compliance. &middot; Workspace: <span id="overview-org-label" class="font-semibold text-[#18181B] dark:text-zinc-200">Organization</span>
-                        </p>
-                        <!-- Live Team Data Status Row -->
-                        <div class="flex flex-wrap items-center gap-2.5 mt-2.5">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E6F4EA] dark:bg-emerald-950/80 text-[#137333] dark:text-emerald-300 text-[11px] font-semibold">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#1E8E3E] live-dot-pulse"></span>
-                                <span id="live-sync-label">Live team data</span>
-                            </span>
-                            <span class="text-xs text-[#71717A] dark:text-[#A1A1AA]">
-                                Tasks, assignees and status updates synchronize across all logged-in team members.
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Right Action Buttons (Date Range Pill, + Assign Task [Obsidian Black], Team Directory [Zinc Pill], Download Excel [Zinc Pill]) -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <!-- Date / Sprint Scope Pill -->
-                        <div class="relative flex items-center">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 pointer-events-none"></i>
-                            <select id="timeframe-filter" onchange="renderAll()" class="pl-8 pr-7 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium text-[#18181B] dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 outline-none cursor-pointer appearance-none">
-                                <option value="all">All active dates</option>
-                                <option value="scheduled">Scheduled / Planned tasks</option>
-                                <option value="week">Due this week (7 days)</option>
-                                <option value="overdue">Overdue SLA items</option>
-                            </select>
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#71717A] absolute right-2.5 pointer-events-none"></i>
-                        </div>
-
-                        <!-- Primary Obsidian Black Action Button -->
-                        <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold shadow-2xs transition flex items-center gap-1.5">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                            <span>Assign Task</span>
-                        </button>
-
-                        <!-- Secondary Schedule Task Button -->
-                        <button onclick="openCreateTaskModal(true)" class="px-3.5 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
-                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i>
-                            <span>Schedule Task</span>
-                        </button>
-
-                        <!-- Secondary Soft Zinc Pill Button -->
-                        <button onclick="switchMainTab('team')" class="px-3.5 py-2 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-[#18181B] dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold transition flex items-center gap-1.5">
-                            <i data-lucide="users" class="w-3.5 h-3.5 text-[#71717A]"></i>
-                            <span>Team (<span id="btn-team-count">0</span>)</span>
-                        </button>
-
-                        <!-- Secondary Soft Zinc Pill Button -->
-                        <button onclick="exportTasksToCSV()" class="px-3.5 py-2 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-[#18181B] dark:hover:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#27272A] text-xs font-semibold transition flex items-center gap-1.5">
-                            <i data-lucide="download" class="w-3.5 h-3.5 text-[#71717A]"></i>
-                            <span>Download Excel</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Sub-Header Scope Line -->
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <div class="text-sm font-semibold text-[#18181B] dark:text-zinc-200" id="scope-summary-heading">
-                        All listed departments &middot; Active Workspace
-                    </div>
-                    <div class="text-[11px] text-[#71717A] dark:text-[#A1A1AA]">
-                        Click any metric column below to inspect its velocity trend.
-                    </div>
-                </div>
-
-                <!-- Alert Banner -->
-                <div id="ops-alert-banner" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-zinc-300" id="ops-alert-text">
-                        <i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i>
-                        <span>EBG Performance Marketing Workspace active. Assign deliverables to colleagues and track execution live.</span>
-                    </div>
-                    <button id="ops-alert-btn" onclick="openCreateTaskModal()" class="px-3.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-[#18181B] dark:text-zinc-200 transition shrink-0 self-start sm:self-auto">
-                        Assign Task
-                    </button>
-                </div>
-
-                <!-- Search & Quick Filter Strip -->
-                <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex flex-wrap items-center gap-2.5 flex-1">
-                        <div class="relative flex-1 min-w-[200px] max-w-sm">
-                            <i data-lucide="search" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 top-2.5"></i>
-                            <input type="text" id="search-input" oninput="renderAll()" placeholder="Search tasks by ID, title, assignee or tag..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-[#F8F9FA] dark:bg-[#18181B] text-xs text-[#18181B] dark:text-white focus:bg-white dark:focus:bg-[#111113] focus:border-[#111113] dark:focus:border-white outline-none transition">
-                        </div>
-
-                        <select id="priority-filter" onchange="renderAll()" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
-                            <option value="all">All Priorities</option>
-                            <option value="Urgent">Urgent</option>
-                            <option value="High">High</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Low">Low</option>
-                        </select>
-
-                        <!-- Brand Filter (Brand-wise segregation) -->
-                        <select id="brand-filter" onchange="renderAll()" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
-                            <option value="all">All Brands</option>
-                            <option value="EBG Performance">EBG Performance</option>
-                            <option value="EBG Retail">EBG Retail</option>
-                            <option value="Brand Alpha">Brand Alpha</option>
-                            <option value="Brand Beta">Brand Beta</option>
-                            <option value="Brand Gamma">Brand Gamma</option>
-                        </select>
-
-                        <button onclick="toggleMyTasksFilter()" id="pill-filter-mine" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
-                            Assigned to Me
-                        </button>
-
-                        <button onclick="resetFilters()" class="text-xs font-medium text-[#71717A] hover:text-[#111113] dark:hover:text-white px-2 py-1 transition">
-                            Clear
-                        </button>
-                    </div>
-
-                    <!-- View Switcher Pills: Each button leads to a dedicated distinct screen -->
-                    <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg">
-                        <button onclick="switchMainTab('overview')" id="view-pill-overview" class="px-3 py-1 rounded-md text-xs font-semibold bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">Overview</button>
-                        <button onclick="switchMainTab('board')" id="view-pill-board" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Board</button>
-                        <button onclick="switchMainTab('list')" id="view-pill-list" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Table</button>
-                        <button onclick="switchMainTab('creatives')" id="view-pill-creatives" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Creatives &amp; Reels</button>
-                        <button onclick="switchMainTab('team')" id="view-pill-team" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Team</button>
-                    </div>
-                </div>
-
-                <!-- ========================================================= -->
-                <!-- SCREEN 1: DEDICATED WORKSPACE OVERVIEW & ANALYTICS        -->
-                <!-- ========================================================= -->
-                <section id="section-overview" class="space-y-5">
-                    
-                    <!-- 7-Column Segmented KPI Card + Interactive SVG Trend Chart -->
-                    <div id="overview-analytics-card" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden shadow-2xs">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] dark:divide-[#27272A] border-b border-[#E4E4E7] dark:border-[#27272A]">
-                            <button type="button" onclick="selectKpiMetric('total')" id="kpi-seg-total" class="kpi-segment active text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Total Tasks</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-total">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('todo')" id="kpi-seg-todo" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">To Do</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-todo">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('inprogress')" id="kpi-seg-inprogress" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Progress</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-inprogress">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('review')" id="kpi-seg-review" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Review</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-review">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('done')" id="kpi-seg-done" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Completed</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-done">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('overdue')" id="kpi-seg-overdue" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Overdue</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-overdue">0</div>
-                            </button>
-                            <button type="button" onclick="selectKpiMetric('sla')" id="kpi-seg-sla" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none col-span-2 sm:col-span-1">
-                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">On-Time SLA</div>
-                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-sla">100%</div>
-                            </button>
-                        </div>
-                        <div class="p-4 sm:p-6">
-                            <div class="relative w-full h-52" id="chart-wrapper">
-                                <svg id="velocity-svg-chart" class="w-full h-full overflow-visible" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
-                                <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-[#111113] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-md z-10 border border-zinc-700"></div>
-                            </div>
-                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-[#71717A]">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3.5 h-0.5 bg-[#111113] dark:bg-white inline-block"></span>
-                                    <span id="chart-legend-label">Total Tasks &middot; Live Workspace Velocity</span>
-                                </div>
-                                <span id="chart-summary-note">Real-time team activity</span>
+                        <div id="home-date" class="text-sm font-medium text-zinc-700 dark:text-zinc-300">Today</div>
+                        <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-1">
+                            <h1 id="home-greeting" class="text-[32px] leading-tight font-normal text-zinc-900 dark:text-white">Good day</h1>
+                            <div class="flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-900 px-1.5 py-1 text-xs text-zinc-600 dark:text-zinc-300 self-start md:self-auto">
+                                <span class="px-2.5 py-1 font-medium">My week</span>
+                                <span class="px-2.5 py-1 flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5"></i><span id="home-week-done">0 tasks completed</span></span>
+                                <span class="px-2.5 py-1 flex items-center gap-1.5"><i data-lucide="users" class="w-3.5 h-3.5"></i><span id="home-week-collab">0 collaborators</span></span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Department & Brand Overview Cards (3 Cards) -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('creatives')">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
-                                    <i data-lucide="clapperboard" class="w-4 h-4"></i> Graphic Designing &amp; Reels
-                                </span>
-                                <span id="overview-badge-design" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 rounded-full">0 Tasks</span>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <!-- My tasks widget -->
+                        <div class="widget">
+                            <div class="flex items-center gap-3 px-5 pt-5">
+                                <div id="home-mytasks-avatar" class="w-9 h-9 rounded-full bg-amber-400 text-zinc-900 font-bold text-xs flex items-center justify-center">EB</div>
+                                <h2 class="text-xl font-medium text-zinc-900 dark:text-white flex items-center gap-2">My tasks <i data-lucide="lock" class="w-3.5 h-3.5 text-zinc-400"></i></h2>
+                                <button onclick="navigate('mytasks')" class="ml-auto text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">View all</button>
                             </div>
-                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Reels, carousels, and creative assets with Google Drive content briefs &amp; submission links.</p>
-                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <span>Drive links &amp; brand specs</span>
-                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Studio <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            <div class="flex gap-5 px-5 mt-3 border-b border-zinc-200 dark:border-zinc-800 text-sm">
+                                <button onclick="setHomeTaskTab('upcoming')" id="home-tab-upcoming" class="home-tab">Upcoming</button>
+                                <button onclick="setHomeTaskTab('overdue')" id="home-tab-overdue" class="home-tab">Overdue <span id="home-overdue-count" class="text-rose-600"></span></button>
+                                <button onclick="setHomeTaskTab('completed')" id="home-tab-completed" class="home-tab">Completed</button>
                             </div>
+                            <form onsubmit="quickAddMyTask(event, 'home-quick-add')" class="px-5 py-2 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4 text-zinc-400"></i>
+                                <input id="home-quick-add" type="text" placeholder="Create task" class="flex-1 py-1 text-sm bg-transparent outline-none text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-500">
+                            </form>
+                            <div id="home-task-list" class="px-2 pb-3 max-h-[340px] overflow-y-auto"></div>
                         </div>
 
-                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('board')">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i> Performance Marketing
-                                </span>
-                                <span id="overview-badge-pm" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 rounded-full">0 Tasks</span>
+                        <!-- Projects widget -->
+                        <div class="widget">
+                            <div class="flex items-center gap-3 px-5 pt-5">
+                                <h2 class="text-xl font-medium text-zinc-900 dark:text-white">Projects</h2>
+                                <span class="text-xs text-zinc-500">Departments</span>
+                                <button onclick="navigate('projects')" class="ml-auto text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Browse</button>
                             </div>
-                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Paid search, social, SQR audits, campaign launches, and client ROAS tracking.</p>
-                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <span>SLA schedules &amp; delegation</span>
-                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Board <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('list')">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                                    <i data-lucide="code-2" class="w-4 h-4"></i> Web Developer
-                                </span>
-                                <span id="overview-badge-web" class="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full">0 Tasks</span>
-                            </div>
-                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Landing pages, CRO experiments, speed optimization, and front-end implementations.</p>
-                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                                <span>Code deliverables</span>
-                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Table <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
-                            </div>
+                            <div id="home-projects" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-4"></div>
                         </div>
                     </div>
 
-                    <!-- Team Member Productivity Matrix (with Date Range Filter) -->
-                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 space-y-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-                            <div>
-                                <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
-                                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
-                                    <span>Team Member Productivity Analytics</span>
-                                </h3>
-                                <p class="text-[11px] text-[#71717A] dark:text-zinc-400">View tasks assigned, completed, pending, and productivity % per team member in the selected date window</p>
-                            </div>
-                            <!-- Date Range Filter Selector -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg border border-[#E4E4E7] dark:border-[#27272A]">
-                                    <button type="button" onclick="setProductivityRange('all')" id="range-btn-all" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">All Time</button>
-                                    <button type="button" onclick="setProductivityRange('today')" id="range-btn-today" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Today</button>
-                                    <button type="button" onclick="setProductivityRange('yesterday')" id="range-btn-yesterday" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Yesterday</button>
-                                    <button type="button" onclick="setProductivityRange('week')" id="range-btn-week" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">This Week</button>
-                                    <button type="button" onclick="setProductivityRange('month')" id="range-btn-month" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">30 Days</button>
-                                </div>
-                                <div class="flex items-center gap-1.5 text-[11px]">
-                                    <input type="date" id="overview-start-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
-                                    <span class="text-zinc-400">to</span>
-                                    <input type="date" id="overview-end-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
-                                </div>
-                            </div>
+                    <!-- People widget -->
+                    <div class="widget">
+                        <div class="flex items-center gap-3 px-5 pt-5">
+                            <h2 class="text-xl font-medium text-zinc-900 dark:text-white">People</h2>
+                            <span class="text-xs text-zinc-500">Open tasks per teammate</span>
+                            <button onclick="navigate('team')" class="ml-auto text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">View team</button>
                         </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="text-[11px] font-semibold text-[#71717A] dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
-                                        <th class="py-2.5 px-3">Team Member</th>
-                                        <th class="py-2.5 px-3">Department &amp; Role</th>
-                                        <th class="py-2.5 px-3 text-center">Assigned</th>
-                                        <th class="py-2.5 px-3 text-center">Completed</th>
-                                        <th class="py-2.5 px-3 text-center">Pending</th>
-                                        <th class="py-2.5 px-3 text-center">Overdue</th>
-                                        <th class="py-2.5 px-3">Productivity</th>
-                                        <th class="py-2.5 px-3 text-right">Follow-up</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="overview-productivity-tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
-                                    <!-- Populated dynamically -->
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="home-people" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-4"></div>
                     </div>
                 </section>
 
-                <!-- ========================================================= -->
-                <!-- SCREEN 2: DEDICATED KANBAN TASK EXECUTION BOARD           -->
-                <!-- ========================================================= -->
-                <section id="section-kanban" class="hidden space-y-3">
+                <!-- MY TASKS -->
+                <section id="screen-mytasks" class="screen hidden">
+                    <div class="px-6 lg:px-8 pt-6 pb-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3">
+                        <div id="mytasks-avatar" class="w-10 h-10 rounded-full bg-amber-400 text-zinc-900 font-bold text-sm flex items-center justify-center">EB</div>
+                        <h1 class="text-xl font-medium text-zinc-900 dark:text-white">My tasks</h1>
+                    </div>
+                    <div class="px-6 lg:px-8 py-4 space-y-2">
+                        <form onsubmit="quickAddMyTask(event, 'mytasks-quick-add')" class="flex items-center gap-2 max-w-xl">
+                            <button type="submit" class="px-3 py-1.5 rounded-md bg-[#111113] dark:bg-white text-white dark:text-zinc-900 text-xs font-semibold flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add task</button>
+                            <input id="mytasks-quick-add" type="text" placeholder="Task name, due today" class="flex-1 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-transparent text-sm outline-none focus:border-zinc-500">
+                        </form>
+                        <div id="mytasks-groups" class="pt-2"></div>
+                    </div>
+                </section>
+
+                <!-- INBOX -->
+                <section id="screen-inbox" class="screen hidden">
+                    <div class="px-6 lg:px-8 pt-6 pb-3 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                        <h1 class="text-xl font-medium text-zinc-900 dark:text-white">Inbox</h1>
+                        <button onclick="markInboxRead()" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">Mark all as read</button>
+                    </div>
+                    <div id="inbox-list" class="max-w-3xl px-6 lg:px-8 py-4 space-y-2"></div>
+                </section>
+
+                <!-- PROJECTS BROWSE -->
+                <section id="screen-projects" class="screen hidden px-6 lg:px-8 py-6 space-y-4">
                     <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Task Execution Board</h2>
-                            <span class="text-xs text-[#71717A]">Drag &amp; drop deliverables across stages or click any card to inspect Drive links &amp; brief</span>
+                        <h1 class="text-2xl font-medium text-zinc-900 dark:text-white">Projects</h1>
+                        <button onclick="openCreateTaskModal()" class="px-3 py-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800">Add task</button>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-zinc-400 absolute left-3.5 top-2.5"></i>
+                        <input id="projects-find" type="text" oninput="renderProjectsBrowse()" placeholder="Find a project" class="w-full pl-10 pr-4 py-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-transparent text-sm outline-none focus:border-zinc-500">
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-xs text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                                <th class="text-left font-medium py-2.5 px-2">Name</th>
+                                <th class="text-left font-medium py-2.5 px-2">Members</th>
+                                <th class="text-left font-medium py-2.5 px-2">Open tasks</th>
+                                <th class="text-left font-medium py-2.5 px-2">Progress</th>
+                                <th class="text-right font-medium py-2.5 px-2">Last modified</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-table"></tbody>
+                    </table>
+                </section>
+
+                <!-- PROJECT -->
+                <section id="screen-project" class="screen hidden">
+                    <div class="px-6 lg:px-8 pt-5 border-b border-zinc-200 dark:border-zinc-800">
+                        <div class="flex items-center gap-3">
+                            <div id="project-icon" class="w-9 h-9 rounded-lg flex items-center justify-center text-white"><i data-lucide="list" class="w-5 h-5"></i></div>
+                            <h1 id="project-title" class="text-xl font-medium text-zinc-900 dark:text-white">Project</h1>
+                            <div id="project-members" class="ml-auto flex -space-x-1.5"></div>
+                            <button onclick="openCreateTaskModalForProject()" class="ml-3 px-3 py-1.5 rounded-md bg-[#4573D2] hover:bg-[#3b64bb] text-white text-xs font-semibold flex items-center gap-1.5"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add task</button>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="openCreateTaskModal()" class="px-3 py-1.5 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
-                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task
-                            </button>
-                        </div>
+                        <nav class="flex gap-5 mt-3 text-sm overflow-x-auto">
+                            <button onclick="setProjectTab('overview')" id="ptab-overview" class="ptab">Overview</button>
+                            <button onclick="setProjectTab('list')" id="ptab-list" class="ptab">List</button>
+                            <button onclick="setProjectTab('board')" id="ptab-board" class="ptab">Board</button>
+                            <button onclick="setProjectTab('calendar')" id="ptab-calendar" class="ptab">Calendar</button>
+                            <button onclick="setProjectTab('workload')" id="ptab-workload" class="ptab">Workload</button>
+                            <button onclick="setProjectTab('messages')" id="ptab-messages" class="ptab">Messages</button>
+                            <button onclick="setProjectTab('dashboard')" id="ptab-dashboard" class="ptab">Dashboard</button>
+                        </nav>
                     </div>
 
+                    <!-- Filter toolbar (list / board / calendar / dashboard) -->
+                    <div id="project-toolbar" class="px-6 lg:px-8 py-2.5 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center gap-2">
+                        <select id="header-dept-filter" onchange="syncHeaderFilters()" class="hidden">
+                            <option value="all">All Departments</option>
+                            <option value="Performance Marketing">Performance Marketing</option>
+                            <option value="Graphic Designing">Graphic Designing</option>
+                            <option value="Web Developer">Web Developer</option>
+                        </select>
+                        <div class="relative min-w-[200px] max-w-xs flex-1">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-2"></i>
+                            <input type="text" id="search-input" oninput="renderAll()" placeholder="Filter tasks" class="w-full pl-8 pr-3 py-1 rounded-md border border-zinc-200 dark:border-zinc-700 bg-transparent text-xs outline-none focus:border-zinc-500">
+                        </div>
+                        <select id="header-member-filter" onchange="syncHeaderMemberFilter()" class="toolbar-select"><option value="all">All members</option></select>
+                        <select id="priority-filter" onchange="renderAll()" class="toolbar-select">
+                            <option value="all">All priorities</option><option value="Urgent">Urgent</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option>
+                        </select>
+                        <select id="brand-filter" onchange="renderAll()" class="toolbar-select">
+                            <option value="all">All brands</option><option value="EBG Performance">EBG Performance</option><option value="EBG Retail">EBG Retail</option><option value="Brand Alpha">Brand Alpha</option><option value="Brand Beta">Brand Beta</option><option value="Brand Gamma">Brand Gamma</option>
+                        </select>
+                        <select id="timeframe-filter" onchange="renderAll()" class="toolbar-select">
+                            <option value="all">Any date</option><option value="scheduled">Scheduled</option><option value="week">Due in 7 days</option><option value="overdue">Overdue</option>
+                        </select>
+                        <button onclick="toggleMyTasksFilter()" id="pill-filter-mine" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Assigned to Me</button>
+                        <button onclick="toggleUrgentFilter()" id="rail-urgent" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">Urgent &amp; overdue</button>
+                        <button onclick="resetFilters()" class="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white px-1">Clear</button>
+                        <span class="ml-auto text-[11px] text-zinc-500" id="scope-summary-heading"></span>
+                    </div>
+
+                    <div class="px-6 lg:px-8 py-5">
+                        <!-- Overview tab -->
+                        <div id="ptab-panel-overview" class="ptab-panel space-y-6 max-w-5xl"></div>
+
+                        <!-- List tab -->
+                        <div id="ptab-panel-list" class="ptab-panel hidden"><div id="project-list"></div></div>
+
+                        <!-- Board tab -->
+                        <div id="ptab-panel-board" class="ptab-panel hidden">
+                            <section id="section-kanban">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
                         <!-- Column 0: Scheduled -->
                         <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-3.5 flex flex-col kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'Scheduled')">
@@ -767,51 +583,195 @@
                             <div id="col-done" class="space-y-2.5 flex-1"></div>
                         </div>
                     </div>
-                </section>
-
-                <!-- ========================================================= -->
-                <!-- SCREEN 3: DEDICATED STRUCTURED TASK LEDGER                -->
-                <!-- ========================================================= -->
-                <section id="section-table" class="hidden space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Structured Task Ledger</h2>
-                            <p class="text-xs text-[#71717A]">Comprehensive deliverables table with brand briefs, drive links, and deadlines</p>
+                            </section>
                         </div>
-                        <button onclick="exportTasksToCSV()" class="px-3.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold text-[#18181B] dark:text-zinc-200 transition flex items-center gap-1.5">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export to Excel (CSV)
-                        </button>
-                    </div>
 
-                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden">
+                        <!-- Calendar tab -->
+                        <div id="ptab-panel-calendar" class="ptab-panel hidden">
+                            <div class="flex items-center gap-2 mb-3">
+                                <button onclick="shiftCalendar(-1)" class="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800" title="Previous month"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                                <button onclick="shiftCalendar(0)" class="px-3 py-1 rounded-md border border-zinc-200 dark:border-zinc-700 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800">Today</button>
+                                <button onclick="shiftCalendar(1)" class="p-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800" title="Next month"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                <h2 id="calendar-title" class="text-base font-medium text-zinc-900 dark:text-white ml-2">Month</h2>
+                            </div>
+                            <div id="project-calendar"></div>
+                        </div>
+
+                        <!-- Workload tab -->
+                        <div id="ptab-panel-workload" class="ptab-panel hidden"><div id="project-workload"></div></div>
+
+                        <!-- Messages tab -->
+                        <div id="ptab-panel-messages" class="ptab-panel hidden max-w-2xl mx-auto space-y-4">
+                            <form onsubmit="postProjectMessage(event)" class="widget p-4 flex items-start gap-3">
+                                <div id="message-composer-avatar" class="w-8 h-8 rounded-full bg-amber-400 text-zinc-900 font-bold text-[11px] flex items-center justify-center shrink-0">EB</div>
+                                <div class="flex-1 space-y-2">
+                                    <textarea id="message-input" rows="2" placeholder="Send message to members" class="w-full px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 bg-transparent text-sm outline-none focus:border-zinc-500 resize-y"></textarea>
+                                    <div class="flex justify-end"><button type="submit" class="px-3.5 py-1.5 rounded-md bg-[#4573D2] hover:bg-[#3b64bb] text-white text-xs font-semibold">Post message</button></div>
+                                </div>
+                            </form>
+                            <div id="project-messages" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Dashboard tab (analytics) -->
+                        <div id="ptab-panel-dashboard" class="ptab-panel hidden space-y-5">
+                            <section id="section-overview" class="space-y-5">
+                <!-- Alert Banner -->
+                <div id="ops-alert-banner" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-zinc-300" id="ops-alert-text">
+                        <i data-lucide="info" class="w-4 h-4 text-[#111113] dark:text-white shrink-0"></i>
+                        <span>EBG Performance Marketing Workspace active. Assign deliverables to colleagues and track execution live.</span>
+                    </div>
+                    <button id="ops-alert-btn" onclick="openCreateTaskModal()" class="px-3.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-[#18181B] dark:text-zinc-200 transition shrink-0 self-start sm:self-auto">
+                        Assign Task
+                    </button>
+                </div>
+                    <!-- 7-Column Segmented KPI Card + Interactive SVG Trend Chart -->
+                    <div id="overview-analytics-card" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden shadow-2xs">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] dark:divide-[#27272A] border-b border-[#E4E4E7] dark:border-[#27272A]">
+                            <button type="button" onclick="selectKpiMetric('total')" id="kpi-seg-total" class="kpi-segment active text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Total Tasks</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-total">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('todo')" id="kpi-seg-todo" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">To Do</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-todo">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('inprogress')" id="kpi-seg-inprogress" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Progress</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-inprogress">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('review')" id="kpi-seg-review" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Review</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-review">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('done')" id="kpi-seg-done" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Completed</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-done">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('overdue')" id="kpi-seg-overdue" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Overdue</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-overdue">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('sla')" id="kpi-seg-sla" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none col-span-2 sm:col-span-1">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">On-Time SLA</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-sla">100%</div>
+                            </button>
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <div class="relative w-full h-52" id="chart-wrapper">
+                                <svg id="velocity-svg-chart" class="w-full h-full overflow-visible" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
+                                <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-[#111113] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-md z-10 border border-zinc-700"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-[#71717A]">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3.5 h-0.5 bg-[#111113] dark:bg-white inline-block"></span>
+                                    <span id="chart-legend-label">Total Tasks &middot; Live Workspace Velocity</span>
+                                </div>
+                                <span id="chart-summary-note">Real-time team activity</span>
+                            </div>
+                        </div>
+                    </div>
+                                <div id="dashboard-dept-cards">
+                    <!-- Department & Brand Overview Cards (3 Cards) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('creatives')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                    <i data-lucide="clapperboard" class="w-4 h-4"></i> Graphic Designing &amp; Reels
+                                </span>
+                                <span id="overview-badge-design" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 rounded-full">0 Tasks</span>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Reels, carousels, and creative assets with Google Drive content briefs &amp; submission links.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>Drive links &amp; brand specs</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Studio <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="openProject('Performance Marketing', 'list')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i> Performance Marketing
+                                </span>
+                                <span id="overview-badge-pm" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 rounded-full">0 Tasks</span>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Paid search, social, SQR audits, campaign launches, and client ROAS tracking.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>SLA schedules &amp; delegation</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open project <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="openProject('Web Developer', 'list')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <i data-lucide="code-2" class="w-4 h-4"></i> Web Developer
+                                </span>
+                                <span id="overview-badge-web" class="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full">0 Tasks</span>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Landing pages, CRO experiments, speed optimization, and front-end implementations.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>Code deliverables</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open project <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                                </div>
+                    <!-- Team Member Productivity Matrix (with Date Range Filter) -->
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                            <div>
+                                <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
+                                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                                    <span>Team Member Productivity Analytics</span>
+                                </h3>
+                                <p class="text-[11px] text-[#71717A] dark:text-zinc-400">View tasks assigned, completed, pending, and productivity % per team member in the selected date window</p>
+                            </div>
+                            <!-- Date Range Filter Selector -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg border border-[#E4E4E7] dark:border-[#27272A]">
+                                    <button type="button" onclick="setProductivityRange('all')" id="range-btn-all" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">All Time</button>
+                                    <button type="button" onclick="setProductivityRange('today')" id="range-btn-today" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Today</button>
+                                    <button type="button" onclick="setProductivityRange('yesterday')" id="range-btn-yesterday" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Yesterday</button>
+                                    <button type="button" onclick="setProductivityRange('week')" id="range-btn-week" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">This Week</button>
+                                    <button type="button" onclick="setProductivityRange('month')" id="range-btn-month" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">30 Days</button>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[11px]">
+                                    <input type="date" id="overview-start-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
+                                    <span class="text-zinc-400">to</span>
+                                    <input type="date" id="overview-end-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
-                                    <tr class="bg-[#F8F9FA] dark:bg-[#18181B] border-b border-[#E4E4E7] dark:border-[#27272A] text-[11px] font-semibold text-[#71717A] dark:text-zinc-400">
-                                        <th class="py-3 px-4">Task ID</th>
-                                        <th class="py-3 px-4">Brand</th>
-                                        <th class="py-3 px-4">Deliverable &amp; Format</th>
-                                        <th class="py-3 px-4">Content Brief</th>
-                                        <th class="py-3 px-4">Submitted Drive Link</th>
-                                        <th class="py-3 px-4">Assignee</th>
-                                        <th class="py-3 px-4">Priority</th>
-                                        <th class="py-3 px-4">Status</th>
-                                        <th class="py-3 px-4">Due Date</th>
-                                        <th class="py-3 px-4 text-right">Details</th>
+                                    <tr class="text-[11px] font-semibold text-[#71717A] dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+                                        <th class="py-2.5 px-3">Team Member</th>
+                                        <th class="py-2.5 px-3">Department &amp; Role</th>
+                                        <th class="py-2.5 px-3 text-center">Assigned</th>
+                                        <th class="py-2.5 px-3 text-center">Completed</th>
+                                        <th class="py-2.5 px-3 text-center">Pending</th>
+                                        <th class="py-2.5 px-3 text-center">Overdue</th>
+                                        <th class="py-2.5 px-3">Productivity</th>
+                                        <th class="py-2.5 px-3 text-right">Follow-up</th>
                                     </tr>
                                 </thead>
-                                <tbody id="task-table-body" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
-                                    <!-- Dynamic rows -->
+                                <tbody id="overview-productivity-tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
+                                    <!-- Populated dynamically -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                            </section>
+                        </div>
+                    </div>
                 </section>
 
-                <!-- ========================================================= -->
-                <!-- SCREEN 4: DEDICATED BRAND CREATIVES & REELS STUDIO        -->
-                <!-- ========================================================= -->
-                <section id="section-creatives" class="hidden space-y-4">
+                <!-- CREATIVES -->
+                <div id="screen-creatives" class="screen hidden px-6 lg:px-8 py-6">
+                <section id="section-creatives" class="space-y-4">
                     <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <div class="flex items-center gap-2">
@@ -854,11 +814,11 @@
                         <!-- Populated dynamically brand by brand -->
                     </div>
                 </section>
+                </div>
 
-                <!-- ========================================================= -->
-                <!-- SCREEN 5: DEDICATED TEAM DIRECTORY & PRODUCTIVITY SCREEN  -->
-                <!-- ========================================================= -->
-                <section id="section-team" class="hidden space-y-4">
+                <!-- PEOPLE -->
+                <div id="screen-team" class="screen hidden px-6 lg:px-8 py-6">
+                <section id="section-team" class="space-y-4">
                     <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <h2 class="text-base font-semibold text-[#18181B] dark:text-white">Team Directory &amp; Member Productivity</h2>
@@ -925,12 +885,13 @@
                         <!-- Dynamic member cards -->
                     </div>
                 </section>
+                </div>
 
-                    <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Dynamic member cards -->
-                    </div>
+                <!-- SEARCH -->
+                <section id="screen-search" class="screen hidden px-6 lg:px-8 py-6 max-w-4xl space-y-5">
+                    <h1 class="text-xl font-medium text-zinc-900 dark:text-white">Search results for "<span id="search-query"></span>"</h1>
+                    <div id="search-results" class="space-y-6"></div>
                 </section>
-
             </main>
         </div>
     </div>
@@ -1792,7 +1753,7 @@
         }
         function clearLocalSessionCache() {
             setSessionToken('');
-            ['current_user', 'current_profile', 'registered_users', 'org_members', 'org_tasks', 'organizations']
+            ['current_user', 'current_profile', 'registered_users', 'org_members', 'org_tasks', 'org_messages', 'organizations']
                 .forEach(k => localStorage.removeItem(`ebg_prod_${k}`));
         }
 
@@ -1838,6 +1799,7 @@
             if (data.organizations && typeof data.organizations === 'object') setLocalStore('organizations', data.organizations);
             if (Array.isArray(data.members)) setLocalStore('org_members', data.members);
             if (Array.isArray(data.tasks)) setLocalStore('org_tasks', data.tasks);
+            if (Array.isArray(data.messages)) setLocalStore('org_messages', data.messages);
             setLocalStore('registered_users', (data.users && typeof data.users === 'object') ? data.users : {});
             // Pick up role/department changes an Admin made to the signed-in user
             if (currentUser && currentUserProfile && Array.isArray(data.members)) {
@@ -1987,9 +1949,9 @@
         }
         async function pollServer() {
             if (!currentUser || document.hidden) return;
-            const before = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '');
+            const before = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '');
             await syncFromServer();
-            const after = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '');
+            const after = (localStorage.getItem('ebg_prod_org_tasks') || '') + (localStorage.getItem('ebg_prod_org_members') || '') + (localStorage.getItem('ebg_prod_org_messages') || '');
             if (currentUser && before !== after) refreshLocalWorkspaceData();
         }
         document.addEventListener('visibilitychange', () => {
@@ -2149,6 +2111,7 @@
 
             refreshLocalWorkspaceData();
             startPolling();
+            navigate(activeScreen || 'home');
 
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
@@ -2159,6 +2122,7 @@
         function refreshLocalWorkspaceData() {
             orgMembers = getLocalStore('org_members', []);
             orgTasks = getLocalStore('org_tasks', []);
+            orgMessages = getLocalStore('org_messages', []);
             orgTasks.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
             syncAfterDataChange();
         }
@@ -2246,6 +2210,7 @@
                 }
             }
 
+            renderShell();
             lucide.createIcons();
         }
 
@@ -2488,6 +2453,7 @@
 
             // Table rows
             const tbody = document.getElementById('task-table-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="py-10 text-center text-xs text-[#71717A]">No tasks match your current filters.</td></tr>`;
@@ -2853,7 +2819,6 @@
 
         function resetFilters() {
             document.getElementById('search-input').value = '';
-            document.getElementById('header-dept-filter').value = 'all';
             document.getElementById('header-member-filter').value = 'all';
             document.getElementById('priority-filter').value = 'all';
             document.getElementById('timeframe-filter').value = 'all';
@@ -3956,20 +3921,7 @@
             lucide.createIcons();
         }
 
-        function toggleSidebarExpand() {
-            isSidebarExpanded = !isSidebarExpanded;
-            const rail = document.getElementById('left-icon-rail');
-            const labels = document.querySelectorAll('.rail-label');
-            if (isSidebarExpanded) {
-                rail.classList.remove('w-16');
-                rail.classList.add('w-52');
-                labels.forEach(l => l.classList.remove('hidden'));
-            } else {
-                rail.classList.remove('w-52');
-                rail.classList.add('w-16');
-                labels.forEach(l => l.classList.add('hidden'));
-            }
-        }
+        
 
         function toggleUserMenu() {
             const menu = document.getElementById('user-dropdown-menu');
@@ -3980,49 +3932,733 @@
             if (adminMenuBtn) adminMenuBtn.classList.toggle('hidden', !isAdmin);
         }
 
-        function switchMainTab(tab) {
-            activeMainTab = tab;
-            const overviewSec = document.getElementById('section-overview');
-            const kanbanSec = document.getElementById('section-kanban');
-            const tableSec = document.getElementById('section-table');
-            const creativesSec = document.getElementById('section-creatives');
-            const teamSec = document.getElementById('section-team');
-            const titleEl = document.getElementById('main-page-title');
+        
 
-            if (overviewSec) overviewSec.classList.toggle('hidden', tab !== 'overview');
-            if (kanbanSec) kanbanSec.classList.toggle('hidden', tab !== 'board');
-            if (tableSec) tableSec.classList.toggle('hidden', tab !== 'list');
-            if (creativesSec) creativesSec.classList.toggle('hidden', tab !== 'creatives');
-            if (teamSec) teamSec.classList.toggle('hidden', tab !== 'team');
+        // 18. Helpers
 
-            const titles = {
-                overview: 'Overview & Velocity Analytics',
-                board: 'Task Execution Board (Kanban)',
-                list: 'Structured Task Ledger',
-                creatives: 'Brand-Wise Creatives & Reels Studio',
-                team: 'Team Directory & Member Productivity'
-            };
-            if (titleEl) titleEl.textContent = titles[tab] || 'Overview & Velocity Analytics';
+        // =====================================================================
+        // WORKSPACE SHELL: navigation, Home, My tasks, Inbox, Projects, Search
+        // =====================================================================
+        const PROJECTS = [
+            { id: 'all', name: 'All work', color: '#6D6E6F', icon: 'layers',
+              desc: 'Every task across Performance Marketing, Graphic Designing and Web Development.' },
+            { id: 'Performance Marketing', name: 'Performance Marketing', color: '#4573D2', icon: 'trending-up',
+              desc: 'Paid search and social campaigns, SQR audits, launches and client ROAS tracking.' },
+            { id: 'Graphic Designing', name: 'Graphic Designing', color: '#E8384F', icon: 'palette',
+              desc: 'Reels, carousels, statics and creative assets with Drive briefs and submissions.' },
+            { id: 'Web Developer', name: 'Web Development', color: '#1F9F84', icon: 'code-2',
+              desc: 'Landing pages, CRO experiments, site speed and front-end implementation.' }
+        ];
+        const PROJECT_STATUSES = ['Scheduled', 'To Do', 'In Progress', 'In Review', 'Done'];
+        const AVATAR_COLORS = ['#F06A6A', '#F1BD6C', '#5DA283', '#4573D2', '#9E6FD4', '#E8384F', '#1F9F84', '#E87B2F', '#6D6E6F', '#B36BD4'];
 
-            ['overview', 'board', 'list', 'creatives', 'team'].forEach(t => {
-                const pill = document.getElementById(`view-pill-${t}`);
-                const railBtn = document.getElementById(`rail-${t}`);
-                if (pill) {
-                    pill.className = t === tab
-                        ? "px-3 py-1 rounded-md text-xs font-semibold bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition"
-                        : "px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition";
-                }
-                if (railBtn) {
-                    railBtn.className = t === tab
-                        ? "rail-btn w-full h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center gap-3 px-3 transition"
-                        : "rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition";
-                }
-            });
+        let activeScreen = 'home';
+        let previousScreen = 'home';
+        let activeProject = 'all';
+        let activeProjectTab = 'list';
+        let homeTaskTab = 'upcoming';
+        let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        let orgMessages = [];
 
+        Object.assign(window, {
+            navigate, openProject, setProjectTab, setHomeTaskTab, quickAddMyTask, toggleTaskComplete,
+            markInboxRead, renderProjectsBrowse, shiftCalendar, postProjectMessage, deleteProjectMessage,
+            handleGlobalSearch, toggleCreateMenu, hideCreateMenu, openCreateTaskModalForProject
+        });
+
+        function getProject(id) {
+            return PROJECTS.find(p => p.id === id) || PROJECTS[0];
+        }
+        function projectOfTask(task) {
+            return PROJECTS.find(p => p.id === task.tag) || PROJECTS[0];
+        }
+        function tasksInProject(id) {
+            return id === 'all' ? orgTasks : orgTasks.filter(t => t.tag === id);
+        }
+
+        // ---- small render helpers ----
+        function avatarColor(seed) {
+            let h = 0;
+            for (const ch of String(seed || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            return AVATAR_COLORS[h % AVATAR_COLORS.length];
+        }
+        function avatarHtml(name, seed, size = 24) {
+            const px = `${size}px`;
+            const fs = Math.max(9, Math.round(size * 0.38));
+            return `<span class="inline-flex items-center justify-center rounded-full font-semibold text-white shrink-0 ring-2 ring-white dark:ring-[#18181B]" style="width:${px};height:${px};font-size:${fs}px;background:${avatarColor(seed || name)}" title="${escapeHtml(name || '')}">${escapeHtml(getInitials(name))}</span>`;
+        }
+        function projectIconHtml(project, size = 28) {
+            return `<span class="inline-flex items-center justify-center rounded-md text-white shrink-0" style="width:${size}px;height:${size}px;background:${project.color}"><i data-lucide="${project.icon}" style="width:${Math.round(size * 0.55)}px;height:${Math.round(size * 0.55)}px"></i></span>`;
+        }
+        function todayStr() {
+            return localDateStr(new Date());
+        }
+        function addDaysStr(n) {
+            const d = new Date();
+            d.setDate(d.getDate() + n);
+            return localDateStr(d);
+        }
+        function dueLabel(dateStr) {
+            if (!dateStr) return { text: '', cls: 'text-zinc-400' };
+            const today = todayStr();
+            if (dateStr === today) return { text: 'Today', cls: 'text-emerald-600 dark:text-emerald-400' };
+            if (dateStr === addDaysStr(1)) return { text: 'Tomorrow', cls: 'text-emerald-600 dark:text-emerald-400' };
+            if (dateStr === addDaysStr(-1)) return { text: 'Yesterday', cls: 'text-rose-600' };
+            const d = new Date(dateStr + 'T00:00:00');
+            if (dateStr < today) return { text: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cls: 'text-rose-600' };
+            if (dateStr <= addDaysStr(6)) return { text: d.toLocaleDateString('en-US', { weekday: 'long' }), cls: 'text-zinc-600 dark:text-zinc-300' };
+            return { text: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), cls: 'text-zinc-500' };
+        }
+        function isMine(task) {
+            const me = currentUser?.uid;
+            return !!me && (task.assigneeId === me || task.delegatedToUid === me);
+        }
+        function timeAgo(iso) {
+            return formatTimeAgo(iso) || '';
+        }
+
+        function taskRowHtml(task, opts = {}) {
+            const done = task.status === 'Done';
+            const due = dueLabel(task.dueDate);
+            const project = projectOfTask(task);
+            const meta = [];
+            if ((task.subtasks || []).length) meta.push(`<span class="inline-flex items-center gap-0.5"><i data-lucide="list-checks" class="w-3 h-3"></i>${task.subtasks.filter(s => s.done).length}/${task.subtasks.length}</span>`);
+            if ((task.comments || []).length) meta.push(`<span class="inline-flex items-center gap-0.5"><i data-lucide="message-square" class="w-3 h-3"></i>${task.comments.length}</span>`);
+            return `
+                <div class="group flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800/60 cursor-pointer border-b border-zinc-100 dark:border-zinc-800/70" onclick="openTaskDetail(${jsArg(task.id)})">
+                    <button type="button" onclick="event.stopPropagation(); toggleTaskComplete(${jsArg(task.id)})" class="shrink-0 ${done ? 'text-emerald-600' : 'text-zinc-400 hover:text-emerald-600'}" title="${done ? 'Mark incomplete' : 'Mark complete'}">
+                        <i data-lucide="${done ? 'circle-check-big' : 'circle-check'}" class="w-[18px] h-[18px]"></i>
+                    </button>
+                    <span class="flex-1 min-w-0 truncate text-sm ${done ? 'text-zinc-400 line-through' : 'text-zinc-800 dark:text-zinc-100'}">${escapeHtml(task.title)}</span>
+                    ${meta.length ? `<span class="hidden sm:flex items-center gap-2 text-[11px] text-zinc-400">${meta.join('')}</span>` : ''}
+                    ${opts.showProject !== false ? `<span class="hidden md:inline-flex items-center gap-1 text-[11px] text-zinc-500 max-w-[150px] truncate"><span class="w-2 h-2 rounded-sm shrink-0" style="background:${project.color}"></span>${escapeHtml(project.name)}</span>` : ''}
+                    ${opts.showAssignee ? avatarHtml(task.assigneeName || 'Unassigned', task.assigneeId, 22) : ''}
+                    <span class="text-xs w-20 text-right shrink-0 ${due.cls}">${escapeHtml(due.text)}</span>
+                </div>`;
+        }
+
+        // ---- navigation ----
+        function navigate(screen) {
+            if (screen !== 'search') {
+                const gs = document.getElementById('global-search');
+                if (gs && gs.value && document.activeElement !== gs) gs.value = '';
+            }
+            activeScreen = screen;
+            activeMainTab = screen;
+            document.querySelectorAll('#main-canvas > .screen').forEach(el => el.classList.toggle('hidden', el.id !== `screen-${screen}`));
+            hideCreateMenu();
+            document.getElementById('user-dropdown-menu')?.classList.add('hidden');
+            if (window.innerWidth < 768) document.getElementById('left-icon-rail')?.classList.add('hidden');
+            document.getElementById('main-canvas')?.scrollTo({ top: 0 });
             renderAll();
         }
 
-        // 18. Helpers
+        function openProject(id, tab) {
+            activeProject = getProject(id).id;
+            const deptSel = document.getElementById('header-dept-filter');
+            if (deptSel) deptSel.value = activeProject;
+            if (tab) activeProjectTab = tab;
+            navigate('project');
+            setProjectTab(activeProjectTab);
+        }
+
+        function setProjectTab(tab) {
+            activeProjectTab = tab;
+            document.querySelectorAll('.ptab').forEach(el => el.classList.toggle('active', el.id === `ptab-${tab}`));
+            document.querySelectorAll('.ptab-panel').forEach(el => el.classList.toggle('hidden', el.id !== `ptab-panel-${tab}`));
+            const showToolbar = ['list', 'board', 'calendar', 'dashboard'].includes(tab);
+            document.getElementById('project-toolbar')?.classList.toggle('hidden', !showToolbar);
+            renderAll();
+        }
+
+        // Older buttons call switchMainTab(); route them into the new layout
+        function switchMainTab(tab) {
+            const map = { overview: () => navigate('home'), board: () => openProject(activeProject, 'board'),
+                          list: () => openProject(activeProject, 'list'), creatives: () => navigate('creatives'),
+                          team: () => navigate('team') };
+            (map[tab] || map.overview)();
+        }
+
+        function toggleSidebarExpand() {
+            document.getElementById('left-icon-rail')?.classList.toggle('hidden');
+        }
+
+        function toggleCreateMenu(e) {
+            e?.stopPropagation();
+            document.getElementById('create-menu')?.classList.toggle('hidden');
+        }
+        function hideCreateMenu() {
+            document.getElementById('create-menu')?.classList.add('hidden');
+        }
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('create-menu');
+            if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target)) menu.classList.add('hidden');
+            const userMenu = document.getElementById('user-dropdown-menu');
+            if (userMenu && !userMenu.classList.contains('hidden') && !userMenu.parentElement.contains(e.target)) userMenu.classList.add('hidden');
+        });
+
+        function openCreateTaskModalForProject() {
+            openCreateTaskModal();
+            if (activeProject !== 'all') {
+                const tag = document.getElementById('task-tag');
+                if (tag) tag.value = activeProject;
+            }
+        }
+
+        // ---- master render for the new screens ----
+        function renderShell() {
+            if (!currentUser) return;
+            renderSidebar();
+            const me = currentUserProfile || {};
+            const color = avatarColor(currentUser.uid);
+            ['header-user-avatar', 'home-mytasks-avatar', 'mytasks-avatar', 'message-composer-avatar'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = getInitials(me.displayName); el.style.background = color; el.style.color = '#fff'; }
+            });
+            if (activeScreen === 'home') renderHome();
+            else if (activeScreen === 'mytasks') renderMyTasks();
+            else if (activeScreen === 'inbox') renderInbox();
+            else if (activeScreen === 'projects') renderProjectsBrowse();
+            else if (activeScreen === 'project') renderProjectView();
+            else if (activeScreen === 'search') renderSearch();
+        }
+
+        function renderSidebar() {
+            ['home', 'inbox', 'mytasks', 'projects', 'creatives', 'team'].forEach(s => {
+                document.getElementById(`nav-${s}`)?.classList.toggle('active', activeScreen === s);
+            });
+            document.getElementById('nav-reporting')?.classList.toggle('active', activeScreen === 'project' && activeProject === 'all' && activeProjectTab === 'dashboard');
+            const list = document.getElementById('sidebar-projects');
+            if (list) {
+                list.innerHTML = PROJECTS.map(p => {
+                    const open = tasksInProject(p.id).filter(t => t.status !== 'Done').length;
+                    const active = activeScreen === 'project' && activeProject === p.id && !(p.id === 'all' && activeProjectTab === 'dashboard');
+                    return `<button onclick="openProject(${jsArg(p.id)})" class="nav-item ${active ? 'active' : ''}">
+                        <span class="w-3 h-3 rounded-[4px] shrink-0" style="background:${p.color}"></span>
+                        <span class="flex-1 text-left truncate">${escapeHtml(p.name)}</span>
+                        <span class="text-[11px] text-zinc-500">${open || ''}</span>
+                    </button>`;
+                }).join('');
+            }
+            const unread = inboxUnreadCount();
+            const badge = document.getElementById('inbox-badge');
+            if (badge) {
+                badge.textContent = unread > 99 ? '99+' : String(unread);
+                badge.classList.toggle('hidden', unread === 0);
+            }
+        }
+
+        // ---- HOME ----
+        function setHomeTaskTab(tab) {
+            homeTaskTab = tab;
+            renderHome();
+            lucide.createIcons();
+        }
+
+        function renderHome() {
+            const now = new Date();
+            const hour = now.getHours();
+            const part = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+            const firstName = (currentUserProfile?.displayName || '').split(' ')[0];
+            const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+            setText('home-date', now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
+            setText('home-greeting', `Good ${part}${firstName ? ', ' + firstName : ''}`);
+
+            const mine = orgTasks.filter(isMine);
+            const monday = new Date(now);
+            monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+            const weekStart = localDateStr(monday);
+            const doneThisWeek = mine.filter(t => t.status === 'Done' && t.completedAt && localDateStr(new Date(t.completedAt)) >= weekStart).length;
+            const collaborators = new Set();
+            mine.forEach(t => {
+                if (t.createdBy && t.createdBy !== currentUser.uid) collaborators.add(t.createdBy);
+                (t.comments || []).forEach(c => { if (c.authorId && c.authorId !== currentUser.uid) collaborators.add(c.authorId); });
+            });
+            orgTasks.filter(t => t.createdBy === currentUser.uid && t.assigneeId && t.assigneeId !== currentUser.uid).forEach(t => collaborators.add(t.assigneeId));
+            setText('home-week-done', `${doneThisWeek} task${doneThisWeek === 1 ? '' : 's'} completed`);
+            setText('home-week-collab', `${collaborators.size} collaborator${collaborators.size === 1 ? '' : 's'}`);
+
+            ['upcoming', 'overdue', 'completed'].forEach(t => document.getElementById(`home-tab-${t}`)?.classList.toggle('active', homeTaskTab === t));
+            const overdue = mine.filter(isTaskOverdue);
+            setText('home-overdue-count', overdue.length ? `(${overdue.length})` : '');
+            let list;
+            if (homeTaskTab === 'overdue') list = overdue;
+            else if (homeTaskTab === 'completed') list = mine.filter(t => t.status === 'Done').sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
+            else list = mine.filter(t => t.status !== 'Done' && !isTaskOverdue(t));
+            if (homeTaskTab !== 'completed') list = [...list].sort((a, b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
+            const box = document.getElementById('home-task-list');
+            if (box) {
+                const empty = { upcoming: "You're all caught up. Tasks assigned to you will show here.", overdue: 'Nothing overdue. Nice work!', completed: 'Tasks you complete will show here.' }[homeTaskTab];
+                box.innerHTML = list.length ? list.slice(0, 30).map(t => taskRowHtml(t)).join('') : `<p class="text-sm text-zinc-500 px-3 py-6 text-center">${empty}</p>`;
+            }
+
+            const projBox = document.getElementById('home-projects');
+            if (projBox) {
+                const soon = addDaysStr(7);
+                projBox.innerHTML = PROJECTS.map(p => {
+                    const tasks = tasksInProject(p.id);
+                    const dueSoon = tasks.filter(t => t.status !== 'Done' && t.dueDate && t.dueDate <= soon).length;
+                    return `<button onclick="openProject(${jsArg(p.id)}, 'list')" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-left">
+                        ${projectIconHtml(p, 40)}
+                        <span class="min-w-0">
+                            <span class="block text-sm font-medium text-zinc-900 dark:text-white truncate">${escapeHtml(p.name)}</span>
+                            <span class="block text-xs text-zinc-500">${dueSoon ? `${dueSoon} task${dueSoon === 1 ? '' : 's'} due soon` : `${tasks.filter(t => t.status !== 'Done').length} open tasks`}</span>
+                        </span>
+                    </button>`;
+                }).join('');
+            }
+
+            const peopleBox = document.getElementById('home-people');
+            if (peopleBox) {
+                peopleBox.innerHTML = orgMembers.length ? orgMembers.map(m => {
+                    const open = orgTasks.filter(t => t.assigneeId === m.uid && t.status !== 'Done').length;
+                    return `<button onclick="document.getElementById('header-member-filter').value=${jsArg(m.uid)}; openProject('all', 'list')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/60">
+                        ${avatarHtml(m.displayName, m.uid, 44)}
+                        <span class="text-xs font-medium text-zinc-800 dark:text-zinc-100 truncate max-w-full">${escapeHtml(m.displayName)}</span>
+                        <span class="text-[11px] text-zinc-500">${open} open</span>
+                    </button>`;
+                }).join('') : '<p class="text-sm text-zinc-500 col-span-full text-center py-4">No teammates yet.</p>';
+            }
+        }
+
+        async function quickAddMyTask(e, inputId) {
+            e.preventDefault();
+            const input = document.getElementById(inputId);
+            const title = (input?.value || '').trim();
+            if (!title) return;
+            const dept = currentUserProfile?.department;
+            const tag = PROJECTS.some(p => p.id === dept && p.id !== 'all') ? dept : 'Performance Marketing';
+            const id = newClientId('tsk');
+            input.value = '';
+            const ok = await syncToServer({ tasks: [{ id, title, assigneeId: currentUser.uid, dueDate: todayStr(), tag, priority: 'Medium', status: 'To Do', format: 'General Deliverable' }] });
+            if (ok) showToast(`Added "${title}" to your tasks.`, "success");
+            else input.value = title;
+        }
+
+        async function toggleTaskComplete(taskId) {
+            const task = orgTasks.find(t => t.id === taskId);
+            if (!task) return;
+            const done = task.status === 'Done';
+            const ok = await patchTaskById(taskId, { status: done ? 'To Do' : 'Done' });
+            if (ok) showToast(done ? 'Marked incomplete.' : `Completed "${task.title}".`, 'success');
+        }
+
+        // ---- MY TASKS ----
+        function renderMyTasks() {
+            const box = document.getElementById('mytasks-groups');
+            if (!box) return;
+            const today = todayStr();
+            const week = addDaysStr(7);
+            const mine = orgTasks.filter(isMine);
+            const open = mine.filter(t => t.status !== 'Done');
+            const byDue = (a, b) => (a.dueDate || '').localeCompare(b.dueDate || '');
+            const groups = [
+                ['Overdue', open.filter(t => t.dueDate && t.dueDate < today).sort(byDue)],
+                ['Today', open.filter(t => t.dueDate === today)],
+                ['Next 7 days', open.filter(t => t.dueDate > today && t.dueDate <= week).sort(byDue)],
+                ['Later', open.filter(t => t.dueDate > week).sort(byDue)],
+                ['No due date', open.filter(t => !t.dueDate)],
+            ];
+            const completed = mine.filter(t => t.status === 'Done').sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || '')).slice(0, 50);
+            box.innerHTML = groups.map(([name, list]) => `
+                <details class="mb-3" open>
+                    <summary class="cursor-pointer select-none text-sm font-semibold text-zinc-800 dark:text-zinc-100 py-1.5 ${name === 'Overdue' && list.length ? 'text-rose-600' : ''}">${name} <span class="text-zinc-400 font-normal">${list.length}</span></summary>
+                    <div class="mt-1">${list.length ? list.map(t => taskRowHtml(t)).join('') : '<p class="text-xs text-zinc-400 px-3 py-2">No tasks</p>'}</div>
+                </details>`).join('') + `
+                <details class="mb-3">
+                    <summary class="cursor-pointer select-none text-sm font-semibold text-zinc-800 dark:text-zinc-100 py-1.5">Completed <span class="text-zinc-400 font-normal">${completed.length}</span></summary>
+                    <div class="mt-1">${completed.map(t => taskRowHtml(t)).join('') || '<p class="text-xs text-zinc-400 px-3 py-2">No completed tasks yet</p>'}</div>
+                </details>`;
+        }
+
+        // ---- INBOX ----
+        function inboxSeenKey() {
+            return `ebg_prod_inbox_seen_${currentUser?.uid || ''}`;
+        }
+        function buildInboxEvents() {
+            if (!currentUser) return [];
+            const me = currentUser.uid;
+            const events = [];
+            orgTasks.forEach(t => {
+                const mineTask = isMine(t);
+                const created = t.createdBy === me;
+                if (mineTask && t.createdBy && t.createdBy !== me) {
+                    events.push({ at: t.delegatedToUid === me && t.delegatedAt ? t.delegatedAt : t.createdAt, actor: t.delegatedToUid === me && t.delegatedBy ? t.delegatedBy : t.createdByName, actorId: t.createdBy,
+                                  icon: 'user-plus', text: `assigned you <strong>${escapeHtml(t.title)}</strong>`, task: t });
+                }
+                if (mineTask || created) {
+                    (t.comments || []).forEach(c => {
+                        if (c.authorId !== me) events.push({ at: c.timestamp, actor: c.author, actorId: c.authorId, icon: 'message-square',
+                            text: `commented on <strong>${escapeHtml(t.title)}</strong>: "${escapeHtml((c.text || '').slice(0, 120))}"`, task: t });
+                    });
+                }
+                if (created && t.assigneeId && t.assigneeId !== me) {
+                    (t.statusHistory || []).slice(1).forEach(h => {
+                        events.push({ at: h.at, actor: t.assigneeName, actorId: t.assigneeId, icon: h.status === 'Done' ? 'circle-check-big' : 'arrow-right-left',
+                            text: `${h.status === 'Done' ? 'completed' : `moved to <strong>${escapeHtml(h.status)}</strong>`} <strong>${escapeHtml(t.title)}</strong>`, task: t });
+                    });
+                    if (t.submissionDriveUrl && t.submissionSubmittedAt) {
+                        events.push({ at: t.submissionSubmittedAt, actor: t.submissionSubmittedBy || t.assigneeName, actorId: t.assigneeId, icon: 'upload',
+                            text: `submitted the Drive link for <strong>${escapeHtml(t.title)}</strong>`, task: t });
+                    }
+                }
+            });
+            orgMessages.forEach(m => {
+                if (m.authorId !== me) events.push({ at: m.timestamp, actor: m.author, actorId: m.authorId, icon: 'megaphone',
+                    text: `posted in <strong>${escapeHtml(getProject(m.project).name)}</strong>: "${escapeHtml((m.text || '').slice(0, 140))}"`, project: m.project });
+            });
+            return events.filter(e => e.at).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 150);
+        }
+        function inboxUnreadCount() {
+            const seen = localStorage.getItem(inboxSeenKey()) || '';
+            return buildInboxEvents().filter(e => e.at > seen).length;
+        }
+        function markInboxRead() {
+            localStorage.setItem(inboxSeenKey(), new Date().toISOString());
+            renderAll();
+        }
+        function renderInbox() {
+            const box = document.getElementById('inbox-list');
+            if (!box) return;
+            const seen = localStorage.getItem(inboxSeenKey()) || '';
+            const events = buildInboxEvents();
+            const overdue = orgTasks.filter(t => isMine(t) && isTaskOverdue(t));
+            const reminder = overdue.length ? `
+                <div class="widget p-3.5 flex items-center gap-3 border-rose-200 dark:border-rose-900">
+                    <i data-lucide="alarm-clock" class="w-5 h-5 text-rose-600"></i>
+                    <span class="text-sm text-zinc-700 dark:text-zinc-200 flex-1">You have <strong>${overdue.length} overdue task${overdue.length === 1 ? '' : 's'}</strong>.</span>
+                    <button onclick="navigate('mytasks')" class="text-xs font-semibold text-rose-600 hover:underline">Review</button>
+                </div>` : '';
+            box.innerHTML = reminder + (events.length ? events.map(e => {
+                const unread = e.at > seen;
+                const click = e.task ? `openTaskDetail(${jsArg(e.task.id)})` : `openProject(${jsArg(e.project)}, 'messages')`;
+                return `<div onclick="${click}" class="widget p-3.5 flex items-start gap-3 cursor-pointer hover:border-zinc-400 dark:hover:border-zinc-600 ${unread ? 'bg-sky-50/60 dark:bg-sky-950/20' : ''}">
+                    ${avatarHtml(e.actor || 'EBG', e.actorId, 32)}
+                    <div class="flex-1 min-w-0 text-sm text-zinc-700 dark:text-zinc-200">
+                        <div><strong>${escapeHtml(e.actor || 'Someone')}</strong> ${e.text}</div>
+                        <div class="text-[11px] text-zinc-500 mt-0.5 flex items-center gap-1.5"><i data-lucide="${e.icon}" class="w-3 h-3"></i>${escapeHtml(timeAgo(e.at))}${e.task ? ` &middot; ${escapeHtml(e.task.code || '')}` : ''}</div>
+                    </div>
+                    ${unread ? '<span class="w-2 h-2 rounded-full bg-[#4573D2] mt-2 shrink-0"></span>' : ''}
+                </div>`;
+            }).join('') : '<div class="text-center py-16 text-sm text-zinc-500"><i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 text-zinc-300"></i>Assignments, comments and messages for you will appear here.</div>');
+            // Opening the inbox marks it read (the dots stay until the next visit)
+            localStorage.setItem(inboxSeenKey(), new Date().toISOString());
+            const badge = document.getElementById('inbox-badge');
+            if (badge) badge.classList.add('hidden');
+        }
+
+        // ---- PROJECTS BROWSE ----
+        function lastModified(tasks, projectId) {
+            let latest = '';
+            tasks.forEach(t => {
+                [t.createdAt, t.completedAt, t.submissionSubmittedAt, ...(t.statusHistory || []).map(h => h.at), ...(t.comments || []).map(c => c.timestamp)]
+                    .forEach(v => { if (v && v > latest) latest = v; });
+            });
+            orgMessages.filter(m => projectId === 'all' || m.project === projectId).forEach(m => { if (m.timestamp > latest) latest = m.timestamp; });
+            return latest;
+        }
+        function memberStackHtml(uids, size = 26, max = 4) {
+            const members = uids.map(uid => orgMembers.find(m => m.uid === uid)).filter(Boolean);
+            const shown = members.slice(0, max).map(m => avatarHtml(m.displayName, m.uid, size)).join('');
+            const more = members.length > max ? `<span class="inline-flex items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700 text-[10px] text-zinc-600 dark:text-zinc-300 ring-2 ring-white dark:ring-[#18181B]" style="width:${size}px;height:${size}px">+${members.length - max}</span>` : '';
+            return `<span class="flex -space-x-1.5">${shown}${more}</span>`;
+        }
+        function projectMemberUids(id) {
+            const uids = new Set(tasksInProject(id).map(t => t.assigneeId).filter(Boolean));
+            orgMembers.forEach(m => { if (id === 'all' || m.department === id) uids.add(m.uid); });
+            return [...uids];
+        }
+        function renderProjectsBrowse() {
+            const body = document.getElementById('projects-table');
+            if (!body) return;
+            const q = (document.getElementById('projects-find')?.value || '').toLowerCase().trim();
+            body.innerHTML = PROJECTS.filter(p => !q || p.name.toLowerCase().includes(q)).map(p => {
+                const tasks = tasksInProject(p.id);
+                const open = tasks.filter(t => t.status !== 'Done').length;
+                const pct = tasks.length ? Math.round(((tasks.length - open) / tasks.length) * 100) : 0;
+                const lm = lastModified(tasks, p.id);
+                return `<tr onclick="openProject(${jsArg(p.id)}, 'list')" class="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer">
+                    <td class="py-3 px-2"><span class="flex items-center gap-3">${projectIconHtml(p, 26)}<span class="font-medium text-zinc-900 dark:text-white">${escapeHtml(p.name)}</span></span></td>
+                    <td class="py-3 px-2">${memberStackHtml(projectMemberUids(p.id))}</td>
+                    <td class="py-3 px-2 text-zinc-600 dark:text-zinc-300">${open}</td>
+                    <td class="py-3 px-2"><span class="flex items-center gap-2"><span class="w-24 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden"><span class="block h-full bg-emerald-500" style="width:${pct}%"></span></span><span class="text-xs text-zinc-500">${pct}%</span></span></td>
+                    <td class="py-3 px-2 text-right text-xs text-zinc-500">${lm ? escapeHtml(timeAgo(lm)) : '—'}</td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="5" class="py-8 text-center text-sm text-zinc-500">No projects match.</td></tr>';
+        }
+
+        // ---- PROJECT PAGE ----
+        function renderProjectView() {
+            const p = getProject(activeProject);
+            const deptSel = document.getElementById('header-dept-filter');
+            if (deptSel && deptSel.value !== p.id) deptSel.value = p.id;
+            const icon = document.getElementById('project-icon');
+            if (icon) { icon.style.background = p.color; icon.innerHTML = `<i data-lucide="${p.icon}" class="w-5 h-5"></i>`; }
+            const title = document.getElementById('project-title');
+            if (title) title.textContent = p.name;
+            const mem = document.getElementById('project-members');
+            if (mem) mem.innerHTML = memberStackHtml(projectMemberUids(p.id), 28, 5);
+            document.querySelectorAll('.ptab').forEach(el => el.classList.toggle('active', el.id === `ptab-${activeProjectTab}`));
+            document.getElementById('dashboard-dept-cards')?.classList.toggle('hidden', p.id !== 'all');
+            if (activeProjectTab === 'overview') renderProjectOverview();
+            else if (activeProjectTab === 'list') renderProjectList();
+            else if (activeProjectTab === 'calendar') renderProjectCalendar();
+            else if (activeProjectTab === 'workload') renderProjectWorkload();
+            else if (activeProjectTab === 'messages') renderProjectMessages();
+        }
+
+        function projectActivity(id, limit = 10) {
+            const events = [];
+            tasksInProject(id).forEach(t => {
+                events.push({ at: t.createdAt, actor: t.createdByName, actorId: t.createdBy, text: `created <strong>${escapeHtml(t.title)}</strong>`, task: t });
+                (t.statusHistory || []).slice(1).forEach(h => events.push({ at: h.at, actor: t.assigneeName, actorId: t.assigneeId, text: `moved <strong>${escapeHtml(t.title)}</strong> to ${escapeHtml(h.status)}`, task: t }));
+                (t.comments || []).forEach(c => events.push({ at: c.timestamp, actor: c.author, actorId: c.authorId, text: `commented on <strong>${escapeHtml(t.title)}</strong>`, task: t }));
+            });
+            orgMessages.filter(m => id === 'all' || m.project === id).forEach(m => events.push({ at: m.timestamp, actor: m.author, actorId: m.authorId, text: 'posted a message', project: m.project }));
+            return events.filter(e => e.at).sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+        }
+
+        function renderProjectOverview() {
+            const box = document.getElementById('ptab-panel-overview');
+            if (!box) return;
+            const p = getProject(activeProject);
+            const tasks = tasksInProject(p.id);
+            const counts = PROJECT_STATUSES.map(s => [s, tasks.filter(t => t.status === s).length]);
+            const done = tasks.filter(t => t.status === 'Done').length;
+            const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+            const overdue = tasks.filter(isTaskOverdue);
+            const soon = tasks.filter(t => t.status !== 'Done' && t.dueDate && t.dueDate >= todayStr() && t.dueDate <= addDaysStr(7)).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+            const members = projectMemberUids(p.id).map(uid => orgMembers.find(m => m.uid === uid)).filter(Boolean);
+            const health = overdue.length === 0 ? ['On track', 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300']
+                : overdue.length <= 2 ? ['At risk', 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300']
+                : ['Off track', 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'];
+            box.innerHTML = `
+                <div>
+                    <h2 class="text-base font-medium text-zinc-900 dark:text-white mb-1.5">Project description</h2>
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">${escapeHtml(p.desc)}</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div class="widget p-5 lg:col-span-2 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Status</h3>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold ${health[1]}">${health[0]}</span>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs text-zinc-500 mb-1"><span>${done} of ${tasks.length} tasks complete</span><span>${pct}%</span></div>
+                            <div class="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${pct}%"></div></div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                            ${counts.map(([s, n]) => `<button onclick="setProjectTab('board')" class="rounded-lg border border-zinc-200 dark:border-zinc-800 p-2.5 text-left hover:border-zinc-400"><div class="text-[11px] text-zinc-500">${s}</div><div class="text-lg font-semibold text-zinc-900 dark:text-white">${n}</div></button>`).join('')}
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-semibold text-zinc-700 dark:text-zinc-200 mb-1">Due in the next 7 days</h4>
+                            ${soon.length ? soon.slice(0, 8).map(t => taskRowHtml(t, { showProject: p.id === 'all', showAssignee: true })).join('') : '<p class="text-xs text-zinc-400 py-2">Nothing due this week.</p>'}
+                        </div>
+                        ${overdue.length ? `<div><h4 class="text-xs font-semibold text-rose-600 mb-1">Overdue</h4>${overdue.slice(0, 8).map(t => taskRowHtml(t, { showProject: p.id === 'all', showAssignee: true })).join('')}</div>` : ''}
+                    </div>
+                    <div class="space-y-4">
+                        <div class="widget p-5">
+                            <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Members</h3>
+                            <div class="space-y-2.5">${members.length ? members.map(m => `<div class="flex items-center gap-2.5">${avatarHtml(m.displayName, m.uid, 30)}<div class="min-w-0"><div class="text-sm text-zinc-800 dark:text-zinc-100 truncate">${escapeHtml(m.displayName)}</div><div class="text-[11px] text-zinc-500 truncate">${escapeHtml(m.role || '')}</div></div></div>`).join('') : '<p class="text-xs text-zinc-400">No members yet.</p>'}</div>
+                        </div>
+                        <div class="widget p-5">
+                            <h3 class="text-sm font-semibold text-zinc-900 dark:text-white mb-3">Recent activity</h3>
+                            <div class="space-y-3">${projectActivity(p.id).map(e => `<div class="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300 cursor-pointer" onclick="${e.task ? `openTaskDetail(${jsArg(e.task.id)})` : `setProjectTab('messages')`}">${avatarHtml(e.actor || 'EBG', e.actorId, 22)}<div><strong>${escapeHtml(e.actor || 'Someone')}</strong> ${e.text}<div class="text-[10px] text-zinc-400">${escapeHtml(timeAgo(e.at))}</div></div></div>`).join('') || '<p class="text-xs text-zinc-400">No activity yet.</p>'}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderProjectList() {
+            const box = document.getElementById('project-list');
+            if (!box) return;
+            const p = getProject(activeProject);
+            const tasks = getFilteredTasks();
+            const header = `<div class="hidden md:grid grid-cols-[minmax(0,1fr)_150px_100px_90px_120px] gap-2 px-3 py-2 text-[11px] font-medium text-zinc-500 border-b border-zinc-200 dark:border-zinc-800">
+                <span>Task name</span><span>Assignee</span><span>Due date</span><span>Priority</span><span>Brand</span></div>`;
+            const row = (t) => {
+                const done = t.status === 'Done';
+                const due = dueLabel(t.dueDate);
+                return `<div onclick="openTaskDetail(${jsArg(t.id)})" class="grid grid-cols-[minmax(0,1fr)_auto] md:grid-cols-[minmax(0,1fr)_150px_100px_90px_120px] gap-2 items-center px-3 py-2 border-b border-zinc-100 dark:border-zinc-800/70 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer text-sm">
+                    <span class="flex items-center gap-2.5 min-w-0">
+                        <button type="button" onclick="event.stopPropagation(); toggleTaskComplete(${jsArg(t.id)})" class="${done ? 'text-emerald-600' : 'text-zinc-400 hover:text-emerald-600'} shrink-0"><i data-lucide="${done ? 'circle-check-big' : 'circle-check'}" class="w-[18px] h-[18px]"></i></button>
+                        <span class="truncate ${done ? 'line-through text-zinc-400' : 'text-zinc-800 dark:text-zinc-100'}">${escapeHtml(t.title)}</span>
+                        <span class="font-mono text-[10px] text-zinc-400 shrink-0">${escapeHtml(t.code || '')}</span>
+                        ${(t.comments || []).length ? `<span class="text-[11px] text-zinc-400 flex items-center gap-0.5 shrink-0"><i data-lucide="message-square" class="w-3 h-3"></i>${t.comments.length}</span>` : ''}
+                    </span>
+                    <span class="hidden md:flex items-center gap-1.5 min-w-0">${t.assigneeId ? avatarHtml(t.assigneeName, t.assigneeId, 22) : ''}<span class="truncate text-xs text-zinc-600 dark:text-zinc-300">${escapeHtml(t.assigneeName || 'Unassigned')}</span></span>
+                    <span class="text-xs ${due.cls}">${escapeHtml(due.text || '—')}</span>
+                    <span class="hidden md:inline"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getPriorityBadgeClass(t.priority)}">${escapeHtml(t.priority || '')}</span></span>
+                    <span class="hidden md:block text-xs text-zinc-500 truncate">${escapeHtml(t.brand || '')}</span>
+                </div>`;
+            };
+            box.innerHTML = header + PROJECT_STATUSES.map(status => {
+                const list = tasks.filter(t => (t.status || 'To Do') === status);
+                if (status === 'Scheduled' && list.length === 0) return '';
+                return `<details class="mt-3" ${status === 'Done' && list.length > 8 ? '' : 'open'}>
+                    <summary class="cursor-pointer select-none px-1 py-1.5 text-sm font-semibold text-zinc-900 dark:text-white">${escapeHtml(status)} <span class="font-normal text-zinc-400">${list.length}</span></summary>
+                    ${list.map(row).join('')}
+                    <button onclick="openCreateTaskModalForProject()" class="ml-9 mt-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white">+ Add task...</button>
+                </details>`;
+            }).join('') + (tasks.length === 0 ? `<p class="text-sm text-zinc-500 text-center py-10">No tasks match in ${escapeHtml(p.name)}.</p>` : '');
+        }
+
+        function shiftCalendar(n) {
+            if (n === 0) {
+                const d = new Date();
+                calendarCursor = new Date(d.getFullYear(), d.getMonth(), 1);
+            } else {
+                calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + n, 1);
+            }
+            renderProjectCalendar();
+            lucide.createIcons();
+        }
+
+        function renderProjectCalendar() {
+            const box = document.getElementById('project-calendar');
+            if (!box) return;
+            const title = document.getElementById('calendar-title');
+            if (title) title.textContent = calendarCursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            const tasks = getFilteredTasks().filter(t => t.dueDate);
+            const first = new Date(calendarCursor);
+            const start = new Date(first);
+            start.setDate(1 - first.getDay());
+            const today = todayStr();
+            let cells = '';
+            for (let i = 0; i < 42; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const iso = localDateStr(d);
+                const inMonth = d.getMonth() === calendarCursor.getMonth();
+                const dayTasks = tasks.filter(t => t.dueDate === iso);
+                const chips = dayTasks.slice(0, 3).map(t => {
+                    const pc = projectOfTask(t).color;
+                    const done = t.status === 'Done';
+                    return `<button onclick="openTaskDetail(${jsArg(t.id)})" class="w-full text-left truncate px-1.5 py-0.5 rounded text-[11px] ${done ? 'line-through opacity-60' : ''}" style="background:${pc}22;color:${pc}" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</button>`;
+                }).join('');
+                cells += `<div class="min-h-[96px] border-r border-b border-zinc-200 dark:border-zinc-800 p-1.5 space-y-1 ${inMonth ? '' : 'bg-zinc-50 dark:bg-zinc-900/40'}">
+                    <div class="text-xs ${iso === today ? 'w-6 h-6 rounded-full bg-[#4573D2] text-white flex items-center justify-center font-semibold' : inMonth ? 'text-zinc-700 dark:text-zinc-300' : 'text-zinc-400'}">${d.getDate()}</div>
+                    ${chips}${dayTasks.length > 3 ? `<div class="text-[10px] text-zinc-500 px-1">+${dayTasks.length - 3} more</div>` : ''}
+                </div>`;
+            }
+            box.innerHTML = `<div class="grid grid-cols-7 border-l border-t border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+                ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="text-[11px] font-medium text-zinc-500 px-2 py-1.5 border-r border-b border-zinc-200 dark:border-zinc-800">${d}</div>`).join('')}
+                ${cells}</div>`;
+        }
+
+        function renderProjectWorkload() {
+            const box = document.getElementById('project-workload');
+            if (!box) return;
+            const p = getProject(activeProject);
+            const tasks = tasksInProject(p.id).filter(t => t.status !== 'Done');
+            const days = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() + i);
+                return { iso: localDateStr(d), label: i === 0 ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }) };
+            });
+            const members = projectMemberUids(p.id).map(uid => orgMembers.find(m => m.uid === uid)).filter(Boolean);
+            const cell = (n) => {
+                const cls = n === 0 ? 'text-zinc-300 dark:text-zinc-600' : n >= 4 ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300' : n >= 2 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+                return `<td class="p-1"><span class="block text-center rounded py-1.5 text-xs font-semibold ${cls}">${n || '·'}</span></td>`;
+            };
+            box.innerHTML = members.length ? `
+                <p class="text-xs text-zinc-500 mb-3">Open tasks per person by due date. Capacity bar assumes 5 open tasks per person.</p>
+                <div class="overflow-x-auto"><table class="w-full text-sm">
+                    <thead><tr class="text-[11px] text-zinc-500">
+                        <th class="text-left font-medium py-2 px-2">Person</th><th class="text-left font-medium py-2 px-2 w-44">Capacity</th>
+                        <th class="font-medium py-2 px-1 text-rose-600">Overdue</th>${days.map(d => `<th class="font-medium py-2 px-1">${d.label}</th>`).join('')}<th class="font-medium py-2 px-1">Later</th>
+                    </tr></thead>
+                    <tbody>${members.map(m => {
+                        const mt = tasks.filter(t => t.assigneeId === m.uid);
+                        const pct = Math.min(100, Math.round((mt.length / 5) * 100));
+                        const bar = mt.length >= 5 ? 'bg-rose-500' : mt.length >= 3 ? 'bg-amber-500' : 'bg-emerald-500';
+                        return `<tr class="border-t border-zinc-100 dark:border-zinc-800">
+                            <td class="py-2 px-2"><button onclick="document.getElementById('header-member-filter').value=${jsArg(m.uid)}; setProjectTab('list')" class="flex items-center gap-2 text-left">${avatarHtml(m.displayName, m.uid, 26)}<span class="text-zinc-800 dark:text-zinc-100">${escapeHtml(m.displayName)}</span></button></td>
+                            <td class="py-2 px-2"><div class="flex items-center gap-2"><div class="flex-1 h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden"><div class="h-full ${bar}" style="width:${pct}%"></div></div><span class="text-xs text-zinc-500 w-10">${mt.length}/5</span></div></td>
+                            ${cell(mt.filter(isTaskOverdue).length)}
+                            ${days.map(d => cell(mt.filter(t => t.dueDate === d.iso).length)).join('')}
+                            ${cell(mt.filter(t => !t.dueDate || t.dueDate > days[6].iso).length)}
+                        </tr>`;
+                    }).join('')}</tbody>
+                </table></div>` : '<p class="text-sm text-zinc-500 text-center py-10">No members in this project yet.</p>';
+        }
+
+        function renderProjectMessages() {
+            const box = document.getElementById('project-messages');
+            if (!box) return;
+            const p = getProject(activeProject);
+            const input = document.getElementById('message-input');
+            if (input) input.placeholder = `Send message to ${p.id === 'all' ? 'everyone' : p.name + ' members'}`;
+            const list = orgMessages.filter(m => p.id === 'all' || m.project === p.id).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+            box.innerHTML = list.length ? list.map(m => {
+                const canDelete = isCurrentUserAdmin() || m.authorId === currentUser?.uid;
+                return `<div class="widget p-4 flex items-start gap-3">
+                    ${avatarHtml(m.author, m.authorId, 32)}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 text-xs">
+                            <strong class="text-zinc-900 dark:text-white">${escapeHtml(m.author)}</strong>
+                            <span class="text-zinc-400">${escapeHtml(timeAgo(m.timestamp))}</span>
+                            ${p.id === 'all' ? `<span class="inline-flex items-center gap-1 text-zinc-500"><span class="w-2 h-2 rounded-sm" style="background:${getProject(m.project).color}"></span>${escapeHtml(getProject(m.project).name)}</span>` : ''}
+                            ${canDelete ? `<button onclick="deleteProjectMessage(${jsArg(m.id)})" class="ml-auto text-zinc-400 hover:text-rose-600" title="Delete message"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                        </div>
+                        <p class="text-sm text-zinc-700 dark:text-zinc-200 mt-1 whitespace-pre-wrap break-words">${escapeHtml(m.text)}</p>
+                    </div>
+                </div>`;
+            }).join('') : `
+                <div class="widget p-10 text-center">
+                    <i data-lucide="messages-square" class="w-12 h-12 mx-auto text-zinc-300"></i>
+                    <h3 class="text-lg font-medium text-zinc-900 dark:text-white mt-3">Connect your words to your work</h3>
+                    <p class="text-sm text-zinc-500 mt-1 max-w-md mx-auto">Send a message to kick off work, discuss tasks or share updates with everyone in ${escapeHtml(p.name)}.</p>
+                </div>`;
+        }
+
+        async function postProjectMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('message-input');
+            const text = (input?.value || '').trim();
+            if (!text) return;
+            const project = activeProject;
+            const ok = await syncToServer({ addMessage: { project, text } });
+            if (ok) {
+                input.value = '';
+                showToast(`Message posted to ${getProject(project).name}.`, 'success');
+            }
+        }
+
+        async function deleteProjectMessage(id) {
+            if (!confirm('Delete this message? This cannot be undone.')) return;
+            await syncToServer({ deleteMessageId: id });
+        }
+
+        // ---- SEARCH ----
+        function handleGlobalSearch(value) {
+            const q = (value || '').trim();
+            if (q) {
+                if (activeScreen !== 'search') previousScreen = activeScreen;
+                if (activeScreen !== 'search') navigate('search');
+                else { renderSearch(); lucide.createIcons(); }
+            } else if (activeScreen === 'search') {
+                navigate(previousScreen || 'home');
+            }
+        }
+
+        function renderSearch() {
+            const q = (document.getElementById('global-search')?.value || '').toLowerCase().trim();
+            const qEl = document.getElementById('search-query');
+            if (qEl) qEl.textContent = q;
+            const box = document.getElementById('search-results');
+            if (!box) return;
+            if (!q) { box.innerHTML = ''; return; }
+            const tasks = orgTasks.filter(t => `${t.code} ${t.title} ${t.description} ${t.assigneeName} ${t.brand} ${t.tag}`.toLowerCase().includes(q)).slice(0, 40);
+            const people = orgMembers.filter(m => `${m.displayName} ${m.email} ${m.role} ${m.department}`.toLowerCase().includes(q)).slice(0, 12);
+            const msgs = orgMessages.filter(m => `${m.text} ${m.author}`.toLowerCase().includes(q)).slice(0, 12);
+            const section = (title, html) => `<div><h2 class="text-sm font-semibold text-zinc-500 mb-2">${title}</h2>${html}</div>`;
+            box.innerHTML = (tasks.length ? section(`Tasks (${tasks.length})`, tasks.map(t => taskRowHtml(t, { showAssignee: true })).join('')) : '')
+                + (people.length ? section('People', `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${people.map(m => `<button onclick="document.getElementById('header-member-filter').value=${jsArg(m.uid)}; openProject('all','list')" class="widget p-3 flex items-center gap-3 text-left hover:border-zinc-400">${avatarHtml(m.displayName, m.uid, 32)}<span><span class="block text-sm text-zinc-900 dark:text-white">${escapeHtml(m.displayName)}</span><span class="block text-xs text-zinc-500">${escapeHtml(m.role || '')} · ${escapeHtml(m.department || '')}</span></span></button>`).join('')}</div>`) : '')
+                + (msgs.length ? section('Messages', msgs.map(m => `<button onclick="openProject(${jsArg(m.project)}, 'messages')" class="widget w-full p-3 mb-2 text-left hover:border-zinc-400"><div class="text-xs text-zinc-500"><strong class="text-zinc-800 dark:text-zinc-100">${escapeHtml(m.author)}</strong> in ${escapeHtml(getProject(m.project).name)} · ${escapeHtml(timeAgo(m.timestamp))}</div><div class="text-sm text-zinc-700 dark:text-zinc-200 mt-1 line-clamp-2">${escapeHtml(m.text)}</div></button>`).join('')) : '')
+                || '<p class="text-sm text-zinc-500 py-10 text-center">No tasks, people or messages match your search.</p>';
+        }
+
         function showLoading(text) {
             document.getElementById('loading-text').textContent = text || "Loading...";
             document.getElementById('loading-overlay').classList.remove('hidden');
