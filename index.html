@@ -401,6 +401,9 @@
                             <div class="text-xs font-bold text-[#18181B] dark:text-white" id="menu-user-name">User</div>
                             <div class="text-[11px] text-[#71717A]" id="menu-user-dept">Department</div>
                         </div>
+                        <button id="menu-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden w-full px-4 py-2 text-left text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 flex items-center gap-2.5 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
+                        </button>
                         <button onclick="signOutUser()" class="w-full px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center gap-2.5">
                             <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign Out
                         </button>
@@ -921,9 +924,14 @@
                             <h2 class="text-base font-semibold text-[#18181B] dark:text-white">Team Directory &amp; Member Productivity</h2>
                             <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">Track tasks assigned, completed, pending, and individual velocity across date windows.</p>
                         </div>
-                        <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5 self-start sm:self-auto">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task
-                        </button>
+                        <div class="flex items-center gap-2 self-start sm:self-auto">
+                            <button id="team-btn-admin-manage" onclick="openAdminUserManagementModal()" class="hidden px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Manage Team &amp; Logins
+                            </button>
+                            <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Interactive Productivity Date Range Filter Bar for Team View -->
@@ -1396,6 +1404,294 @@
 
 
     <!-- ===================================================================== -->
+    <!-- MODAL: ADMIN TEAM MEMBERS & LOGIN CREDENTIALS MANAGEMENT CONSOLE      -->
+    <!-- ===================================================================== -->
+    <div id="admin-user-management-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-[#111113] rounded-2xl shadow-2xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-4xl overflow-hidden my-6 flex flex-col max-h-[90vh]">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#18181B] shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Team Logins &amp; Access Control Console</h3>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">Admin Only</span>
+                        </div>
+                        <p class="text-[11px] text-[#71717A]">Manage team member credentials, login suspension, permissions &amp; account provisioning</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="adminToggleProvisionForm()" class="px-3 py-1.5 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                        <span>Provision Member</span>
+                    </button>
+                    <button onclick="closeAdminUserManagementModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Content Area -->
+            <div class="p-6 overflow-y-auto space-y-5 flex-1">
+                
+                <!-- KPI Stats Strip -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-zinc-50 dark:bg-[#18181B]/50 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold tracking-wider text-[#71717A]">Total Members</div>
+                            <div id="admin-stat-total" class="text-base font-bold text-[#18181B] dark:text-white">0</div>
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-zinc-50 dark:bg-[#18181B]/50 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold tracking-wider text-[#71717A]">Active Logins</div>
+                            <div id="admin-stat-active" class="text-base font-bold text-emerald-600 dark:text-emerald-400">0</div>
+                        </div>
+                    </div>
+                    <div class="p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A] bg-zinc-50 dark:bg-[#18181B]/50 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                            <i data-lucide="ban" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] uppercase font-bold tracking-wider text-[#71717A]">Suspended Logins</div>
+                            <div id="admin-stat-suspended" class="text-base font-bold text-rose-600 dark:text-rose-400">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Provision New Member Form (Collapsible) -->
+                <div id="admin-provision-form-container" class="hidden p-4 rounded-xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> Provision New Colleague &amp; Account
+                        </h4>
+                        <button type="button" onclick="adminToggleProvisionForm(false)" class="text-[11px] text-[#71717A] hover:text-[#18181B] dark:hover:text-white">Cancel</button>
+                    </div>
+                    <form id="admin-provision-form" onsubmit="adminSubmitProvisionMember(event)" class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Full Name *</label>
+                                <input type="text" id="admin-prov-name" required placeholder="e.g. Rohit Verma" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Official Email (@theebg.com) *</label>
+                                <input type="email" id="admin-prov-email" required placeholder="name@theebg.com" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department *</label>
+                                <select id="admin-prov-dept" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                                    <option value="Performance Marketing">Performance Marketing</option>
+                                    <option value="Graphic Designing">Graphic Designing</option>
+                                    <option value="Web Developer">Web Developer</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Role *</label>
+                                <select id="admin-prov-role" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                                    <option value="Graphic Designer">Graphic Designer</option>
+                                    <option value="Graphic Design Team Lead">Graphic Design Team Lead</option>
+                                    <option value="Performance Marketer">Performance Marketer</option>
+                                    <option value="Senior Web Developer">Senior Web Developer</option>
+                                    <option value="Member">Member</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">WhatsApp Phone *</label>
+                                <input type="tel" id="admin-prov-phone" required placeholder="+91 98765 43210" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Initial Password (min 6 chars) *</label>
+                                <input type="password" id="admin-prov-password" required minlength="6" placeholder="Temporary login password" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="submit" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>Create &amp; Activate Account</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Filter Toolbar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#F8F9FA] dark:bg-[#18181B] p-2.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A]">
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-[#71717A] absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="admin-user-search" oninput="renderAdminUsersTable()" placeholder="Search by name or email..." class="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-lg outline-none">
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="admin-user-dept-filter" onchange="renderAdminUsersTable()" class="px-2.5 py-1.5 text-xs bg-white dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-lg outline-none">
+                            <option value="all">All Departments</option>
+                            <option value="Performance Marketing">Performance Marketing</option>
+                            <option value="Graphic Designing">Graphic Designing</option>
+                            <option value="Web Developer">Web Developer</option>
+                        </select>
+                        <select id="admin-user-status-filter" onchange="renderAdminUsersTable()" class="px-2.5 py-1.5 text-xs bg-white dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-lg outline-none">
+                            <option value="all">All Statuses</option>
+                            <option value="active">Active Logins</option>
+                            <option value="suspended">Suspended Logins</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Accounts Table -->
+                <div class="border border-[#E4E4E7] dark:border-[#27272A] rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-[#F8F9FA] dark:bg-[#18181B] text-[11px] font-semibold text-[#71717A] border-b border-[#E4E4E7] dark:border-[#27272A]">
+                                    <th class="py-2.5 px-4">Member</th>
+                                    <th class="py-2.5 px-4">Department &amp; Role</th>
+                                    <th class="py-2.5 px-4">WhatsApp Phone</th>
+                                    <th class="py-2.5 px-4 text-center">Login Status</th>
+                                    <th class="py-2.5 px-4 text-right">Admin Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body" class="divide-y divide-[#E4E4E7] dark:divide-[#27272A] text-xs">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3 border-t border-[#E4E4E7] dark:border-[#27272A] bg-[#F8F9FA] dark:bg-[#18181B] flex items-center justify-between text-xs text-[#71717A] shrink-0">
+                <span class="flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    <span>Suspended accounts cannot sign in to the workspace until reactivated.</span>
+                </span>
+                <button onclick="closeAdminUserManagementModal()" class="px-3.5 py-1.5 bg-white dark:bg-[#27272A] hover:bg-zinc-100 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-[#3F3F46] rounded-lg font-semibold transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: EDIT MEMBER DETAILS (ADMIN)                                    -->
+    <!-- ===================================================================== -->
+    <div id="admin-edit-member-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-[#111113] rounded-2xl shadow-2xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-md overflow-hidden my-6">
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#18181B]">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center justify-center">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Edit Team Member</h3>
+                        <p class="text-[11px] text-[#71717A]" id="admin-edit-email-label">user@theebg.com</p>
+                    </div>
+                </div>
+                <button onclick="adminCloseEditMemberModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="admin-edit-member-form" onsubmit="adminSaveEditMember(event)" class="p-6 space-y-4">
+                <input type="hidden" id="admin-edit-uid">
+                <input type="hidden" id="admin-edit-email">
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Display Name *</label>
+                    <input type="text" id="admin-edit-name" required class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department *</label>
+                        <select id="admin-edit-dept" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
+                            <option value="Performance Marketing">Performance Marketing</option>
+                            <option value="Graphic Designing">Graphic Designing</option>
+                            <option value="Web Developer">Web Developer</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Role *</label>
+                        <select id="admin-edit-role" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs font-medium focus:border-[#111113] outline-none">
+                            <option value="Admin">Admin</option>
+                            <option value="Performance Marketer">Performance Marketer</option>
+                            <option value="Graphic Design Team Lead">Graphic Design Team Lead</option>
+                            <option value="Graphic Designer">Graphic Designer</option>
+                            <option value="Senior Web Developer">Senior Web Developer</option>
+                            <option value="Member">Member</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">WhatsApp Phone Number</label>
+                    <div class="relative flex items-center">
+                        <i data-lucide="phone" class="w-4 h-4 text-[#25D366] absolute left-3 pointer-events-none"></i>
+                        <input type="tel" id="admin-edit-phone" placeholder="+91 98765 43210" class="w-full pl-9 pr-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] flex justify-end gap-2">
+                    <button type="button" onclick="adminCloseEditMemberModal()" class="px-4 py-2 border border-[#D4D4D8] dark:border-[#3F3F46] text-[#71717A] hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] rounded-lg text-xs font-semibold transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: RESET PASSWORD (ADMIN)                                         -->
+    <!-- ===================================================================== -->
+    <div id="admin-reset-password-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-[#111113] rounded-2xl shadow-2xl border border-[#E4E4E7] dark:border-[#27272A] w-full max-w-sm overflow-hidden my-6">
+            <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#18181B]">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-[#18181B] dark:text-white">Reset Password</h3>
+                        <p class="text-[11px] text-[#71717A]" id="admin-reset-user-label">user@theebg.com</p>
+                    </div>
+                </div>
+                <button onclick="adminCloseResetPasswordModal()" class="p-1.5 text-[#71717A] hover:text-[#18181B] dark:hover:text-white rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <form id="admin-reset-password-form" onsubmit="adminSaveResetPassword(event)" class="p-6 space-y-4">
+                <input type="hidden" id="admin-reset-target-email">
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">New Password *</label>
+                    <input type="password" id="admin-reset-new-password" required minlength="6" placeholder="At least 6 characters" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Confirm New Password *</label>
+                    <input type="password" id="admin-reset-confirm-password" required minlength="6" placeholder="Re-type new password" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] outline-none">
+                </div>
+
+                <div class="pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] flex justify-end gap-2">
+                    <button type="button" onclick="adminCloseResetPasswordModal()" class="px-4 py-2 border border-[#D4D4D8] dark:border-[#3F3F46] text-[#71717A] hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg text-xs font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
+    <!-- ===================================================================== -->
     <!-- FIREBASE & REAL-TIME STATE ENGINE (ZERO MOCK DATA)                    -->
     <!-- ===================================================================== -->
     <script type="module">
@@ -1514,7 +1810,20 @@
             promptSubmitDriveLink,
             delegateTaskFromDrawer,
             setProductivityRange,
-            applyCustomProductivityDateRange
+            applyCustomProductivityDateRange,
+            openAdminUserManagementModal,
+            closeAdminUserManagementModal,
+            adminToggleProvisionForm,
+            renderAdminUsersTable,
+            adminToggleUserStatus,
+            adminOpenResetPasswordModal,
+            adminCloseResetPasswordModal,
+            adminSaveResetPassword,
+            adminOpenEditMember,
+            adminCloseEditMemberModal,
+            adminSaveEditMember,
+            adminSubmitProvisionMember,
+            adminDeleteMember
         });
 
         // 3. Theme Initialization
@@ -1865,6 +2174,12 @@
                 return;
             }
 
+            if (user.status === 'suspended' || (user.profile && user.profile.accountStatus === 'suspended') || user.accountStatus === 'suspended') {
+                hideLoading();
+                showToast("Your login access has been suspended by the workspace Admin. Please contact Admin.", "error");
+                return;
+            }
+
             if (user.password && user.password !== password) {
                 hideLoading();
                 showToast("Incorrect password. Please try again.", "error");
@@ -2026,6 +2341,12 @@
             if (mName) mName.textContent = currentUserProfile.displayName;
             const mDept = document.getElementById('menu-user-dept');
             if (mDept) mDept.textContent = `${currentUserProfile.department} · ${currentUserProfile.role}`;
+
+            const isAdmin = currentUserProfile && currentUserProfile.role === 'Admin';
+            const adminMenuBtn = document.getElementById('menu-btn-admin-manage');
+            if (adminMenuBtn) adminMenuBtn.classList.toggle('hidden', !isAdmin);
+            const teamAdminBtn = document.getElementById('team-btn-admin-manage');
+            if (teamAdminBtn) teamAdminBtn.classList.toggle('hidden', !isAdmin);
 
             if (useCloudSync && db) {
                 const memberDocId = `EBG_${currentUser.uid}`;
@@ -2617,6 +2938,10 @@
             const grid = document.getElementById('team-grid');
             grid.innerHTML = '';
 
+            const isAdmin = currentUserProfile && currentUserProfile.role === 'Admin';
+            const teamAdminBtn = document.getElementById('team-btn-admin-manage');
+            if (teamAdminBtn) teamAdminBtn.classList.toggle('hidden', !isAdmin);
+
             if (orgMembers.length === 0) {
                 grid.innerHTML = `<div class="col-span-full bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-8 text-center text-xs text-[#71717A]">No team members registered yet.</div>`;
                 return;
@@ -2688,9 +3013,16 @@
                                 <span class="hidden sm:inline">WhatsApp</span>
                             </a>
                         </div>
-                        <button onclick="openCreateTaskForMember('${member.uid}')" class="px-3 py-1.5 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 text-xs font-semibold transition flex items-center gap-1">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            ${isAdmin ? `
+                                <button onclick="adminOpenEditMember('${member.uid}', '${escapeHtml(member.email || '')}')" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold transition flex items-center gap-1" title="Manage member login and permissions">
+                                    <i data-lucide="shield" class="w-3 h-3"></i> Manage
+                                </button>
+                            ` : ''}
+                            <button onclick="openCreateTaskForMember('${member.uid}')" class="px-3 py-1.5 rounded-lg bg-[#F4F4F5] hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#18181B] dark:text-zinc-200 text-xs font-semibold transition flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign
+                            </button>
+                        </div>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -3742,7 +4074,12 @@
         }
 
         function toggleUserMenu() {
-            document.getElementById('user-dropdown-menu').classList.toggle('hidden');
+            const menu = document.getElementById('user-dropdown-menu');
+            if (!menu) return;
+            menu.classList.toggle('hidden');
+            const isAdmin = currentUserProfile && currentUserProfile.role === 'Admin';
+            const adminMenuBtn = document.getElementById('menu-btn-admin-manage');
+            if (adminMenuBtn) adminMenuBtn.classList.toggle('hidden', !isAdmin);
         }
 
         function switchMainTab(tab) {
@@ -3893,6 +4230,535 @@
             }
             renderTeamDirectory();
             showToast(`WhatsApp phone updated for ${member.displayName}!`, "success");
+        }
+
+        // =====================================================================
+        // ADMIN TEAM MEMBERS & LOGIN CREDENTIALS MANAGEMENT CONSOLE
+        // =====================================================================
+        function isCurrentUserAdmin() {
+            return !!(currentUserProfile && currentUserProfile.role === 'Admin');
+        }
+
+        async function openAdminUserManagementModal() {
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin access required to manage team logins.", "error");
+                return;
+            }
+            try {
+                const res = await fetch('/api/data');
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.users) {
+                        setLocalStore('registered_users', json.users);
+                    }
+                    if (json.members) {
+                        orgMembers = json.members;
+                        setLocalStore('org_members', orgMembers);
+                    }
+                }
+            } catch (err) {
+                console.warn("Failed fetching fresh admin user list:", err);
+            }
+
+            renderAdminUsersTable();
+            document.getElementById('admin-user-management-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeAdminUserManagementModal() {
+            document.getElementById('admin-user-management-modal').classList.add('hidden');
+            adminToggleProvisionForm(false);
+        }
+
+        function adminToggleProvisionForm(show) {
+            const container = document.getElementById('admin-provision-form-container');
+            if (!container) return;
+            if (typeof show === 'boolean') {
+                container.classList.toggle('hidden', !show);
+            } else {
+                container.classList.toggle('hidden');
+            }
+            if (!container.classList.contains('hidden')) {
+                document.getElementById('admin-prov-name')?.focus();
+            }
+            lucide.createIcons();
+        }
+
+        function renderAdminUsersTable() {
+            const tbody = document.getElementById('admin-users-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const usersMap = getLocalStore('registered_users', {});
+            const searchVal = (document.getElementById('admin-user-search')?.value || '').toLowerCase().trim();
+            const deptFilter = document.getElementById('admin-user-dept-filter')?.value || 'all';
+            const statusFilter = document.getElementById('admin-user-status-filter')?.value || 'all';
+
+            const combinedMap = new Map();
+
+            orgMembers.forEach(m => {
+                const emailKey = (m.email || '').toLowerCase();
+                const userRec = usersMap[emailKey] || {};
+                const status = userRec.status || m.accountStatus || 'active';
+                combinedMap.set(m.uid || emailKey, {
+                    uid: m.uid,
+                    displayName: m.displayName || userRec.displayName || 'Unnamed',
+                    email: m.email || userRec.email || '',
+                    department: m.department || userRec.department || 'Performance Marketing',
+                    role: m.role || userRec.role || 'Member',
+                    phone: m.phone || userRec.phone || '',
+                    status: status,
+                    password: userRec.password || '******',
+                    rawUser: userRec
+                });
+            });
+
+            Object.keys(usersMap).forEach(em => {
+                const u = usersMap[em];
+                const key = u.uid || em;
+                if (!combinedMap.has(key)) {
+                    combinedMap.set(key, {
+                        uid: u.uid || ('usr_' + Date.now().toString(36)),
+                        displayName: u.displayName || (u.profile && u.profile.displayName) || em.split('@')[0],
+                        email: u.email || em,
+                        department: u.department || (u.profile && u.profile.department) || 'Performance Marketing',
+                        role: u.role || (u.profile && u.profile.role) || 'Member',
+                        phone: u.phone || (u.profile && u.profile.phone) || '',
+                        status: u.status || 'active',
+                        password: u.password || '******',
+                        rawUser: u
+                    });
+                }
+            });
+
+            const allList = Array.from(combinedMap.values());
+
+            const totalCount = allList.length;
+            const activeCount = allList.filter(u => u.status === 'active').length;
+            const suspendedCount = allList.filter(u => u.status === 'suspended').length;
+
+            const totalEl = document.getElementById('admin-stat-total');
+            const activeEl = document.getElementById('admin-stat-active');
+            const suspEl = document.getElementById('admin-stat-suspended');
+            if (totalEl) totalEl.textContent = totalCount;
+            if (activeEl) activeEl.textContent = activeCount;
+            if (suspEl) suspEl.textContent = suspendedCount;
+
+            const filtered = allList.filter(u => {
+                if (searchVal) {
+                    const matchName = (u.displayName || '').toLowerCase().includes(searchVal);
+                    const matchEmail = (u.email || '').toLowerCase().includes(searchVal);
+                    if (!matchName && !matchEmail) return false;
+                }
+                if (deptFilter !== 'all' && u.department !== deptFilter) {
+                    return false;
+                }
+                if (statusFilter !== 'all' && u.status !== statusFilter) {
+                    return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-xs text-[#71717A]">No accounts match the current filter or search criteria.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(u => {
+                const isCurrent = currentUser && (u.uid === currentUser.uid || u.email.toLowerCase() === currentUser.email?.toLowerCase());
+                const isSuspended = u.status === 'suspended';
+
+                const tr = document.createElement('tr');
+                tr.className = `hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition ${isSuspended ? 'bg-rose-50/20 dark:bg-rose-950/10' : ''}`;
+                tr.innerHTML = `
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[11px] flex items-center justify-center shrink-0">
+                                ${getInitials(u.displayName)}
+                            </div>
+                            <div>
+                                <div class="font-bold text-[#18181B] dark:text-white flex items-center gap-1.5">
+                                    <span>${escapeHtml(u.displayName)}</span>
+                                    ${isCurrent ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">You</span>' : ''}
+                                </div>
+                                <div class="text-[11px] text-[#71717A]">${escapeHtml(u.email)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="font-medium text-[#18181B] dark:text-zinc-200">${escapeHtml(u.department)}</div>
+                        <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.role === 'Admin' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}">${escapeHtml(u.role)}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-[11px] text-[#18181B] dark:text-zinc-300 flex items-center gap-1">
+                            ${u.phone ? `<i data-lucide="phone" class="w-3 h-3 text-[#25D366]"></i> ${escapeHtml(u.phone)}` : '<span class="text-zinc-400 italic">None</span>'}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${isSuspended ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'}">
+                            <span class="w-1.5 h-1.5 rounded-full ${isSuspended ? 'bg-rose-500' : 'bg-emerald-500'}"></span>
+                            ${isSuspended ? 'Suspended' : 'Active'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="inline-flex items-center gap-1.5">
+                            <button type="button" onclick="adminOpenEditMember('${u.uid}', '${escapeHtml(u.email)}')" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-indigo-600 transition" title="Edit Member Profile">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="adminOpenResetPasswordModal('${escapeHtml(u.email)}', '${escapeHtml(u.displayName)}')" class="p-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-amber-600 transition" title="Reset Password">
+                                <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button type="button" onclick="adminToggleUserStatus('${escapeHtml(u.email)}', '${u.uid}')" class="px-2 py-1 rounded text-[10px] font-semibold transition ${isSuspended ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300'}" title="${isSuspended ? 'Reactivate Login' : 'Suspend Login'}">
+                                ${isSuspended ? 'Activate' : 'Suspend'}
+                            </button>
+                            ${!isCurrent ? `
+                                <button type="button" onclick="adminDeleteMember('${u.uid}', '${escapeHtml(u.email)}', '${escapeHtml(u.displayName)}')" class="p-1.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950 text-zinc-400 hover:text-rose-600 transition" title="Delete Member">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        async function adminToggleUserStatus(email, uid) {
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin privilege required.", "error");
+                return;
+            }
+
+            const cleanEmail = (email || '').toLowerCase().trim();
+            const usersMap = getLocalStore('registered_users', {});
+            let userRec = usersMap[cleanEmail];
+            let currentStatus = userRec?.status || 'active';
+            const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
+
+            if (userRec) {
+                userRec.status = nextStatus;
+                if (userRec.profile) userRec.profile.accountStatus = nextStatus;
+                usersMap[cleanEmail] = userRec;
+                setLocalStore('registered_users', usersMap);
+            }
+
+            const mIdx = orgMembers.findIndex(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail));
+            if (mIdx >= 0) {
+                orgMembers[mIdx].accountStatus = nextStatus;
+                setLocalStore('org_members', orgMembers);
+            }
+
+            await syncToServer({
+                users: userRec ? { [cleanEmail]: userRec } : undefined,
+                members: orgMembers
+            });
+
+            showToast(`Account login for ${cleanEmail} is now ${nextStatus.toUpperCase()}.`, nextStatus === 'active' ? 'success' : 'error');
+            renderAdminUsersTable();
+            renderTeamDirectory();
+        }
+
+        function adminOpenResetPasswordModal(email, name) {
+            const modal = document.getElementById('admin-reset-password-modal');
+            if (!modal) return;
+            document.getElementById('admin-reset-target-email').value = email;
+            document.getElementById('admin-reset-user-label').textContent = `${name || email} (${email})`;
+            document.getElementById('admin-reset-new-password').value = '';
+            document.getElementById('admin-reset-confirm-password').value = '';
+            modal.classList.remove('hidden');
+            document.getElementById('admin-reset-new-password').focus();
+            lucide.createIcons();
+        }
+
+        function adminCloseResetPasswordModal() {
+            document.getElementById('admin-reset-password-modal')?.classList.add('hidden');
+        }
+
+        async function adminSaveResetPassword(e) {
+            e.preventDefault();
+            const email = (document.getElementById('admin-reset-target-email')?.value || '').toLowerCase().trim();
+            const newPass = document.getElementById('admin-reset-new-password')?.value || '';
+            const confPass = document.getElementById('admin-reset-confirm-password')?.value || '';
+
+            if (!email) return;
+            if (!newPass || newPass.length < 6) {
+                showToast("Password must be at least 6 characters.", "error");
+                return;
+            }
+            if (newPass !== confPass) {
+                showToast("Passwords do not match.", "error");
+                return;
+            }
+
+            showLoading("Updating member password...");
+            const usersMap = getLocalStore('registered_users', {});
+            let userRec = usersMap[email];
+
+            if (!userRec) {
+                const member = orgMembers.find(m => m.email && m.email.toLowerCase() === email);
+                userRec = {
+                    uid: member?.uid || ('usr_' + Date.now().toString(36)),
+                    email,
+                    displayName: member?.displayName || email.split('@')[0],
+                    department: member?.department || 'Performance Marketing',
+                    role: member?.role || 'Member',
+                    phone: member?.phone || '',
+                    password: newPass,
+                    status: 'active'
+                };
+            } else {
+                userRec.password = newPass;
+            }
+
+            usersMap[email] = userRec;
+            setLocalStore('registered_users', usersMap);
+
+            await syncToServer({
+                users: { [email]: userRec }
+            });
+
+            hideLoading();
+            adminCloseResetPasswordModal();
+            showToast(`Password successfully reset for ${email}!`, "success");
+            renderAdminUsersTable();
+        }
+
+        function adminOpenEditMember(uid, email) {
+            const modal = document.getElementById('admin-edit-member-modal');
+            if (!modal) return;
+
+            const cleanEmail = (email || '').toLowerCase().trim();
+            const member = orgMembers.find(m => m.uid === uid || (m.email && m.email.toLowerCase() === cleanEmail)) || {};
+            const usersMap = getLocalStore('registered_users', {});
+            const userRec = usersMap[cleanEmail] || {};
+
+            document.getElementById('admin-edit-uid').value = uid || member.uid || '';
+            document.getElementById('admin-edit-email').value = cleanEmail;
+            document.getElementById('admin-edit-email-label').textContent = cleanEmail;
+            document.getElementById('admin-edit-name').value = member.displayName || userRec.displayName || '';
+            document.getElementById('admin-edit-dept').value = member.department || userRec.department || 'Performance Marketing';
+            document.getElementById('admin-edit-role').value = member.role || userRec.role || 'Member';
+            document.getElementById('admin-edit-phone').value = member.phone || userRec.phone || '';
+
+            modal.classList.remove('hidden');
+            document.getElementById('admin-edit-name').focus();
+            lucide.createIcons();
+        }
+
+        function adminCloseEditMemberModal() {
+            document.getElementById('admin-edit-member-modal')?.classList.add('hidden');
+        }
+
+        async function adminSaveEditMember(e) {
+            e.preventDefault();
+            const uid = document.getElementById('admin-edit-uid')?.value;
+            const email = (document.getElementById('admin-edit-email')?.value || '').toLowerCase().trim();
+            const name = (document.getElementById('admin-edit-name')?.value || '').trim();
+            const dept = document.getElementById('admin-edit-dept')?.value;
+            const role = document.getElementById('admin-edit-role')?.value;
+            const phone = (document.getElementById('admin-edit-phone')?.value || '').trim();
+
+            if (!name) {
+                showToast("Display name cannot be empty.", "error");
+                return;
+            }
+
+            showLoading("Saving member changes...");
+
+            const mIdx = orgMembers.findIndex(m => m.uid === uid || (m.email && m.email.toLowerCase() === email));
+            let memberObj;
+            if (mIdx >= 0) {
+                orgMembers[mIdx].displayName = name;
+                orgMembers[mIdx].department = dept;
+                orgMembers[mIdx].role = role;
+                orgMembers[mIdx].phone = phone;
+                memberObj = orgMembers[mIdx];
+            } else {
+                memberObj = {
+                    uid: uid || ('usr_' + Date.now().toString(36)),
+                    displayName: name,
+                    email,
+                    department: dept,
+                    role,
+                    phone,
+                    orgId: UNIFIED_ORG_ID,
+                    orgName: UNIFIED_ORG_NAME,
+                    status: 'online',
+                    joinedAt: new Date().toISOString()
+                };
+                orgMembers.push(memberObj);
+            }
+            setLocalStore('org_members', orgMembers);
+
+            const usersMap = getLocalStore('registered_users', {});
+            let userRec = usersMap[email];
+            if (userRec) {
+                userRec.displayName = name;
+                userRec.department = dept;
+                userRec.role = role;
+                userRec.phone = phone;
+                if (userRec.profile) {
+                    userRec.profile.displayName = name;
+                    userRec.profile.department = dept;
+                    userRec.profile.role = role;
+                    userRec.profile.phone = phone;
+                }
+            } else {
+                userRec = {
+                    uid: memberObj.uid,
+                    email,
+                    displayName: name,
+                    department: dept,
+                    role,
+                    phone,
+                    status: 'active',
+                    password: 'password123',
+                    profile: memberObj
+                };
+            }
+            usersMap[email] = userRec;
+            setLocalStore('registered_users', usersMap);
+
+            if (currentUser && (currentUser.uid === uid || currentUser.email.toLowerCase() === email)) {
+                currentUser.displayName = name;
+                currentUserProfile.displayName = name;
+                currentUserProfile.department = dept;
+                currentUserProfile.role = role;
+                currentUserProfile.phone = phone;
+                setLocalStore('current_user', currentUser);
+                setLocalStore('current_profile', currentUserProfile);
+                enterOrganizationWorkspace(UNIFIED_ORG_ID);
+            }
+
+            await syncToServer({
+                users: { [email]: userRec },
+                members: [memberObj]
+            });
+
+            hideLoading();
+            adminCloseEditMemberModal();
+            showToast(`Colleague profile updated successfully!`, "success");
+            renderAdminUsersTable();
+            renderTeamDirectory();
+            populateMemberDropdowns();
+        }
+
+        async function adminSubmitProvisionMember(e) {
+            e.preventDefault();
+            const name = (document.getElementById('admin-prov-name')?.value || '').trim();
+            const email = (document.getElementById('admin-prov-email')?.value || '').toLowerCase().trim();
+            const dept = document.getElementById('admin-prov-dept')?.value || 'Performance Marketing';
+            const role = document.getElementById('admin-prov-role')?.value || 'Member';
+            const phone = (document.getElementById('admin-prov-phone')?.value || '').trim();
+            const password = document.getElementById('admin-prov-password')?.value || '';
+
+            if (!name) {
+                showToast("Full name is required.", "error");
+                return;
+            }
+            if (!email.endsWith('@theebg.com')) {
+                showToast("Email must end with @theebg.com", "error");
+                return;
+            }
+            if (!password || password.length < 6) {
+                showToast("Initial password must be at least 6 characters.", "error");
+                return;
+            }
+
+            const usersMap = getLocalStore('registered_users', {});
+            if (usersMap[email]) {
+                showToast("An account with this email already exists.", "error");
+                return;
+            }
+
+            showLoading("Provisioning new member account...");
+
+            const uid = 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+            const memberProfile = {
+                uid,
+                displayName: name,
+                email,
+                role,
+                department: dept,
+                phone,
+                orgId: UNIFIED_ORG_ID,
+                orgName: UNIFIED_ORG_NAME,
+                status: 'online',
+                accountStatus: 'active',
+                joinedAt: new Date().toISOString()
+            };
+
+            const userRecord = {
+                uid,
+                email,
+                password,
+                displayName: name,
+                department: dept,
+                role,
+                phone,
+                status: 'active',
+                profile: memberProfile
+            };
+
+            usersMap[email] = userRecord;
+            setLocalStore('registered_users', usersMap);
+
+            orgMembers.push(memberProfile);
+            setLocalStore('org_members', orgMembers);
+
+            await syncToServer({
+                users: { [email]: userRecord },
+                members: [memberProfile]
+            });
+
+            document.getElementById('admin-provision-form')?.reset();
+            adminToggleProvisionForm(false);
+            hideLoading();
+            showToast(`Account provisioned successfully for ${name} (${email})!`, "success");
+            renderAdminUsersTable();
+            renderTeamDirectory();
+            populateMemberDropdowns();
+        }
+
+        async function adminDeleteMember(uid, email, name) {
+            if (!isCurrentUserAdmin()) {
+                showToast("Admin access required.", "error");
+                return;
+            }
+
+            if (currentUser && (currentUser.uid === uid || currentUser.email.toLowerCase() === email.toLowerCase())) {
+                showToast("You cannot delete your own active Admin account.", "error");
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to remove member ${name || email} and delete their account access? This action cannot be undone.`)) {
+                return;
+            }
+
+            showLoading("Deleting member account...");
+
+            const cleanEmail = (email || '').toLowerCase().trim();
+            const usersMap = getLocalStore('registered_users', {});
+            if (cleanEmail in usersMap) {
+                delete usersMap[cleanEmail];
+                setLocalStore('registered_users', usersMap);
+            }
+
+            orgMembers = orgMembers.filter(m => m.uid !== uid && (m.email || '').toLowerCase() !== cleanEmail);
+            setLocalStore('org_members', orgMembers);
+
+            await syncToServer({
+                deleteMemberUid: uid,
+                deleteUserEmail: cleanEmail,
+                members: orgMembers
+            });
+
+            hideLoading();
+            showToast(`Member ${name || cleanEmail} removed.`, "info");
+            renderAdminUsersTable();
+            renderTeamDirectory();
+            populateMemberDropdowns();
         }
         function isTaskOverdue(t) {
             if (!t.dueDate || t.status === 'Done') return false;

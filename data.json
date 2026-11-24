@@ -6,7 +6,78 @@
       "createdAt": "2026-11-24T00:00:00.000Z"
     }
   },
-  "members": [],
+  "members": [
+    {
+      "uid": "usr_mwuaxxlgfb60",
+      "displayName": "Hari Krishna",
+      "email": "hari@theebg.com",
+      "role": "Admin",
+      "department": "Performance Marketing",
+      "phone": "+91 98765 43210",
+      "orgId": "EBG-GROUP",
+      "orgName": "EBG Group",
+      "status": "online",
+      "joinedAt": "2026-11-24T06:16:49.492Z"
+    },
+    {
+      "uid": "usr_mwubswpyy159",
+      "displayName": "Rohit Verma",
+      "email": "rohit@theebg.com",
+      "role": "Graphic Design Team Lead",
+      "department": "Graphic Designing",
+      "phone": "+91 91234 56789",
+      "orgId": "EBG-GROUP",
+      "orgName": "EBG Group",
+      "status": "online",
+      "accountStatus": "active",
+      "joinedAt": "2026-11-24T06:40:54.694Z"
+    }
+  ],
   "tasks": [],
-  "users": {}
+  "users": {
+    "hari@theebg.com": {
+      "uid": "usr_mwuaxxlgfb60",
+      "email": "hari@theebg.com",
+      "password": "password123",
+      "displayName": "Hari Krishna",
+      "department": "Performance Marketing",
+      "role": "Admin",
+      "phone": "+91 98765 43210",
+      "profile": {
+        "uid": "usr_mwuaxxlgfb60",
+        "displayName": "Hari Krishna",
+        "email": "hari@theebg.com",
+        "role": "Admin",
+        "department": "Performance Marketing",
+        "phone": "+91 98765 43210",
+        "orgId": "EBG-GROUP",
+        "orgName": "EBG Group",
+        "status": "online",
+        "joinedAt": "2026-11-24T06:16:49.492Z"
+      }
+    },
+    "rohit@theebg.com": {
+      "uid": "usr_mwubswpyy159",
+      "email": "rohit@theebg.com",
+      "password": "rohitnewpass",
+      "displayName": "Rohit Verma",
+      "department": "Graphic Designing",
+      "role": "Graphic Design Team Lead",
+      "phone": "+91 91234 56789",
+      "status": "active",
+      "profile": {
+        "uid": "usr_mwubswpyy159",
+        "displayName": "Rohit Verma",
+        "email": "rohit@theebg.com",
+        "role": "Graphic Design Team Lead",
+        "department": "Graphic Designing",
+        "phone": "+91 91234 56789",
+        "orgId": "EBG-GROUP",
+        "orgName": "EBG Group",
+        "status": "online",
+        "accountStatus": "active",
+        "joinedAt": "2026-11-24T06:40:54.694Z"
+      }
+    }
+  }
 }

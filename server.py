@@ -112,6 +112,12 @@ class EBGHandler(http.server.SimpleHTTPRequestHandler):
                 if "deleteTaskId" in patch:
                     current["tasks"] = [t for t in current["tasks"] if t.get("id") != patch["deleteTaskId"]]
 
+                if "deleteMemberUid" in patch:
+                    current["members"] = [m for m in current["members"] if m.get("uid") != patch["deleteMemberUid"]]
+
+                if "deleteUserEmail" in patch and patch["deleteUserEmail"] in current.get("users", {}):
+                    del current["users"][patch["deleteUserEmail"]]
+
                 if "users" in patch and isinstance(patch["users"], dict):
                     current["users"].update(patch["users"])
 
