@@ -407,7 +407,7 @@
             <!-- Left Slim Icon Rail (64px collapsed, 224px expanded) -->
             <aside id="left-icon-rail" class="w-16 bg-white dark:bg-[#111113] border-r border-[#E4E4E7] dark:border-[#27272A] flex flex-col justify-between py-3 shrink-0 transition-all duration-200 select-none z-20">
                 <div class="space-y-1 px-2.5">
-                    <!-- Overview (KPI + Trend Chart + Board) -->
+                    <!-- Overview (KPI + Trend Chart + Team Productivity) -->
                     <button onclick="switchMainTab('overview')" id="rail-overview" class="rail-btn w-full h-10 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] flex items-center gap-3 px-3 transition" title="Overview & Velocity">
                         <i data-lucide="layout-grid" class="w-4 h-4 shrink-0"></i>
                         <span class="rail-label hidden text-xs font-semibold truncate">Overview</span>
@@ -423,6 +423,12 @@
                     <button onclick="switchMainTab('list')" id="rail-list" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Structured Table">
                         <i data-lucide="table-2" class="w-4 h-4 shrink-0"></i>
                         <span class="rail-label hidden text-xs font-medium truncate">Task Table</span>
+                    </button>
+
+                    <!-- Brand Creatives & Reels Studio -->
+                    <button onclick="switchMainTab('creatives')" id="rail-creatives" class="rail-btn w-full h-10 rounded-full text-[#71717A] dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center gap-3 px-3 transition" title="Brand Creatives & Reels">
+                        <i data-lucide="clapperboard" class="w-4 h-4 shrink-0"></i>
+                        <span class="rail-label hidden text-xs font-medium truncate">Creatives &amp; Reels</span>
                     </button>
 
                     <!-- Team Directory & Workload -->
@@ -558,6 +564,16 @@
                             <option value="Low">Low</option>
                         </select>
 
+                        <!-- Brand Filter (Brand-wise segregation) -->
+                        <select id="brand-filter" onchange="renderAll()" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] text-xs font-medium text-[#18181B] dark:text-zinc-200 outline-none">
+                            <option value="all">All Brands</option>
+                            <option value="EBG Performance">EBG Performance</option>
+                            <option value="EBG Retail">EBG Retail</option>
+                            <option value="Brand Alpha">Brand Alpha</option>
+                            <option value="Brand Beta">Brand Beta</option>
+                            <option value="Brand Gamma">Brand Gamma</option>
+                        </select>
+
                         <button onclick="toggleMyTasksFilter()" id="pill-filter-mine" class="px-3 py-1.5 rounded-lg border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
                             Assigned to Me
                         </button>
@@ -567,100 +583,176 @@
                         </button>
                     </div>
 
-                    <!-- View Switcher Pills -->
+                    <!-- View Switcher Pills: Each button leads to a dedicated distinct screen -->
                     <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg">
                         <button onclick="switchMainTab('overview')" id="view-pill-overview" class="px-3 py-1 rounded-md text-xs font-semibold bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">Overview</button>
                         <button onclick="switchMainTab('board')" id="view-pill-board" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Board</button>
                         <button onclick="switchMainTab('list')" id="view-pill-list" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Table</button>
+                        <button onclick="switchMainTab('creatives')" id="view-pill-creatives" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Creatives &amp; Reels</button>
                         <button onclick="switchMainTab('team')" id="view-pill-team" class="px-3 py-1 rounded-md text-xs font-medium text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Team</button>
                     </div>
                 </div>
 
                 <!-- ========================================================= -->
-                <!-- SEGMENTED 7-COLUMN KPI CARD + INTERACTIVE SVG TREND CHART -->
+                <!-- SCREEN 1: DEDICATED WORKSPACE OVERVIEW & ANALYTICS        -->
                 <!-- ========================================================= -->
-                <section id="overview-analytics-card" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden shadow-2xs">
+                <section id="section-overview" class="space-y-5">
                     
-                    <!-- 7-Column Segmented KPI Strip -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] dark:divide-[#27272A] border-b border-[#E4E4E7] dark:border-[#27272A]">
-                        
-                        <button type="button" onclick="selectKpiMetric('total')" id="kpi-seg-total" class="kpi-segment active text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Total Tasks</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-total">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('todo')" id="kpi-seg-todo" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">To Do</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-todo">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('inprogress')" id="kpi-seg-inprogress" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Progress</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-inprogress">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('review')" id="kpi-seg-review" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Review</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-review">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('done')" id="kpi-seg-done" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Completed</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-done">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('overdue')" id="kpi-seg-overdue" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Overdue</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-overdue">0</div>
-                        </button>
-
-                        <button type="button" onclick="selectKpiMetric('sla')" id="kpi-seg-sla" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none col-span-2 sm:col-span-1">
-                            <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">On-Time SLA</div>
-                            <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-sla">100%</div>
-                        </button>
-
+                    <!-- 7-Column Segmented KPI Card + Interactive SVG Trend Chart -->
+                    <div id="overview-analytics-card" class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden shadow-2xs">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-[#E4E4E7] dark:divide-[#27272A] border-b border-[#E4E4E7] dark:border-[#27272A]">
+                            <button type="button" onclick="selectKpiMetric('total')" id="kpi-seg-total" class="kpi-segment active text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Total Tasks</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-total">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('todo')" id="kpi-seg-todo" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">To Do</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-todo">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('inprogress')" id="kpi-seg-inprogress" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Progress</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-inprogress">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('review')" id="kpi-seg-review" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">In Review</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-review">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('done')" id="kpi-seg-done" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Completed</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-done">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('overdue')" id="kpi-seg-overdue" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">Overdue</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-overdue">0</div>
+                            </button>
+                            <button type="button" onclick="selectKpiMetric('sla')" id="kpi-seg-sla" class="kpi-segment text-left p-4 sm:p-5 hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 focus:outline-none col-span-2 sm:col-span-1">
+                                <div class="text-xs font-medium text-[#71717A] dark:text-zinc-400 metric-label-dashed">On-Time SLA</div>
+                                <div class="text-2xl sm:text-[26px] font-bold text-[#18181B] dark:text-white mt-2 tracking-tight" id="kpi-val-sla">100%</div>
+                            </button>
+                        </div>
+                        <div class="p-4 sm:p-6">
+                            <div class="relative w-full h-52" id="chart-wrapper">
+                                <svg id="velocity-svg-chart" class="w-full h-full overflow-visible" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
+                                <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-[#111113] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-md z-10 border border-zinc-700"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-[#71717A]">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3.5 h-0.5 bg-[#111113] dark:bg-white inline-block"></span>
+                                    <span id="chart-legend-label">Total Tasks &middot; Live Workspace Velocity</span>
+                                </div>
+                                <span id="chart-summary-note">Real-time team activity</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Interactive SVG Trend Line Chart (Obsidian Black / Charcoal Stroke) -->
-                    <div class="p-4 sm:p-6">
-                        <div class="relative w-full h-52" id="chart-wrapper">
-                            <svg id="velocity-svg-chart" class="w-full h-full overflow-visible" viewBox="0 0 900 190" preserveAspectRatio="none"></svg>
-                            <!-- Hover Tooltip -->
-                            <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-[#111113] text-white text-[11px] font-medium px-2.5 py-1.5 rounded-lg shadow-md z-10 border border-zinc-700"></div>
-                        </div>
-                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-[11px] text-[#71717A]">
-                            <div class="flex items-center gap-2">
-                                <span class="w-3.5 h-0.5 bg-[#111113] dark:bg-white inline-block"></span>
-                                <span id="chart-legend-label">Total Tasks &middot; Live Workspace Velocity</span>
+                    <!-- Department & Brand Overview Cards (3 Cards) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('creatives')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                                    <i data-lucide="clapperboard" class="w-4 h-4"></i> Graphic Designing &amp; Reels
+                                </span>
+                                <span id="overview-badge-design" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 rounded-full">0 Tasks</span>
                             </div>
-                            <span id="chart-summary-note">Real-time team activity</span>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Reels, carousels, and creative assets with Google Drive content briefs &amp; submission links.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>Drive links &amp; brand specs</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Studio <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('board')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                                    <i data-lucide="trending-up" class="w-4 h-4"></i> Performance Marketing
+                                </span>
+                                <span id="overview-badge-pm" class="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 rounded-full">0 Tasks</span>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Paid search, social, SQR audits, campaign launches, and client ROAS tracking.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>SLA schedules &amp; delegation</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Board <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col justify-between cursor-pointer hover:border-[#111113] dark:hover:border-white transition" onclick="switchMainTab('list')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <i data-lucide="code-2" class="w-4 h-4"></i> Web Developer
+                                </span>
+                                <span id="overview-badge-web" class="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-full">0 Tasks</span>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-zinc-400 mb-3">Landing pages, CRO experiments, speed optimization, and front-end implementations.</p>
+                            <div class="flex items-center justify-between text-[11px] text-zinc-500 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                                <span>Code deliverables</span>
+                                <span class="font-semibold text-[#111113] dark:text-white flex items-center gap-0.5">Open Table <i data-lucide="chevron-right" class="w-3 h-3"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Member Productivity Matrix (with Date Range Filter) -->
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                            <div>
+                                <h3 class="text-sm font-bold text-[#18181B] dark:text-white flex items-center gap-2">
+                                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                                    <span>Team Member Productivity Analytics</span>
+                                </h3>
+                                <p class="text-[11px] text-[#71717A] dark:text-zinc-400">View tasks assigned, completed, pending, and productivity % per team member in the selected date window</p>
+                            </div>
+                            <!-- Date Range Filter Selector -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg border border-[#E4E4E7] dark:border-[#27272A]">
+                                    <button type="button" onclick="setProductivityRange('all')" id="range-btn-all" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition">All Time</button>
+                                    <button type="button" onclick="setProductivityRange('today')" id="range-btn-today" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Today</button>
+                                    <button type="button" onclick="setProductivityRange('yesterday')" id="range-btn-yesterday" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">Yesterday</button>
+                                    <button type="button" onclick="setProductivityRange('week')" id="range-btn-week" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">This Week</button>
+                                    <button type="button" onclick="setProductivityRange('month')" id="range-btn-month" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition">30 Days</button>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-[11px]">
+                                    <input type="date" id="overview-start-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
+                                    <span class="text-zinc-400">to</span>
+                                    <input type="date" id="overview-end-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-[11px] outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-[11px] font-semibold text-[#71717A] dark:text-zinc-400 border-b border-zinc-100 dark:border-zinc-800">
+                                        <th class="py-2.5 px-3">Team Member</th>
+                                        <th class="py-2.5 px-3">Department &amp; Role</th>
+                                        <th class="py-2.5 px-3 text-center">Assigned</th>
+                                        <th class="py-2.5 px-3 text-center">Completed</th>
+                                        <th class="py-2.5 px-3 text-center">Pending</th>
+                                        <th class="py-2.5 px-3 text-center">Overdue</th>
+                                        <th class="py-2.5 px-3">Productivity</th>
+                                        <th class="py-2.5 px-3 text-right">Follow-up</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="overview-productivity-tbody" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
 
-                <!-- EMPTY WORKSPACE ONBOARDING CALLOUT (Automatically hides once tasks are created) -->
-                <div id="empty-workspace-callout" class="hidden bg-white dark:bg-[#111113] rounded-xl border border-dashed border-[#D4D4D8] dark:border-[#3F3F46] p-8 text-center">
-                    <div class="w-11 h-11 rounded-full bg-[#F4F4F5] dark:bg-[#18181B] text-[#111113] dark:text-white flex items-center justify-center mx-auto mb-3 border border-[#E4E4E7] dark:border-[#27272A]">
-                        <i data-lucide="clipboard-plus" class="w-5 h-5"></i>
-                    </div>
-                    <h3 class="text-base font-semibold text-[#18181B] dark:text-white">No tasks created in this workspace yet</h3>
-                    <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] max-w-md mx-auto mt-1 mb-4">
-                        Start assigning performance marketing deliverables to your team members and tracking execution live.
-                    </p>
-                    <div class="flex items-center justify-center gap-2.5">
-                        <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign First Task
-                        </button>
-                    </div>
-                </div>
-
                 <!-- ========================================================= -->
-                <!-- KANBAN EXECUTION BOARD SECTION                            -->
+                <!-- SCREEN 2: DEDICATED KANBAN TASK EXECUTION BOARD           -->
                 <!-- ========================================================= -->
-                <section id="section-kanban" class="space-y-3">
+                <section id="section-kanban" class="hidden space-y-3">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Task Execution Board</h2>
-                        <span class="text-xs text-[#71717A]">Drag &amp; drop cards across stages or click any task to inspect</span>
+                        <div>
+                            <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Task Execution Board</h2>
+                            <span class="text-xs text-[#71717A]">Drag &amp; drop deliverables across stages or click any card to inspect Drive links &amp; brief</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openCreateTaskModal()" class="px-3 py-1.5 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
@@ -727,12 +819,17 @@
                 </section>
 
                 <!-- ========================================================= -->
-                <!-- STRUCTURED TABLE VIEW SECTION                             -->
+                <!-- SCREEN 3: DEDICATED STRUCTURED TASK LEDGER                -->
                 <!-- ========================================================= -->
                 <section id="section-table" class="hidden space-y-3">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Structured Task Ledger</h2>
-                        <button onclick="exportTasksToCSV()" class="text-xs font-semibold text-[#111113] dark:text-white underline hover:opacity-75">Export to Excel (CSV)</button>
+                        <div>
+                            <h2 class="text-sm font-semibold text-[#18181B] dark:text-white">Structured Task Ledger</h2>
+                            <p class="text-xs text-[#71717A]">Comprehensive deliverables table with brand briefs, drive links, and deadlines</p>
+                        </div>
+                        <button onclick="exportTasksToCSV()" class="px-3.5 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold text-[#18181B] dark:text-zinc-200 transition flex items-center gap-1.5">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export to Excel (CSV)
+                        </button>
                     </div>
 
                     <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden">
@@ -741,11 +838,13 @@
                                 <thead>
                                     <tr class="bg-[#F8F9FA] dark:bg-[#18181B] border-b border-[#E4E4E7] dark:border-[#27272A] text-[11px] font-semibold text-[#71717A] dark:text-zinc-400">
                                         <th class="py-3 px-4">Task ID</th>
-                                        <th class="py-3 px-4">Deliverable &amp; Department</th>
+                                        <th class="py-3 px-4">Brand</th>
+                                        <th class="py-3 px-4">Deliverable &amp; Format</th>
+                                        <th class="py-3 px-4">Content Brief</th>
+                                        <th class="py-3 px-4">Submitted Drive Link</th>
                                         <th class="py-3 px-4">Assignee</th>
                                         <th class="py-3 px-4">Priority</th>
                                         <th class="py-3 px-4">Status</th>
-                                        <th class="py-3 px-4">Checklist</th>
                                         <th class="py-3 px-4">Due Date</th>
                                         <th class="py-3 px-4 text-right">Details</th>
                                     </tr>
@@ -759,18 +858,117 @@
                 </section>
 
                 <!-- ========================================================= -->
-                <!-- TEAM DIRECTORY & WORKLOAD SECTION                         -->
+                <!-- SCREEN 4: DEDICATED BRAND CREATIVES & REELS STUDIO        -->
+                <!-- ========================================================= -->
+                <section id="section-creatives" class="hidden space-y-4">
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                <h2 class="text-base font-bold text-[#18181B] dark:text-white">Brand-Wise Creatives &amp; Reels Studio</h2>
+                            </div>
+                            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-1">
+                                Performance Marketer briefs, Graphic Designer creative submissions, and Reels production pipeline by brand.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2.5 self-start sm:self-auto">
+                            <button onclick="openCreateTaskModalForDesign()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Request Creative / Reel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Creative Pipeline Metrics -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-white dark:bg-[#111113] p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A]">
+                            <span class="text-[11px] text-[#71717A] font-medium block">Total Creatives / Reels</span>
+                            <span id="studio-metric-total" class="text-xl font-bold text-[#18181B] dark:text-white mt-1 block">0</span>
+                        </div>
+                        <div class="bg-white dark:bg-[#111113] p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A]">
+                            <span class="text-[11px] text-[#71717A] font-medium block">Reels (9:16) Pipeline</span>
+                            <span id="studio-metric-reels" class="text-xl font-bold text-rose-600 dark:text-rose-400 mt-1 block">0</span>
+                        </div>
+                        <div class="bg-white dark:bg-[#111113] p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A]">
+                            <span class="text-[11px] text-[#71717A] font-medium block">Drive Links Submitted</span>
+                            <span id="studio-metric-submitted" class="text-xl font-bold text-[#1E8E3E] dark:text-emerald-400 mt-1 block">0</span>
+                        </div>
+                        <div class="bg-white dark:bg-[#111113] p-3.5 rounded-xl border border-[#E4E4E7] dark:border-[#27272A]">
+                            <span class="text-[11px] text-[#71717A] font-medium block">Pending Designer Submission</span>
+                            <span id="studio-metric-pending" class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 block">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Brand-Wise Creative Sections Container -->
+                    <div id="creatives-brand-container" class="space-y-4">
+                        <!-- Populated dynamically brand by brand -->
+                    </div>
+                </section>
+
+                <!-- ========================================================= -->
+                <!-- SCREEN 5: DEDICATED TEAM DIRECTORY & PRODUCTIVITY SCREEN  -->
                 <!-- ========================================================= -->
                 <section id="section-team" class="hidden space-y-4">
                     <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h2 class="text-base font-semibold text-[#18181B] dark:text-white">Registered Team Members &amp; Workload</h2>
-                            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">All members who signed up and joined this workspace appear automatically below.</p>
+                            <h2 class="text-base font-semibold text-[#18181B] dark:text-white">Team Directory &amp; Member Productivity</h2>
+                            <p class="text-xs text-[#71717A] dark:text-[#A1A1AA] mt-0.5">Track tasks assigned, completed, pending, and individual velocity across date windows.</p>
                         </div>
                         <button onclick="openCreateTaskModal()" class="px-4 py-2 rounded-lg bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold transition flex items-center gap-1.5 self-start sm:self-auto">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> Assign Task
                         </button>
                     </div>
+
+                    <!-- Interactive Productivity Date Range Filter Bar for Team View -->
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4 text-indigo-600 dark:text-indigo-400"></i>
+                            <span class="text-xs font-semibold text-[#18181B] dark:text-zinc-200">Productivity Date Window:</span>
+                            <span id="team-active-range-label" class="text-xs font-medium text-[#71717A]">All Time</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex items-center gap-1 bg-[#F4F4F5] dark:bg-[#18181B] p-1 rounded-lg border border-[#E4E4E7] dark:border-[#27272A]">
+                                <button type="button" onclick="setProductivityRange('all')" id="team-range-btn-all" class="px-2.5 py-1 text-[11px] font-semibold rounded bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs">All</button>
+                                <button type="button" onclick="setProductivityRange('today')" id="team-range-btn-today" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B]">Today</button>
+                                <button type="button" onclick="setProductivityRange('yesterday')" id="team-range-btn-yesterday" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B]">Yesterday</button>
+                                <button type="button" onclick="setProductivityRange('week')" id="team-range-btn-week" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B]">This Week</button>
+                                <button type="button" onclick="setProductivityRange('month')" id="team-range-btn-month" class="px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B]">30 Days</button>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[11px]">
+                                <input type="date" id="team-start-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[11px] outline-none">
+                                <span class="text-zinc-400">to</span>
+                                <input type="date" id="team-end-date" onchange="applyCustomProductivityDateRange()" class="px-2 py-1 rounded-md border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-[11px] outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Productivity Summary Table -->
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-[#F8F9FA] dark:bg-[#18181B] text-[11px] font-semibold text-[#71717A] dark:text-zinc-400 border-b border-[#E4E4E7] dark:border-[#27272A]">
+                                        <th class="py-3 px-4">Team Colleague</th>
+                                        <th class="py-3 px-4">Department &amp; Role</th>
+                                        <th class="py-3 px-4 text-center">Assigned Tasks</th>
+                                        <th class="py-3 px-4 text-center">Completed</th>
+                                        <th class="py-3 px-4 text-center">Pending / In Progress</th>
+                                        <th class="py-3 px-4 text-center">Overdue</th>
+                                        <th class="py-3 px-4">Productivity Rate</th>
+                                        <th class="py-3 px-4 text-right">Direct Alert</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="team-productivity-table-body" class="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Member Detail Cards Grid -->
+                    <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamic member cards -->
+                    </div>
+                </section>
 
                     <div id="team-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Dynamic member cards -->
@@ -804,17 +1002,61 @@
             <form id="create-task-form" onsubmit="handleCreateTask(event)" class="p-6 space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Task Title *</label>
-                    <input type="text" id="task-title" required placeholder="e.g. Launch Q4 Search Campaign & Audit SQR" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none">
+                    <input type="text" id="task-title" required placeholder="e.g. Q4 Instagram Reel Hook &amp; High-ROAS Story Ad" class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Description &amp; Instructions</label>
-                    <textarea id="task-desc" rows="3" placeholder="Provide brief, deliverables, links or SLA targets..." class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none"></textarea>
+                    <textarea id="task-desc" rows="3" placeholder="Provide copy brief, reel storyline, target audience, dimensions..." class="w-full px-3.5 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-sm focus:border-[#111113] dark:focus:border-white outline-none"></textarea>
+                </div>
+
+                <!-- Brand & Format Selection (Brand-Wise Organization) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Brand / Client *</label>
+                        <select id="task-brand" onchange="toggleCustomBrandInput(this.value)" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <option value="EBG Performance">EBG Performance</option>
+                            <option value="EBG Retail">EBG Retail</option>
+                            <option value="Brand Alpha">Brand Alpha</option>
+                            <option value="Brand Beta">Brand Beta</option>
+                            <option value="Brand Gamma">Brand Gamma</option>
+                            <option value="__custom__">+ Enter Custom Brand...</option>
+                        </select>
+                        <input type="text" id="task-custom-brand" placeholder="Type custom brand name..." class="hidden mt-1.5 w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B] text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Deliverable Format / Type</label>
+                        <select id="task-format" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <option value="Static Creative (Post/Banner)">Static Creative (Post/Banner)</option>
+                            <option value="Reel / Video (9:16)" selected>Reel / Video (9:16)</option>
+                            <option value="Carousel (Multi-Slide)">Carousel (Multi-Slide)</option>
+                            <option value="Story / Motion Ad">Story / Motion Ad</option>
+                            <option value="Web / Landing Page Asset">Web / Landing Page Asset</option>
+                            <option value="Performance Campaign / SQR">Performance Campaign / SQR</option>
+                            <option value="General Deliverable">General Deliverable</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Content Document Drive Link (Performance Marketer Brief) -->
+                <div class="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 space-y-1.5">
+                    <label class="block text-xs font-semibold text-blue-950 dark:text-blue-200 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-600"></i>
+                            Content Document / Brief Link (Google Drive / Docs)
+                        </span>
+                        <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">Shared with Design Team</span>
+                    </label>
+                    <input type="url" id="task-content-drive" placeholder="https://docs.google.com/... or https://drive.google.com/..." class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs outline-none">
+                    <p class="text-[10px] text-[#71717A] dark:text-zinc-400">Performance Marketer: paste the Google Drive or Docs link with creative copy, brief, script, or references.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Assign To *</label>
+                        <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1 flex items-center justify-between">
+                            <span>Assign To *</span>
+                            <span class="text-[10px] text-[#71717A]">Assign to Lead or Member</span>
+                        </label>
                         <select id="task-assignee" required class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
                             <!-- Populated dynamically -->
                         </select>
@@ -838,8 +1080,8 @@
                     <div>
                         <label class="block text-xs font-semibold text-[#18181B] dark:text-zinc-300 mb-1">Department / Channel</label>
                         <select id="task-tag" class="w-full px-3 py-2 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] text-xs font-medium bg-white dark:bg-[#18181B] focus:border-[#111113] outline-none">
+                            <option value="Graphic Designing" selected>Graphic Designing</option>
                             <option value="Performance Marketing">Performance Marketing</option>
-                            <option value="Graphic Designing">Graphic Designing</option>
                             <option value="Web Developer">Web Developer</option>
                         </select>
                     </div>
@@ -911,8 +1153,10 @@
             
             <!-- Drawer Header -->
             <div class="px-6 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between bg-[#F8F9FA] dark:bg-[#18181B]">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                     <span id="detail-code" class="px-2 py-0.5 rounded font-mono text-xs font-bold bg-[#111113] dark:bg-white text-white dark:text-[#111113]">EBG-001</span>
+                    <span id="detail-brand" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40">EBG Performance</span>
+                    <span id="detail-format" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40">Reel / Video</span>
                     <span id="detail-tag" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#F4F4F5] dark:bg-zinc-800 text-[#18181B] dark:text-zinc-200 border border-[#E4E4E7] dark:border-zinc-700">Department</span>
                     <span id="detail-priority" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">High</span>
                 </div>
@@ -935,6 +1179,82 @@
                 <div>
                     <h2 id="detail-title" class="text-lg font-bold text-[#18181B] dark:text-white leading-snug">Task Title</h2>
                     <p id="detail-meta" class="text-xs text-[#71717A] mt-1">Assigned by User &bull; Due Date</p>
+                </div>
+
+                <!-- Google Drive Links Section: Content Brief Doc & Deliverable Submission -->
+                <div class="space-y-3">
+                    <!-- 1. Content Document / Brief Link (Shared by Performance Marketer) -->
+                    <div id="detail-content-drive-box" class="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
+                                <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i> Content Document / Brief (Google Drive)
+                            </span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-semibold">Performance Brief</span>
+                        </div>
+                        <div id="detail-content-drive-display" class="flex items-center justify-between gap-2 pt-1">
+                            <span id="detail-content-drive-link-text" class="text-xs text-blue-700 dark:text-blue-300 truncate max-w-xs">No link provided yet</span>
+                            <a id="detail-content-drive-btn" href="#" target="_blank" class="hidden px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open Brief Doc
+                            </a>
+                        </div>
+                        <div class="pt-2 border-t border-blue-200/40 dark:border-blue-900/40 flex gap-2">
+                            <input type="url" id="detail-content-drive-input" placeholder="Paste/Update Google Drive or Docs link..." class="flex-1 px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs outline-none">
+                            <button type="button" onclick="updateContentDriveLinkFromDrawer()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition">Save</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Deliverable / Reel Submission Link (Submitted by Graphic Designer) -->
+                    <div id="detail-submission-drive-box" class="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/50 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                                <i data-lucide="clapperboard" class="w-4 h-4 text-emerald-600"></i> Creative / Reel Submission (Drive Link)
+                            </span>
+                            <span id="detail-submission-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-[#137333] dark:text-emerald-300 font-semibold">Pending Submission</span>
+                        </div>
+                        <div id="detail-submission-drive-display" class="hidden flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white/80 dark:bg-zinc-900/80 border border-emerald-200/60">
+                            <div class="min-w-0">
+                                <span class="text-[10px] text-zinc-500 block">Submitted Drive Deliverable:</span>
+                                <span id="detail-submission-drive-text" class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 truncate block">https://drive.google.com/...</span>
+                            </div>
+                            <a id="detail-submission-drive-btn" href="#" target="_blank" class="px-3 py-1.5 bg-[#1E8E3E] hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs shrink-0">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> View Creative
+                            </a>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="block text-[11px] font-semibold text-emerald-950 dark:text-emerald-200">Graphic Designers: Submit / Update Creative Drive Link</label>
+                            <div class="flex gap-2">
+                                <input type="url" id="detail-submission-drive-input" placeholder="Paste Google Drive, Reel MP4 link, Figma, or Canva URL..." class="flex-1 px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs outline-none">
+                                <button type="button" onclick="submitCreativeDriveLinkFromDrawer()" class="px-3.5 py-1.5 bg-[#1E8E3E] hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1 shrink-0">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Submit Link
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Team Lead Task Distribution & Delegation Box -->
+                    <div id="detail-delegation-box" class="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/50 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-amber-600"></i> Team Lead Task Distribution
+                            </span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-semibold">Lead &rarr; Member</span>
+                        </div>
+                        <div id="detail-delegation-status" class="hidden text-xs text-amber-900 dark:text-amber-200 bg-white/70 dark:bg-zinc-900/60 p-2.5 rounded-lg border border-amber-200/60">
+                            <!-- Populated with current delegation info -->
+                        </div>
+                        <div class="space-y-2 pt-1">
+                            <label class="block text-[11px] font-semibold text-amber-950 dark:text-amber-200">Distribute to Graphic Designer / Team Member:</label>
+                            <select id="detail-delegate-select" class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs font-medium outline-none">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <input type="text" id="detail-delegate-note" placeholder="Instructions for designer (e.g. follow Brand Alpha 9:16 guidelines, due Thursday)..." class="w-full px-3 py-1.5 rounded-lg border border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#111113] text-xs outline-none">
+                            <div class="flex items-center justify-end">
+                                <button type="button" onclick="delegateTaskFromDrawer()" class="px-3.5 py-1.5 bg-[#111113] hover:bg-[#27272A] dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-[#111113] text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                                    <i data-lucide="send" class="w-3.5 h-3.5"></i> Distribute Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Status, Assignee, Priority & Due Date Controls -->
@@ -1240,7 +1560,15 @@
             selectGoogleAccount,
             toggleCustomGoogleAccountInput,
             configureGoogleClientIdPrompt,
-            renderGoogleAccountList
+            renderGoogleAccountList,
+            toggleCustomBrandInput,
+            openCreateTaskModalForDesign,
+            updateContentDriveLinkFromDrawer,
+            submitCreativeDriveLinkFromDrawer,
+            promptSubmitDriveLink,
+            delegateTaskFromDrawer,
+            setProductivityRange,
+            applyCustomProductivityDateRange
         });
 
         // 3. Theme Initialization
@@ -2048,6 +2376,7 @@
             const dept = document.getElementById('header-dept-filter').value;
             const memberId = document.getElementById('header-member-filter').value;
             const priority = document.getElementById('priority-filter').value;
+            const brand = document.getElementById('brand-filter')?.value || 'all';
             const timeframe = document.getElementById('timeframe-filter').value;
 
             const todayStr = new Date().toISOString().split('T')[0];
@@ -2057,9 +2386,10 @@
 
             return orgTasks.filter(t => {
                 if (dept !== 'all' && t.tag !== dept) return false;
+                if (brand !== 'all' && (t.brand || 'EBG Performance') !== brand) return false;
                 if (memberId !== 'all' && t.assigneeId !== memberId) return false;
                 if (priority !== 'all' && t.priority !== priority) return false;
-                if (filterOnlyMine && t.assigneeId !== currentUser.uid) return false;
+                if (filterOnlyMine && t.assigneeId !== currentUser.uid && t.delegatedTo !== currentUserProfile?.displayName) return false;
                 if (filterOnlyUrgent && t.priority !== 'Urgent' && !isTaskOverdue(t)) return false;
 
                 if (timeframe === 'overdue' && !isTaskOverdue(t)) return false;
@@ -2067,7 +2397,7 @@
                 if (timeframe === 'week' && (!t.dueDate || t.dueDate < todayStr || t.dueDate > nextWeekStr)) return false;
 
                 if (search) {
-                    const hay = `${t.code || ''} ${t.title || ''} ${t.description || ''} ${t.assigneeName || ''} ${t.tag || ''}`.toLowerCase();
+                    const hay = `${t.code || ''} ${t.title || ''} ${t.description || ''} ${t.assigneeName || ''} ${t.tag || ''} ${t.brand || ''} ${t.format || ''} ${t.delegatedTo || ''}`.toLowerCase();
                     if (!hay.includes(search)) return false;
                 }
                 return true;
@@ -2080,7 +2410,22 @@
             updateKpiStrip(filtered);
             renderTrendChart(filtered);
             renderKanbanAndTable(filtered);
+            renderProductivityMatrix();
+            renderCreativesStudio(filtered);
             renderTeamDirectory();
+
+            // Update Overview Department Badges
+            const designCount = orgTasks.filter(t => t.tag === 'Graphic Designing').length;
+            const pmCount = orgTasks.filter(t => t.tag === 'Performance Marketing').length;
+            const webCount = orgTasks.filter(t => t.tag === 'Web Developer').length;
+
+            const badgeDesign = document.getElementById('overview-badge-design');
+            const badgePm = document.getElementById('overview-badge-pm');
+            const badgeWeb = document.getElementById('overview-badge-web');
+
+            if (badgeDesign) badgeDesign.textContent = `${designCount} Deliverables`;
+            if (badgePm) badgePm.textContent = `${pmCount} Campaigns`;
+            if (badgeWeb) badgeWeb.textContent = `${webCount} Assets`;
 
             const emptyCallout = document.getElementById('empty-workspace-callout');
             if (orgTasks.length === 0 && activeMainTab !== 'team') {
@@ -2345,21 +2690,61 @@
             const subtasks = task.subtasks || [];
             const doneSub = subtasks.filter(s => s.done).length;
             const commentsCount = (task.comments || []).length;
+            const isReel = (task.format || '').includes('Reel') || (task.title || '').toLowerCase().includes('reel');
 
             card.innerHTML = `
-                <div class="flex items-center justify-between gap-2 mb-1.5">
-                    <span class="font-mono text-[10px] font-semibold text-[#71717A]">${escapeHtml(task.code || 'EBG')} &middot; ${escapeHtml(task.tag || 'General')}</span>
+                <!-- Top Meta: Code, Brand & Priority -->
+                <div class="flex items-center justify-between gap-1.5 mb-1.5 flex-wrap">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-mono text-[10px] font-semibold text-[#71717A]">${escapeHtml(task.code || 'EBG')}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50">${escapeHtml(task.brand || 'EBG Performance')}</span>
+                        ${task.format ? `
+                            <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold ${isReel ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}">
+                                ${escapeHtml(isReel ? 'Reel 9:16' : task.format.split(' ')[0])}
+                            </span>
+                        ` : ''}
+                    </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getPriorityBadgeClass(task.priority)}">${escapeHtml(task.priority)}</span>
                 </div>
+
+                <!-- Scheduled Release Tag -->
                 ${(task.status === 'Scheduled' || task.isScheduled || task.scheduledDate || (task.recurrence && task.recurrence !== 'none')) ? `
                     <div class="flex items-center gap-1.5 text-[10px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200/60 dark:border-indigo-800/40 w-fit mb-2">
                         <i data-lucide="calendar-clock" class="w-3 h-3 text-indigo-600 dark:text-indigo-400"></i>
                         <span>Scheduled: ${formatScheduledDateTime(task.scheduledDate || task.dueDate)}${task.recurrence && task.recurrence !== 'none' ? ` &middot; ${capitalizeWords(task.recurrence)}` : ''}</span>
                     </div>
                 ` : ''}
+
                 <h4 class="text-xs sm:text-[13px] font-semibold text-[#18181B] dark:text-white group-hover:underline leading-snug mb-1.5">${escapeHtml(task.title)}</h4>
                 ${task.description ? `<p class="text-[11px] text-[#71717A] dark:text-zinc-400 line-clamp-2 mb-2.5">${escapeHtml(task.description)}</p>` : ''}
 
+                <!-- Google Drive Links Bar on Kanban Card -->
+                <div class="flex items-center gap-1.5 flex-wrap my-2">
+                    ${task.contentDriveUrl ? `
+                        <a href="${task.contentDriveUrl}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 hover:underline">
+                            <i data-lucide="file-text" class="w-2.5 h-2.5"></i> Brief Doc
+                        </a>
+                    ` : ''}
+                    ${task.submissionDriveUrl ? `
+                        <a href="${task.submissionDriveUrl}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E6F4EA] dark:bg-emerald-950/60 text-[#137333] dark:text-emerald-300 border border-emerald-200/60 hover:underline">
+                            <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> Drive Ready
+                        </a>
+                    ` : (task.tag === 'Graphic Designing' ? `
+                        <button type="button" onclick="event.stopPropagation(); promptSubmitDriveLink('${task.id}')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 transition">
+                            <i data-lucide="upload" class="w-2.5 h-2.5"></i> Submit Drive
+                        </button>
+                    ` : '')}
+                </div>
+
+                <!-- Team Lead Delegation Indicator -->
+                ${task.delegatedTo ? `
+                    <div class="text-[10px] text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded border border-amber-200/50 flex items-center gap-1 mb-2">
+                        <i data-lucide="user-check" class="w-2.5 h-2.5 text-amber-600"></i>
+                        <span>Lead &rarr; ${escapeHtml(task.delegatedTo)}</span>
+                    </div>
+                ` : ''}
+
+                <!-- Subtask Progress -->
                 ${subtasks.length > 0 ? `
                     <div class="mb-2.5">
                         <div class="flex justify-between text-[10px] text-[#71717A] mb-1">
@@ -2372,6 +2757,7 @@
                     </div>
                 ` : ''}
 
+                <!-- Footer: Assignee & WhatsApp Action -->
                 <div class="pt-2 border-t border-zinc-200/70 dark:border-zinc-700/70 flex items-center justify-between text-[11px]">
                     <div class="flex items-center gap-1.5 min-w-0">
                         <div class="w-5 h-5 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[9px] flex items-center justify-center shrink-0">
@@ -2399,30 +2785,51 @@
             tr.onclick = () => openTaskDetail(task.id);
 
             const overdue = isTaskOverdue(task);
-            const subtasks = task.subtasks || [];
-            const doneSub = subtasks.filter(s => s.done).length;
-            const pct = subtasks.length > 0 ? Math.round((doneSub / subtasks.length) * 100) : (task.status === 'Done' ? 100 : 0);
+            const isReel = (task.format || '').includes('Reel') || (task.title || '').toLowerCase().includes('reel');
 
             tr.innerHTML = `
                 <td class="py-3 px-4 font-mono text-[11px] font-semibold text-[#111113] dark:text-white">${escapeHtml(task.code || 'EBG')}</td>
+                <td class="py-3 px-4 font-semibold text-[#18181B] dark:text-zinc-100">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50">${escapeHtml(task.brand || 'EBG Performance')}</span>
+                </td>
                 <td class="py-3 px-4">
                     <div class="font-semibold text-[#18181B] dark:text-white flex items-center gap-1.5 flex-wrap">
                         <span>${escapeHtml(task.title)}</span>
-                        ${(task.status === 'Scheduled' || task.isScheduled || task.scheduledDate) ? `
-                            <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium border border-indigo-200/60 dark:border-indigo-800/40">
-                                <i data-lucide="calendar-clock" class="w-2.5 h-2.5"></i>
-                                <span>${task.recurrence && task.recurrence !== 'none' ? capitalizeWords(task.recurrence) : 'Scheduled'}</span>
+                        ${task.format ? `
+                            <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded font-medium ${isReel ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'}">
+                                ${escapeHtml(task.format)}
                             </span>
                         ` : ''}
                     </div>
                     <div class="text-[11px] text-[#71717A] mt-0.5">${escapeHtml(task.tag || 'General')}</div>
+                </td>
+                <td class="py-3 px-4" onclick="event.stopPropagation()">
+                    ${task.contentDriveUrl ? `
+                        <a href="${task.contentDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Brief Doc
+                        </a>
+                    ` : `<span class="text-xs text-zinc-400 italic">-</span>`}
+                </td>
+                <td class="py-3 px-4" onclick="event.stopPropagation()">
+                    ${task.submissionDriveUrl ? `
+                        <a href="${task.submissionDriveUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-[#E6F4EA] text-[#137333] hover:underline">
+                            <i data-lucide="external-link" class="w-3 h-3"></i> Drive Ready
+                        </a>
+                    ` : `
+                        <button type="button" onclick="promptSubmitDriveLink('${task.id}')" class="px-2 py-1 text-[11px] font-semibold rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 transition">
+                            + Submit Link
+                        </button>
+                    `}
                 </td>
                 <td class="py-3 px-4">
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] font-bold text-[10px] flex items-center justify-center">
                             ${getInitials(task.assigneeName)}
                         </div>
-                        <span class="font-medium text-[#18181B] dark:text-zinc-200">${escapeHtml(task.assigneeName)}</span>
+                        <div>
+                            <span class="font-medium text-[#18181B] dark:text-zinc-200 block">${escapeHtml(task.assigneeName)}</span>
+                            ${task.delegatedTo ? `<span class="text-[10px] text-amber-700 dark:text-amber-300 block">Delegated to ${escapeHtml(task.delegatedTo)}</span>` : ''}
+                        </div>
                     </div>
                 </td>
                 <td class="py-3 px-4">
@@ -2436,14 +2843,6 @@
                         <option value="In Review" ${task.status === 'In Review' ? 'selected' : ''}>In Review</option>
                         <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
                     </select>
-                </td>
-                <td class="py-3 px-4 w-28">
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#111113] dark:bg-white rounded-full" style="width: ${pct}%"></div>
-                        </div>
-                        <span class="text-[11px] text-[#71717A]">${pct}%</span>
-                    </div>
                 </td>
                 <td class="py-3 px-4 ${overdue ? 'text-rose-600 font-semibold' : 'text-[#71717A]'}">
                     ${formatShortDate(task.dueDate)}
@@ -2579,18 +2978,25 @@
             const headerMemberSel = document.getElementById('header-member-filter');
             const createAssigneeSel = document.getElementById('task-assignee');
             const detailAssigneeSel = document.getElementById('detail-assignee-select');
+            const detailDelegateSel = document.getElementById('detail-delegate-select');
 
             const prevHeaderVal = headerMemberSel.value;
 
             headerMemberSel.innerHTML = `<option value="all">All members (${orgMembers.length}) · ${orgTasks.length} tasks</option>`;
             createAssigneeSel.innerHTML = '';
             detailAssigneeSel.innerHTML = '';
+            if (detailDelegateSel) detailDelegateSel.innerHTML = '';
 
             orgMembers.forEach(m => {
                 const count = orgTasks.filter(t => t.assigneeId === m.uid).length;
                 headerMemberSel.add(new Option(`${m.displayName} · ${count} tasks`, m.uid));
-                createAssigneeSel.add(new Option(`${m.displayName} (${m.department})`, m.uid));
+                createAssigneeSel.add(new Option(`${m.displayName} (${m.department} · ${m.role})`, m.uid));
                 detailAssigneeSel.add(new Option(m.displayName, m.uid));
+
+                if (detailDelegateSel) {
+                    const isDesigner = m.department === 'Graphic Designing';
+                    detailDelegateSel.add(new Option(`${m.displayName} (${m.department} · ${m.role})${isDesigner ? ' ★' : ''}`, m.uid));
+                }
             });
 
             if ([...headerMemberSel.options].some(o => o.value === prevHeaderVal)) {
@@ -2748,6 +3154,12 @@
             const dueDate = document.getElementById('task-due-date').value;
             const tag = document.getElementById('task-tag').value;
 
+            const brandVal = document.getElementById('task-brand')?.value || 'EBG Performance';
+            const brandCustom = document.getElementById('task-custom-brand')?.value.trim() || '';
+            const brand = (brandVal === '__custom__' && brandCustom) ? brandCustom : (brandVal === '__custom__' ? 'Custom Brand' : brandVal);
+            const format = document.getElementById('task-format')?.value || 'General Deliverable';
+            const contentDriveUrl = document.getElementById('task-content-drive')?.value.trim() || '';
+
             const isScheduled = document.getElementById('task-is-scheduled')?.checked || false;
             const scheduledDate = isScheduled ? (document.getElementById('task-scheduled-date')?.value || '') : '';
             const recurrence = isScheduled ? (document.getElementById('task-recurrence')?.value || 'none') : 'none';
@@ -2761,10 +3173,19 @@
                 orgId: currentOrgId,
                 title,
                 description,
+                brand,
+                format,
+                contentDriveUrl,
+                submissionDriveUrl: '',
                 assigneeId,
                 assigneeName,
                 createdBy: currentUser.uid,
                 createdByName: currentUserProfile.displayName,
+                assignedByRole: currentUserProfile.role || 'Admin',
+                delegatedBy: '',
+                delegatedTo: '',
+                delegatedAt: '',
+                delegationNote: '',
                 priority,
                 status: isScheduled ? 'Scheduled' : 'To Do',
                 isScheduled,
@@ -2793,7 +3214,7 @@
                 }
                 closeCreateTaskModal();
                 showToast(
-                    isScheduled ? `Task ${newTask.code} scheduled!` : `Task ${newTask.code} assigned to ${assigneeName}!`,
+                    isScheduled ? `Task ${newTask.code} scheduled!` : `Task ${newTask.code} (${brand}) assigned to ${assigneeName}!`,
                     "success",
                     {
                         label: `<i data-lucide="message-circle" class="w-3.5 h-3.5"></i> WhatsApp Alert`,
@@ -2823,13 +3244,85 @@
         function renderTaskDetailDrawerContent(task) {
             document.getElementById('detail-code').textContent = task.code || 'EBG-001';
             document.getElementById('detail-tag').textContent = task.tag || 'General';
+            const brandEl = document.getElementById('detail-brand');
+            if (brandEl) brandEl.textContent = task.brand || 'EBG Performance';
+            const formatEl = document.getElementById('detail-format');
+            if (formatEl) formatEl.textContent = task.format || 'Deliverable';
+
             const prioEl = document.getElementById('detail-priority');
             prioEl.textContent = task.priority;
             prioEl.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold ${getPriorityBadgeClass(task.priority)}`;
 
             document.getElementById('detail-title').textContent = task.title;
-            document.getElementById('detail-meta').textContent = `Assigned by ${task.createdByName || 'Manager'} • Due ${formatShortDate(task.dueDate)}`;
+            document.getElementById('detail-meta').textContent = `Assigned by ${task.createdByName || 'Manager'} • Brand: ${task.brand || 'EBG'} • Due ${formatShortDate(task.dueDate)}`;
             document.getElementById('detail-desc').textContent = task.description || 'No description provided.';
+
+            // Content Document Drive Link Box
+            const contentBtn = document.getElementById('detail-content-drive-btn');
+            const contentText = document.getElementById('detail-content-drive-link-text');
+            const contentInput = document.getElementById('detail-content-drive-input');
+            if (task.contentDriveUrl) {
+                if (contentBtn) {
+                    contentBtn.href = task.contentDriveUrl;
+                    contentBtn.classList.remove('hidden');
+                }
+                if (contentText) contentText.textContent = task.contentDriveUrl;
+                if (contentInput) contentInput.value = task.contentDriveUrl;
+            } else {
+                if (contentBtn) contentBtn.classList.add('hidden');
+                if (contentText) contentText.textContent = "No Google Drive brief attached yet";
+                if (contentInput) contentInput.value = '';
+            }
+
+            // Creative / Reel Submission Drive Link Box
+            const subDisplay = document.getElementById('detail-submission-drive-display');
+            const subBtn = document.getElementById('detail-submission-drive-btn');
+            const subText = document.getElementById('detail-submission-drive-text');
+            const subBadge = document.getElementById('detail-submission-status-badge');
+            const subInput = document.getElementById('detail-submission-drive-input');
+            if (task.submissionDriveUrl) {
+                if (subDisplay) subDisplay.classList.remove('hidden');
+                if (subBtn) subBtn.href = task.submissionDriveUrl;
+                if (subText) subText.textContent = task.submissionDriveUrl;
+                if (subBadge) {
+                    subBadge.textContent = "Drive Link Ready";
+                    subBadge.className = "text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/60 text-[#137333] dark:text-emerald-300 font-semibold";
+                }
+                if (subInput) subInput.value = task.submissionDriveUrl;
+            } else {
+                if (subDisplay) subDisplay.classList.add('hidden');
+                if (subBadge) {
+                    subBadge.textContent = "Pending Submission";
+                    subBadge.className = "text-[10px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 font-semibold";
+                }
+                if (subInput) subInput.value = '';
+            }
+
+            // Team Lead Delegation Box
+            const delStatus = document.getElementById('detail-delegation-status');
+            const delSelect = document.getElementById('detail-delegate-select');
+            if (task.delegatedTo) {
+                if (delStatus) {
+                    delStatus.classList.remove('hidden');
+                    delStatus.innerHTML = `
+                        <div class="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-200">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>Delegated to <strong>${escapeHtml(task.delegatedTo)}</strong> by Lead <strong>${escapeHtml(task.delegatedBy || 'Team Lead')}</strong></span>
+                        </div>
+                        ${task.delegationNote ? `<div class="text-[11px] text-zinc-600 dark:text-zinc-300 italic mt-1 bg-white/60 dark:bg-zinc-900/60 p-2 rounded border border-amber-200/50">"${escapeHtml(task.delegationNote)}"</div>` : ''}
+                        <div class="text-[10px] text-zinc-400 mt-1">Distributed at ${formatScheduledDateTime(task.delegatedAt || task.createdAt)}</div>
+                    `;
+                }
+            } else {
+                if (delStatus) delStatus.classList.add('hidden');
+            }
+            if (delSelect) {
+                delSelect.innerHTML = '';
+                orgMembers.forEach(m => {
+                    const isDesigner = m.department === 'Graphic Designing';
+                    delSelect.add(new Option(`${m.displayName} (${m.department} · ${m.role})${isDesigner ? ' ★' : ''}`, m.uid));
+                });
+            }
 
             document.getElementById('detail-status-select').value = task.status || 'To Do';
             document.getElementById('detail-assignee-select').value = task.assigneeId;
@@ -2904,6 +3397,119 @@
                     `;
                     commentsList.appendChild(item);
                 });
+            }
+            lucide.createIcons();
+        }
+
+        function toggleCustomBrandInput(val) {
+            const customDiv = document.getElementById('task-custom-brand-group');
+            if (customDiv) {
+                customDiv.classList.toggle('hidden', val !== '__custom__');
+            }
+        }
+
+        function openCreateTaskModalForDesign(brand = '') {
+            openCreateTaskModal();
+            const deptSelect = document.getElementById('task-tag');
+            if (deptSelect) deptSelect.value = 'Graphic Designing';
+
+            // Auto-select Graphic Design Team Lead (Priya Sharma or Lead role)
+            const gdLead = orgMembers.find(m => m.department === 'Graphic Designing' && (m.role.includes('Lead') || m.role.includes('Manager')));
+            const assigneeSelect = document.getElementById('task-assignee');
+            if (gdLead && assigneeSelect) {
+                assigneeSelect.value = gdLead.uid;
+            }
+
+            if (brand) {
+                const brandSelect = document.getElementById('task-brand');
+                if (brandSelect) {
+                    brandSelect.value = brand;
+                    toggleCustomBrandInput(brand);
+                }
+            }
+            const formatSelect = document.getElementById('task-format');
+            if (formatSelect) formatSelect.value = 'Reel / Video (9:16)';
+        }
+
+        async function updateContentDriveLinkFromDrawer() {
+            if (!activeDetailTaskId) return;
+            const input = document.getElementById('detail-content-drive-input');
+            const url = (input ? input.value : '').trim();
+            if (!url) {
+                showToast("Please enter a valid Google Drive URL", "error");
+                return;
+            }
+            await patchTaskById(activeDetailTaskId, { contentDriveUrl: url });
+            showToast("Content Brief Drive link updated!", "success");
+        }
+
+        async function submitCreativeDriveLinkFromDrawer() {
+            if (!activeDetailTaskId) return;
+            const input = document.getElementById('detail-submission-drive-input');
+            const url = (input ? input.value : '').trim();
+            if (!url) {
+                showToast("Please enter a Google Drive link for your creative / reel deliverable", "error");
+                return;
+            }
+            const currentTask = orgTasks.find(t => t.id === activeDetailTaskId);
+            const newStatus = (currentTask && (currentTask.status === 'To Do' || currentTask.status === 'In Progress')) ? 'In Review' : (currentTask ? currentTask.status : 'In Review');
+
+            await patchTaskById(activeDetailTaskId, {
+                submissionDriveUrl: url,
+                submissionSubmittedAt: new Date().toISOString(),
+                submissionSubmittedBy: currentUserProfile ? currentUserProfile.displayName : 'Designer',
+                status: newStatus
+            });
+            showToast("Deliverable Drive link submitted! Task moved to In Review.", "success");
+        }
+
+        async function promptSubmitDriveLink(taskId) {
+            const task = orgTasks.find(t => t.id === taskId);
+            if (!task) return;
+            const currentUrl = task.submissionDriveUrl || '';
+            const newUrl = prompt(`Submit Creative / Reel Google Drive link for "${task.title}":`, currentUrl);
+            if (newUrl === null) return;
+            const cleaned = newUrl.trim();
+            if (!cleaned) return;
+
+            const newStatus = (task.status === 'To Do' || task.status === 'In Progress') ? 'In Review' : task.status;
+            await patchTaskById(taskId, {
+                submissionDriveUrl: cleaned,
+                submissionSubmittedAt: new Date().toISOString(),
+                submissionSubmittedBy: currentUserProfile ? currentUserProfile.displayName : 'Designer',
+                status: newStatus
+            });
+            showToast("Deliverable Drive link submitted successfully!", "success");
+        }
+
+        async function delegateTaskFromDrawer() {
+            if (!activeDetailTaskId) return;
+            const select = document.getElementById('detail-delegate-select');
+            const noteInput = document.getElementById('detail-delegate-note');
+            if (!select || !select.value) {
+                showToast("Please select a team member to delegate this task to.", "error");
+                return;
+            }
+            const targetMember = orgMembers.find(m => m.uid === select.value);
+            if (!targetMember) return;
+            const note = noteInput ? noteInput.value.trim() : '';
+            const leadName = currentUserProfile ? currentUserProfile.displayName : 'Team Lead';
+
+            await patchTaskById(activeDetailTaskId, {
+                assigneeId: targetMember.uid,
+                assigneeName: targetMember.displayName,
+                delegatedTo: targetMember.displayName,
+                delegatedToUid: targetMember.uid,
+                delegatedBy: leadName,
+                delegatedAt: new Date().toISOString(),
+                delegationNote: note
+            });
+
+            if (noteInput) noteInput.value = '';
+            showToast(`Task delegated & distributed to ${targetMember.displayName}!`, "success");
+
+            if (confirm(`Would you like to send a direct WhatsApp alert to ${targetMember.displayName} about this task assignment?`)) {
+                triggerWhatsAppAlertForTask(activeDetailTaskId);
             }
         }
 
@@ -3024,18 +3630,22 @@
                 showToast("No tasks to export yet.", "info");
                 return;
             }
-            const headers = ['Task ID', 'Title', 'Department', 'Assignee', 'Priority', 'Status', 'Release Schedule', 'Recurrence', 'Due Date', 'Created By'];
+            const headers = ['Task ID', 'Title', 'Brand', 'Creative Format', 'Department', 'Assignee', 'Delegated To', 'Priority', 'Status', 'Content Brief Drive Link', 'Submission Drive Link', 'Release Schedule', 'Due Date', 'Created By'];
             const csvLines = [headers.join(',')];
             rows.forEach(t => {
                 const vals = [
                     t.code || '',
                     `"${(t.title || '').replace(/"/g, '""')}"`,
+                    `"${(t.brand || 'EBG Performance').replace(/"/g, '""')}"`,
+                    `"${(t.format || 'Standard Deliverable').replace(/"/g, '""')}"`,
                     `"${(t.tag || '').replace(/"/g, '""')}"`,
                     `"${(t.assigneeName || '').replace(/"/g, '""')}"`,
+                    `"${(t.delegatedTo || '').replace(/"/g, '""')}"`,
                     t.priority || '',
                     t.status || '',
+                    `"${(t.contentDriveUrl || '').replace(/"/g, '""')}"`,
+                    `"${(t.submissionDriveUrl || '').replace(/"/g, '""')}"`,
                     `"${(t.scheduledDate || '').replace(/"/g, '""')}"`,
-                    t.recurrence || 'none',
                     t.dueDate || '',
                     `"${(t.createdByName || '').replace(/"/g, '""')}"`
                 ];
@@ -3048,7 +3658,327 @@
             a.download = `EBG_Tasks_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast("Exported tasks to Excel (CSV)!", "success");
+            showToast("Exported tasks to Excel (CSV) with Brand & Drive links!", "success");
+        }
+
+        // Productivity Date Range Filtering State & Functions
+        let activeProductivityRange = 'all';
+        let prodCustomStart = '';
+        let prodCustomEnd = '';
+
+        function setProductivityRange(range) {
+            activeProductivityRange = range;
+            prodCustomStart = '';
+            prodCustomEnd = '';
+
+            // Reset custom input fields
+            ['overview-start-date', 'overview-end-date', 'team-start-date', 'team-end-date'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            updateProductivityRangeUI();
+            renderProductivityMatrix();
+        }
+
+        function applyCustomProductivityDateRange() {
+            const oStart = document.getElementById('overview-start-date')?.value;
+            const oEnd = document.getElementById('overview-end-date')?.value;
+            const tStart = document.getElementById('team-start-date')?.value;
+            const tEnd = document.getElementById('team-end-date')?.value;
+
+            prodCustomStart = oStart || tStart || '';
+            prodCustomEnd = oEnd || tEnd || '';
+
+            const startEl1 = document.getElementById('overview-start-date');
+            const startEl2 = document.getElementById('team-start-date');
+            const endEl1 = document.getElementById('overview-end-date');
+            const endEl2 = document.getElementById('team-end-date');
+            if (startEl1 && prodCustomStart) startEl1.value = prodCustomStart;
+            if (startEl2 && prodCustomStart) startEl2.value = prodCustomStart;
+            if (endEl1 && prodCustomEnd) endEl1.value = prodCustomEnd;
+            if (endEl2 && prodCustomEnd) endEl2.value = prodCustomEnd;
+
+            if (prodCustomStart || prodCustomEnd) {
+                activeProductivityRange = 'custom';
+            }
+            updateProductivityRangeUI();
+            renderProductivityMatrix();
+        }
+
+        function updateProductivityRangeUI() {
+            const ranges = ['all', 'today', 'yesterday', 'week', 'month'];
+            ranges.forEach(r => {
+                const btnO = document.getElementById(`range-btn-${r}`);
+                const btnT = document.getElementById(`team-range-btn-${r}`);
+                const isMatch = (activeProductivityRange === r);
+                const activeClass = "px-2.5 py-1 text-[11px] font-semibold rounded bg-white dark:bg-[#27272A] text-[#111113] dark:text-white shadow-2xs transition";
+                const inactiveClass = "px-2.5 py-1 text-[11px] font-medium rounded text-[#71717A] dark:text-zinc-400 hover:text-[#18181B] transition";
+                if (btnO) btnO.className = isMatch ? activeClass : inactiveClass;
+                if (btnT) btnT.className = isMatch ? activeClass : inactiveClass;
+            });
+
+            const labelEl = document.getElementById('team-active-range-label');
+            if (labelEl) {
+                if (activeProductivityRange === 'custom') {
+                    labelEl.textContent = `${prodCustomStart || 'Start'} to ${prodCustomEnd || 'Today'}`;
+                } else {
+                    const labels = { all: 'All Time', today: 'Today', yesterday: 'Yesterday', week: 'This Week', month: 'Past 30 Days' };
+                    labelEl.textContent = labels[activeProductivityRange] || 'All Time';
+                }
+            }
+        }
+
+        function isTaskInProductivityRange(task, range, customStart, customEnd) {
+            if (range === 'all') return true;
+
+            const taskDateStr = (task.createdAt || task.dueDate || '').split('T')[0];
+            if (!taskDateStr) return true;
+
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+
+            if (range === 'today') {
+                return taskDateStr === todayStr;
+            }
+            if (range === 'yesterday') {
+                const y = new Date(today);
+                y.setDate(y.getDate() - 1);
+                return taskDateStr === y.toISOString().split('T')[0];
+            }
+            if (range === 'week') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                const weekAgoStr = weekAgo.toISOString().split('T')[0];
+                return taskDateStr >= weekAgoStr && taskDateStr <= todayStr;
+            }
+            if (range === 'month') {
+                const monthAgo = new Date(today);
+                monthAgo.setDate(monthAgo.getDate() - 30);
+                const monthAgoStr = monthAgo.toISOString().split('T')[0];
+                return taskDateStr >= monthAgoStr && taskDateStr <= todayStr;
+            }
+            if (range === 'custom') {
+                if (customStart && taskDateStr < customStart) return false;
+                if (customEnd && taskDateStr > customEnd) return false;
+                return true;
+            }
+            return true;
+        }
+
+        function renderProductivityMatrix() {
+            const overviewTbody = document.getElementById('overview-productivity-tbody');
+            const teamTbody = document.getElementById('team-productivity-table-body');
+            if (!overviewTbody && !teamTbody) return;
+
+            if (overviewTbody) overviewTbody.innerHTML = '';
+            if (teamTbody) teamTbody.innerHTML = '';
+
+            if (orgMembers.length === 0) {
+                const emptyRow = `<tr><td colspan="8" class="text-center py-6 text-zinc-400 italic">No team members registered yet.</td></tr>`;
+                if (overviewTbody) overviewTbody.innerHTML = emptyRow;
+                if (teamTbody) teamTbody.innerHTML = emptyRow;
+                return;
+            }
+
+            const rangeTasks = orgTasks.filter(t => isTaskInProductivityRange(t, activeProductivityRange, prodCustomStart, prodCustomEnd));
+
+            orgMembers.forEach(member => {
+                const mTasks = rangeTasks.filter(t => t.assigneeId === member.uid);
+                const assignedCount = mTasks.length;
+                const completedCount = mTasks.filter(t => t.status === 'Done').length;
+                const pendingCount = mTasks.filter(t => t.status !== 'Done').length;
+                const overdueCount = mTasks.filter(t => isTaskOverdue(t)).length;
+
+                const prodRate = assignedCount > 0 ? Math.round((completedCount / assignedCount) * 100) : 0;
+
+                let rateBadgeClass = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
+                if (assignedCount > 0) {
+                    if (prodRate >= 75) rateBadgeClass = "bg-[#E6F4EA] text-[#137333] dark:bg-emerald-950/70 dark:text-emerald-300";
+                    else if (prodRate >= 40) rateBadgeClass = "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300";
+                    else rateBadgeClass = "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300";
+                }
+
+                let cleanPhone = (member.phone || '').replace(/\D/g, '');
+                if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+                const waUrl = cleanPhone 
+                    ? `https://wa.me/${cleanPhone}?text=Hi%20${encodeURIComponent(member.displayName)},%20checking%20in%20on%20your%20${pendingCount}%20pending%20tasks`
+                    : `https://wa.me/?text=Hi%20${encodeURIComponent(member.displayName)},%20checking%20in%20on%20your%20tasks`;
+
+                const rowHtml = `
+                    <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
+                        <td class="py-2.5 px-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-[10px] font-bold flex items-center justify-center shrink-0">
+                                    ${getInitials(member.displayName)}
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-[#18181B] dark:text-white block">${escapeHtml(member.displayName)}</span>
+                                    <span class="text-[10px] text-zinc-400">${escapeHtml(member.email || '')}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                ${escapeHtml(member.department || 'General')}
+                            </span>
+                            <span class="text-[10px] text-zinc-400 block mt-0.5">${escapeHtml(member.role || 'Member')}</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-center font-bold text-[#18181B] dark:text-white">${assignedCount}</td>
+                        <td class="py-2.5 px-3 text-center font-semibold text-[#1E8E3E] dark:text-emerald-400">${completedCount}</td>
+                        <td class="py-2.5 px-3 text-center font-semibold text-amber-600 dark:text-amber-400">${pendingCount}</td>
+                        <td class="py-2.5 px-3 text-center font-semibold ${overdueCount > 0 ? 'text-rose-600' : 'text-zinc-400'}">${overdueCount}</td>
+                        <td class="py-2.5 px-3">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${rateBadgeClass}">${prodRate}%</span>
+                                <div class="w-16 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
+                                    <div class="h-full bg-emerald-500 rounded-full" style="width: ${prodRate}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3 text-right">
+                            <a href="${waUrl}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#E6F4EA] dark:bg-emerald-950/60 hover:bg-[#ceead6] text-[#137333] dark:text-emerald-300 text-[10px] font-semibold transition" title="Follow up on WhatsApp">
+                                <i data-lucide="message-circle" class="w-3 h-3"></i> Alert
+                            </a>
+                        </td>
+                    </tr>
+                `;
+
+                if (overviewTbody) overviewTbody.insertAdjacentHTML('beforeend', rowHtml);
+                if (teamTbody) teamTbody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+            lucide.createIcons();
+        }
+
+        // Dedicated Brand-Wise Creatives & Reels Studio Renderer
+        function renderCreativesStudio(filtered) {
+            const totalEl = document.getElementById('studio-metric-total');
+            const reelsEl = document.getElementById('studio-metric-reels');
+            const submittedEl = document.getElementById('studio-metric-submitted');
+            const pendingEl = document.getElementById('studio-metric-pending');
+            const container = document.getElementById('creatives-brand-container');
+
+            if (!container) return;
+
+            const creativeTasks = orgTasks.filter(t => t.tag === 'Graphic Designing' || t.format || t.brand);
+
+            const totalCount = creativeTasks.length;
+            const reelsCount = creativeTasks.filter(t => t.format && t.format.includes('Reel')).length;
+            const submittedCount = creativeTasks.filter(t => t.submissionDriveUrl).length;
+            const pendingCount = creativeTasks.filter(t => !t.submissionDriveUrl).length;
+
+            if (totalEl) totalEl.textContent = totalCount;
+            if (reelsEl) reelsEl.textContent = reelsCount;
+            if (submittedEl) submittedEl.textContent = submittedCount;
+            if (pendingEl) pendingEl.textContent = pendingCount;
+
+            container.innerHTML = '';
+
+            if (creativeTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-10 text-center">
+                        <i data-lucide="video" class="w-8 h-8 text-zinc-400 mx-auto mb-2"></i>
+                        <h3 class="text-sm font-semibold text-[#18181B] dark:text-white">No Creative or Reel Tasks Yet</h3>
+                        <p class="text-xs text-[#71717A] max-w-sm mx-auto mt-1 mb-4">Performance Marketer Admins can assign brand-wise creative briefs with Google Drive links to the Graphic Design Team Lead.</p>
+                        <button onclick="openCreateTaskModalForDesign()" class="px-3.5 py-1.5 rounded-lg bg-[#111113] dark:bg-white text-white dark:text-[#111113] text-xs font-semibold">
+                            + Create First Creative Request
+                        </button>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const brandMap = {};
+            creativeTasks.forEach(task => {
+                const brand = task.brand || 'EBG Performance';
+                if (!brandMap[brand]) brandMap[brand] = [];
+                brandMap[brand].push(task);
+            });
+
+            Object.keys(brandMap).sort().forEach(brand => {
+                const tasks = brandMap[brand];
+                const section = document.createElement('div');
+                section.className = "bg-white dark:bg-[#111113] rounded-xl border border-[#E4E4E7] dark:border-[#27272A] p-5 space-y-4";
+
+                let brandTasksHtml = '';
+                tasks.forEach(t => {
+                    const hasContentBrief = !!t.contentDriveUrl;
+                    const hasSubmission = !!t.submissionDriveUrl;
+
+                    brandTasksHtml += `
+                        <div class="bg-zinc-50 dark:bg-[#18181B] rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col justify-between gap-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">${t.code || 'EBG-001'}</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded ${t.format && t.format.includes('Reel') ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/70 dark:text-rose-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300'}">
+                                        ${escapeHtml(t.format || 'Creative')}
+                                    </span>
+                                </div>
+                                <h4 onclick="openTaskDetail('${t.id}')" class="text-xs font-bold text-[#18181B] dark:text-white hover:underline cursor-pointer mb-1">
+                                    ${escapeHtml(t.title)}
+                                </h4>
+                                <p class="text-[11px] text-zinc-500 line-clamp-2 mb-2">${escapeHtml(t.description || 'No description.')}</p>
+
+                                <div class="text-[10px] text-zinc-400 space-y-0.5 mb-3">
+                                    <div><strong>Assignee:</strong> ${escapeHtml(t.assigneeName || 'Unassigned')}</div>
+                                    ${t.delegatedTo ? `<div class="text-amber-600 dark:text-amber-400 font-medium">↳ Delegated by Lead <strong>${escapeHtml(t.delegatedBy || '')}</strong> to <strong>${escapeHtml(t.delegatedTo)}</strong></div>` : ''}
+                                    <div><strong>Due:</strong> ${formatShortDate(t.dueDate)}</div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 pt-2 border-t border-zinc-200/80 dark:border-zinc-800">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-zinc-400 font-medium">1. Content Brief:</span>
+                                    ${hasContentBrief ? `
+                                        <a href="${t.contentDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                                            <i data-lucide="external-link" class="w-3 h-3"></i> Open Drive Doc
+                                        </a>
+                                    ` : `
+                                        <span class="text-[10px] text-zinc-400 italic">No brief attached</span>
+                                    `}
+                                </div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-zinc-400 font-medium">2. Deliverable:</span>
+                                    ${hasSubmission ? `
+                                        <a href="${t.submissionDriveUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-[#137333] dark:text-emerald-400 hover:underline">
+                                            <i data-lucide="check-circle" class="w-3 h-3 text-[#1E8E3E]"></i> View Drive Link
+                                        </a>
+                                    ` : `
+                                        <button onclick="promptSubmitDriveLink('${t.id}')" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 transition">
+                                            + Submit Drive Link
+                                        </button>
+                                    `}
+                                </div>
+                                <div class="flex items-center justify-between pt-1">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Done' ? 'bg-[#E6F4EA] text-[#137333]' : 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'}">${t.status}</span>
+                                    <button onclick="openTaskDetail('${t.id}')" class="text-[10px] text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline">
+                                        Manage / Delegate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                section.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-[#111113] dark:bg-white text-white dark:text-[#111113] shadow-2xs">${escapeHtml(brand)}</span>
+                            <span class="text-xs text-[#71717A]">${tasks.length} Deliverable(s)</span>
+                        </div>
+                        <button onclick="openCreateTaskModalForDesign('${brand}')" class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> Add for ${escapeHtml(brand)}
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${brandTasksHtml}
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+
+            lucide.createIcons();
         }
 
         // 17. Navigation & Layout Controls
@@ -3081,26 +4011,29 @@
 
         function switchMainTab(tab) {
             activeMainTab = tab;
-            const analytics = document.getElementById('overview-analytics-card');
-            const kanban = document.getElementById('section-kanban');
-            const table = document.getElementById('section-table');
-            const team = document.getElementById('section-team');
+            const overviewSec = document.getElementById('section-overview');
+            const kanbanSec = document.getElementById('section-kanban');
+            const tableSec = document.getElementById('section-table');
+            const creativesSec = document.getElementById('section-creatives');
+            const teamSec = document.getElementById('section-team');
             const titleEl = document.getElementById('main-page-title');
 
-            analytics.classList.toggle('hidden', tab === 'team');
-            kanban.classList.toggle('hidden', tab === 'list' || tab === 'team');
-            table.classList.toggle('hidden', tab !== 'list');
-            team.classList.toggle('hidden', tab !== 'team');
+            if (overviewSec) overviewSec.classList.toggle('hidden', tab !== 'overview');
+            if (kanbanSec) kanbanSec.classList.toggle('hidden', tab !== 'board');
+            if (tableSec) tableSec.classList.toggle('hidden', tab !== 'list');
+            if (creativesSec) creativesSec.classList.toggle('hidden', tab !== 'creatives');
+            if (teamSec) teamSec.classList.toggle('hidden', tab !== 'team');
 
             const titles = {
-                overview: 'Overview',
-                board: 'Task Execution Board',
+                overview: 'Overview & Velocity Analytics',
+                board: 'Task Execution Board (Kanban)',
                 list: 'Structured Task Ledger',
-                team: 'Team Directory & Workload'
+                creatives: 'Brand-Wise Creatives & Reels Studio',
+                team: 'Team Directory & Member Productivity'
             };
-            titleEl.textContent = titles[tab] || 'Overview';
+            if (titleEl) titleEl.textContent = titles[tab] || 'Overview & Velocity Analytics';
 
-            ['overview', 'board', 'list', 'team'].forEach(t => {
+            ['overview', 'board', 'list', 'creatives', 'team'].forEach(t => {
                 const pill = document.getElementById(`view-pill-${t}`);
                 const railBtn = document.getElementById(`rail-${t}`);
                 if (pill) {
