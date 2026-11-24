@@ -1553,27 +1553,17 @@
                 if (!res.ok) return null;
                 const data = await res.json();
                 if (data && typeof data === 'object') {
-                    if (data.organizations && Object.keys(data.organizations).length > 0) {
-                        const localOrgs = getLocalStore('organizations', {});
-                        setLocalStore('organizations', { ...localOrgs, ...data.organizations });
+                    if (data.organizations && typeof data.organizations === 'object') {
+                        setLocalStore('organizations', data.organizations);
                     }
-                    if (data.members && Array.isArray(data.members) && data.members.length > 0) {
-                        const localMembers = getLocalStore('org_members', []);
-                        const map = new Map();
-                        localMembers.forEach(m => map.set(`${m.orgId}_${m.uid}`, m));
-                        data.members.forEach(m => map.set(`${m.orgId}_${m.uid}`, m));
-                        setLocalStore('org_members', Array.from(map.values()));
+                    if (Array.isArray(data.members)) {
+                        setLocalStore('org_members', data.members);
                     }
-                    if (data.tasks && Array.isArray(data.tasks) && data.tasks.length > 0) {
-                        const localTasks = getLocalStore('org_tasks', []);
-                        const map = new Map();
-                        localTasks.forEach(t => map.set(t.id, t));
-                        data.tasks.forEach(t => map.set(t.id, t));
-                        setLocalStore('org_tasks', Array.from(map.values()));
+                    if (Array.isArray(data.tasks)) {
+                        setLocalStore('org_tasks', data.tasks);
                     }
-                    if (data.users && Object.keys(data.users).length > 0) {
-                        const localUsers = getLocalStore('registered_users', {});
-                        setLocalStore('registered_users', { ...localUsers, ...data.users });
+                    if (data.users && typeof data.users === 'object') {
+                        setLocalStore('registered_users', data.users);
                     }
                     return data;
                 }
@@ -1655,16 +1645,21 @@
                     await loadAuthenticatedUserProfile(user);
                 });
             } else {
-                document.getElementById('live-sync-label').textContent = 'Live local workspace';
+                document.getElementById('live-sync-label').textContent = 'Live workspace';
                 await syncFromServer();
                 const savedUser = getLocalStore('current_user', null);
                 const savedProfile = getLocalStore('current_profile', null);
-                if (savedUser && savedProfile) {
+                const registeredUsers = getLocalStore('registered_users', {});
+                if (savedUser && savedProfile && registeredUsers[savedUser.email]) {
                     currentUser = savedUser;
                     currentUserProfile = savedProfile;
                     currentOrgId = UNIFIED_ORG_ID;
                     await enterOrganizationWorkspace(currentOrgId);
                 } else {
+                    localStorage.removeItem('ebg_prod_current_user');
+                    localStorage.removeItem('ebg_prod_current_profile');
+                    currentUser = null;
+                    currentUserProfile = null;
                     hideLoading();
                     showAuthStep('login');
                 }
